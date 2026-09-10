@@ -49,6 +49,41 @@ each (83 CICFlowMeter features + `Label`).
 
 ## InSDN
 
-Not yet acquired for this stage — see `proteus/data_full.py::load_insdn()` (raises
-`NotImplementedError` with the reason). No official non-Kaggle mirror was found; acquisition
-is blocked on Kaggle API credentials, tracked as a follow-up.
+**Source**: Kaggle dataset `badcodebuilder/insdn-dataset` (re-upload of Elsayed et al.'s InSDN:
+A Novel SDN Intrusion Dataset, IEEE Access 8, 2020). No official non-Kaggle mirror exists;
+acquired via the Kaggle API once credentials were available.
+
+- Retrieved: 2026-09-10
+- Extracted to `data/raw/insdn/InSDN_DatasetCSV/` (gitignored, not committed)
+
+| File | Rows | SHA256 |
+|---|---|---|
+| Normal_data.csv    |  68,424 | 5cc80c7b5707bf92d3ea501a9af8b488cc4680f0a5b29b5b608e92bbe6e297a |
+| OVS.csv             | 138,722 | 8b218c16769dea961028d511928e7da139302afe341cea29dd65e526d580e09 |
+| metasploitable-2.csv | 136,743 | 75c5ea5e3526c9500e3d73cbdb11b99ff3fbfb8dac8dff8c39e9dd35d60556b |
+
+Total: 343,889 rows — matches the published InSDN row count exactly.
+
+### Schema unification
+
+InSDN's CSVs use CICFlowMeter's abbreviated column-name convention (e.g. `Tot Fwd Pkts`), while
+the corrected CICIDS2017 files use the unabbreviated convention (e.g. `Total Fwd Packet`). Both
+are the same 84 CICFlowMeter features in the same emission order — verified by a positional
+diff of the two raw header rows, which lines up 1:1 across all 84 columns, including one real
+naming quirk (InSDN's `CWE Flag Count` is CICIDS2017's `CWR Flag Count`, same feature/position).
+`proteus/data_full.py::INSDN_TO_CICIDS2017_COLS` encodes this verified positional mapping (not a
+fuzzy abbreviation-expansion heuristic), so InSDN rows are renamed onto CICIDS2017's column
+convention and then run through the same cleaning path (`clean_and_unify_cicids2017`).
+
+InSDN's `Normal` label is mapped to `BENIGN` to match CICIDS2017's benign-class naming; InSDN's
+attack labels (`DDoS`, `DoS`, `Probe`, `BFA`, `Web-Attack`, `BOTNET`, `U2R`) have no CICIDS2017
+equivalent for `BFA`/`Web-Attack`/`BOTNET`/`U2R` and are kept as their own classes rather than
+force-mapped onto an unrelated CICIDS2017 label.
+
+### Post-cleaning result (via `proteus/data_full.py::load_insdn`)
+
+- 0 inf values, 0 rows dropped for missing/invalid features (InSDN's CSVs are clean going in).
+- **343,889 rows retained**, 80 numeric/one-hot feature columns, **8 label classes**: BENIGN
+  (19.9%), DDoS (35.5%), Probe (28.5%), DoS (15.6%), BFA (0.41%), Web-Attack (0.056%), BOTNET
+  (0.048%), U2R (0.0049%).
+- Stratified 70/15/15 train/val/test split: 240,722 / 51,583 / 51,584 rows.
