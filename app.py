@@ -58,11 +58,11 @@ def architecture_figure():
         fig.add_annotation(x=x1, y=y1, ax=x0, ay=y0, xref="x", yref="y", axref="x", ayref="y",
                             showarrow=True, arrowhead=3, arrowsize=1, arrowwidth=2,
                             arrowcolor="#4c8bf5")
-    fig.add_annotation(x=2, y=-0.15, ax=4, ay=0, xref="x", yref="y", axref="x", ayref="y",
+    fig.add_annotation(x=1, y=0.65, ax=3.5, ay=-0.55, xref="x", yref="y", axref="x", ayref="y",
                         showarrow=True, arrowhead=3, arrowwidth=2, arrowcolor="#e06666",
                         text="drift fires -> triggers retrain", font=dict(size=10, color="#e06666"))
     fig.update_xaxes(visible=False, range=[-0.6, 4.6])
-    fig.update_yaxes(visible=False, range=[-0.5, 1.5])
+    fig.update_yaxes(visible=False, range=[-0.75, 1.5])
     fig.update_layout(height=260, margin=dict(l=10, r=10, t=10, b=10),
                        plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
     return fig
