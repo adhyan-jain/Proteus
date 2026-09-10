@@ -23,7 +23,7 @@ export function ClassDistributionChart({ distribution }: { distribution: Record<
           width={140}
         />
         <Tooltip {...tooltipStyle} formatter={(v) => (typeof v === "number" ? v.toLocaleString("en-US") : v)} />
-        <Bar dataKey="count" radius={[0, 3, 3, 0]}>
+        <Bar dataKey="count" radius={[0, 3, 3, 0]} isAnimationActive={false}>
           {data.map((_, i) => (
             <Cell key={i} fill={CLASS_COLOR_SEQUENCE[i % CLASS_COLOR_SEQUENCE.length]} />
           ))}

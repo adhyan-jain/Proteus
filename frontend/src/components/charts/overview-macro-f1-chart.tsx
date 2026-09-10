@@ -53,7 +53,7 @@ export function OverviewMacroF1Chart({ conditions }: { conditions: Extract<Exper
         {conditions.retrain_timesteps.map((t) => (
           <ReferenceLine key={`r${t}`} x={t} stroke={chartColors.synthetic} strokeDasharray="1 2" strokeOpacity={0.5} />
         ))}
-        <Line type="monotone" dataKey="baseline" stroke={chartColors.idle} strokeWidth={1.5} dot={false} name="baseline" />
+        <Line type="monotone" dataKey="baseline" stroke={chartColors.idle} strokeWidth={1.5} dot={false} name="baseline" isAnimationActive={false} />
         <Line
           type="monotone"
           dataKey="static_augmentation"
@@ -61,8 +61,8 @@ export function OverviewMacroF1Chart({ conditions }: { conditions: Extract<Exper
           strokeWidth={1.5}
           dot={false}
           name="static augmentation"
-        />
-        <Line type="monotone" dataKey="closed_loop" stroke={chartColors.good} strokeWidth={2} dot={false} name="closed loop (proteus)" />
+         isAnimationActive={false} />
+        <Line type="monotone" dataKey="closed_loop" stroke={chartColors.good} strokeWidth={2} dot={false} name="closed loop (proteus)" isAnimationActive={false} />
         <Legend wrapperStyle={{ fontSize: 11, color: chartColors.text }} iconSize={8} />
       </LineChart>
     </ResponsiveContainer>

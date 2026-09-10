@@ -38,7 +38,7 @@ export function PerClassF1Chart({
             stroke={CLASS_COLOR_SEQUENCE[i % CLASS_COLOR_SEQUENCE.length]}
             strokeWidth={1.6}
             dot={false}
-          />
+           isAnimationActive={false} />
         ))}
         <Legend wrapperStyle={{ fontSize: 11, color: chartColors.text }} iconSize={8} />
       </LineChart>

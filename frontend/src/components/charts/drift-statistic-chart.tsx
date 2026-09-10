@@ -25,7 +25,7 @@ export function DriftStatisticChart({ events }: { events: DriftEvent[] }) {
           strokeDasharray="4 3"
           label={{ value: `α=${alpha}`, fontSize: 10, fill: chartColors.warn, position: "insideTopRight" }}
         />
-        <Bar dataKey="p_value" name="p-value" radius={[2, 2, 0, 0]}>
+        <Bar dataKey="p_value" name="p-value" radius={[2, 2, 0, 0]} isAnimationActive={false}>
           {data.map((d, i) => (
             <Cell key={i} fill={d.fired ? chartColors.bad : chartColors.network} fillOpacity={d.fired ? 0.9 : 0.5} />
           ))}

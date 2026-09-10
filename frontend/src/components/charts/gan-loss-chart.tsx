@@ -18,8 +18,8 @@ export function GanLossChart({ lossLog }: { lossLog: { step: number; g_loss: num
         />
         <YAxis stroke={chartColors.axis} tick={{ fontSize: 10, fill: chartColors.text }} tickLine={false} axisLine={{ stroke: chartColors.grid }} width={40} />
         <Tooltip {...tooltipStyle} formatter={(v) => (typeof v === "number" ? v.toFixed(3) : v)} />
-        <Line type="monotone" dataKey="g_loss" stroke={chartColors.synthetic} strokeWidth={1.6} dot={false} name="generator loss" />
-        <Line type="monotone" dataKey="d_loss" stroke={chartColors.network} strokeWidth={1.6} dot={false} name="critic loss" />
+        <Line type="monotone" dataKey="g_loss" stroke={chartColors.synthetic} strokeWidth={1.6} dot={false} name="generator loss" isAnimationActive={false} />
+        <Line type="monotone" dataKey="d_loss" stroke={chartColors.network} strokeWidth={1.6} dot={false} name="critic loss" isAnimationActive={false} />
         <Legend wrapperStyle={{ fontSize: 11, color: chartColors.text }} iconSize={8} />
       </LineChart>
     </ResponsiveContainer>

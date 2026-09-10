@@ -8,7 +8,7 @@ import { NAV_ITEMS } from "./nav-items";
 export function Sidebar() {
   const pathname = usePathname();
   return (
-    <aside className="flex h-full w-[204px] shrink-0 flex-col border-r border-border-subtle bg-surface-1">
+    <aside className="hidden h-full w-[204px] shrink-0 flex-col border-r border-border-subtle bg-surface-1 md:flex">
       <div className="flex h-12 items-center gap-2 border-b border-border-subtle px-4">
         <span className="h-2 w-2 rounded-full bg-network live-dot" />
         <span className="text-[13px] font-bold tracking-[0.14em] text-text-primary">PROTEUS</span>

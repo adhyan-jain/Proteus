@@ -26,8 +26,8 @@ export function MmdHistoryChart({ entries, threshold }: { entries: GateEntry[]; 
         <ZAxis dataKey="n" range={[40, 160]} />
         <Tooltip {...tooltipStyle} formatter={(v) => (typeof v === "number" ? v.toFixed(3) : v)} />
         <ReferenceLine y={threshold} stroke={chartColors.warn} strokeDasharray="4 3" label={{ value: "threshold", fontSize: 10, fill: chartColors.warn }} />
-        <Scatter data={admitted} fill={chartColors.good} name="admitted" />
-        <Scatter data={rejected} fill={chartColors.bad} name="rejected" />
+        <Scatter data={admitted} fill={chartColors.good} name="admitted" isAnimationActive={false} />
+        <Scatter data={rejected} fill={chartColors.bad} name="rejected" isAnimationActive={false} />
       </ScatterChart>
     </ResponsiveContainer>
   );

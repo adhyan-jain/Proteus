@@ -4,7 +4,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Stat } from "@/components/ui/stat";
 import { ClassDistributionChart } from "@/components/charts/class-distribution-chart";
-import { fmtInt } from "@/lib/utils";
+import { fmtDuration, fmtInt } from "@/lib/utils";
 
 export default async function ModelsPage() {
   const [models, datasets] = await Promise.all([api.models(), api.datasetsSummary()]);
@@ -67,7 +67,7 @@ export default async function ModelsPage() {
                           label="Split (train/val/test)"
                           value={`${fmtInt(d.split_sizes?.train)} / ${fmtInt(d.split_sizes?.val)} / ${fmtInt(d.split_sizes?.test)}`}
                         />
-                        <Stat label="Load time" value={`${d.load_seconds ?? "—"} s`} />
+                        <Stat label="Load time" value={fmtDuration(d.load_seconds)} />
                       </div>
                       {d.class_distribution && <ClassDistributionChart distribution={d.class_distribution} />}
                     </>

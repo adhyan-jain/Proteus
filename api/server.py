@@ -23,9 +23,11 @@ DATASETS_CACHE = Path(__file__).resolve().parent / "cache" / "datasets_summary.j
 
 app = FastAPI(title="Proteus API", description="Read-only local API over Proteus research results.")
 
+# Local-only, read-only, no auth, no cookies -- wide open CORS is fine here regardless of
+# which port the Next.js dev/prod server happens to run on.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=["*"],
     allow_methods=["GET"],
     allow_headers=["*"],
 )
