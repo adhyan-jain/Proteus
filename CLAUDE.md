@@ -2,8 +2,11 @@
 
 Proteus is a drift-aware, GAN-augmented intrusion detection system (IDS) for
 Software-Defined Networks (SDN). This file is the standing operating manual for any Claude
-Code session working in this repo. Read it before making changes. See also `ARCHITECTURE.md`
-(what exists and how it fits together) and `CHANGELOG.md` (how it got this way, in order).
+Code session working in this repo. **Read `STATUS.md` first** — it has the current running
+state, what's blocked, and what's mid-decision, updated at the end of every session. This file
+is the operating rules; `STATUS.md` is "where things actually are right now." See also
+`ARCHITECTURE.md` (what exists and how it fits together), `CHANGELOG.md` (how it got this way,
+in order), and `METRICS_HISTORY.md` (every real metric any run has produced, over time).
 
 ## Absolute rules — non-negotiable
 

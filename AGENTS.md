@@ -1,8 +1,10 @@
 # AGENTS.md — Proteus
 
-Operating rules for any AI coding agent (Claude Code, or otherwise) working in this repository.
-This mirrors `CLAUDE.md` — if you're a tool that reads `AGENTS.md` by convention rather than
-`CLAUDE.md`, this is the same information; keep the two in sync if either changes.
+Operating rules for any AI coding agent (Claude Code, Antigravity, Cursor, or otherwise) working
+in this repository. **Read `STATUS.md` first** — current running state, what's blocked, what's
+mid-decision, updated at the end of every session; this file is the operating rules, `STATUS.md`
+is "where things actually are right now." This file mirrors `CLAUDE.md` — if your tool reads
+`CLAUDE.md` instead, that's the same information; keep the two in sync if either changes.
 
 ## Absolute rules
 

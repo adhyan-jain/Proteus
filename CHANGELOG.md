@@ -2,7 +2,9 @@
 
 Chronological record of how the pipeline got to its current shape, including where the plan
 itself changed mid-project and why. This is a narrative log, not a commit-by-commit mirror —
-see `git log` for that. Dates are when the work happened (this machine's local time).
+see `git log` for that. Dates are when the work happened (this machine's local time). For
+current running state and open items, see `STATUS.md` — this file explains history, `STATUS.md`
+is the live handoff point.
 
 ## 2026-09-10 — Demo proof-of-concept (40-minute build)
 
@@ -126,14 +128,7 @@ attempt (more epochs, different learning rate, or excluding them from GAN augmen
 already-excluded too-rare classes) before Stage 4 begins — this is a real judgment call to make
 with the repo owner, not something to silently wave through or silently fix by lowering the bar.
 
-## Open items as of this entry
+## Current open items
 
-- Full-scale WGAN-GP training: restarted on GPU, in progress at time of writing — see the most
-  recent commit / `results/gan_full_diagnostics.json` (once it exists) for real outcomes.
-- Stages 3 (baseline + static-augmentation comparison at full scale), 4 (drift detector +
-  fidelity gate validated at real scale), 5-7 (live Mininet deployment, closed-loop
-  orchestration, 5-seed statistical evaluation): not yet built. Stages 5-7 specifically blocked
-  on Mininet installation (see above).
-- `RESULTS_SUMMARY.md` (final deliverable comparing the three conditions with confidence
-  intervals, honest comparison against the NetGuard reference point, and a list of any
-  divergences from the originally-planned architecture): not yet written — depends on the above.
+See `STATUS.md` — kept current there instead of duplicated here, so there's exactly one place
+that can go stale instead of two disagreeing ones.
