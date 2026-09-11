@@ -86,6 +86,34 @@ expected since sample generation uses fresh random noise each call.)
 
 ---
 
+## 2026-09-11 (later) — Full-scale baseline + static-augmentation classifiers (Stage 3 remainder)
+
+**Component**: `proteus/baseline_full.py::run_stage3_classifiers()` →
+`results/stage3_classifiers.json`
+**Scale**: real CICIDS2017, 1,470,014 train rows / 315,004 test rows, 25 classes, Random Forest
+(100 trees), single run.
+
+| Condition | Macro-F1 | Weighted-F1 | Fit time |
+|---|---:|---:|---:|
+| Baseline (no augmentation) | 0.8922 | 0.9926 | 346.1s |
+| Static augmentation | 0.8915 | 0.9926 | 413.0s |
+
+- Static augmentation: 2,000 synthetic samples added per GAN-admitted class (9 classes — the 3
+  over-dispersed classes from the Stage 3 WGAN-GP entry above were excluded, a documented
+  decision, see `proteus/gan_full.py::GAN_ADMIT_CLASSES`), 18,000 synthetic rows total added to
+  the 1,470,014 real training rows.
+- **Honest finding: static augmentation did not help, and macro-F1 is marginally lower**
+  (-0.0007) than the unaugmented baseline. Per-class deltas for the 9 augmented classes are
+  small in both directions (`DoS Hulk - Attempted` +0.0055, `Web Attack - XSS - Attempted`
+  -0.0034, five classes exactly 0.0000 unchanged, others within +/-0.001). This is not a
+  favorable result for the "augmentation helps" narrative and is reported as such — 2,000
+  synthetic rows per class is small relative to this Random Forest's total training set (100
+  trees over 1.47M real rows), and Random Forest's own bagging may already be fairly robust to
+  this degree of class imbalance without augmentation. Whether Proteus's actual contribution
+  (closed-loop, drift-triggered retraining — not yet built, Stage 6) shows a different picture
+  than this static, one-shot augmentation baseline is the real open question the full evaluation
+  needs to answer.
+
 ## Template for future entries
 
 ```

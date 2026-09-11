@@ -58,6 +58,22 @@ GAN_TARGET_CLASSES = [
     "DoS Slowhttptest - Attempted", "FTP-Patator", "DoS slowloris", "DoS GoldenEye",
 ]
 
+# After training (see results/gan_full_diagnostics.json, METRICS_HISTORY.md's Stage 3 entry),
+# 3 of the 12 GAN_TARGET_CLASSES came back flagged `likely_overdispersed`: the generator had
+# not learned their real (sometimes tightly-clustered) distribution and was producing
+# statistically implausible, far-more-scattered-than-real synthetic samples for them
+# (Bot - Attempted: ~3000x; DoS slowloris - Attempted: ~11x; FTP-Patator: ~3.2x, borderline).
+# Decision (made explicitly, not silently): exclude these from admission into any downstream
+# augmented training set, mirroring the existing rare-but-not-modelable exclusion pattern below
+# -- a class this GAN doesn't yet model faithfully shouldn't have its synthetic output trusted
+# just because it cleared the "not literally mode-collapsed" bar. The trained generator and its
+# diagnostics are kept (not deleted) as evidence; this can be revisited with a retrain (more
+# epochs / different LR / more critic steps) without redoing Stage 1/2.
+GAN_ADMIT_CLASSES = [
+    c for c in GAN_TARGET_CLASSES
+    if c not in ("Bot - Attempted", "DoS slowloris - Attempted", "FTP-Patator")
+]
+
 CHECKPOINT_DIR = Path(__file__).parent.parent / "checkpoints" / "gan_full"
 RESULTS_DIR = Path(__file__).parent.parent / "results"
 
