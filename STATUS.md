@@ -44,6 +44,12 @@ Check with `curl -s -o /dev/null -w "%{http_code}\n" http://localhost:PORT` — 
 - **Next.js mission-control UI**: 10 screens, real-data-or-explicit-empty-state, QA'd with
   Playwright (locally installed npm package — no Playwright MCP existed in this installation
   at the time; check again now, see "Tooling notes" below).
+- **Overview page pipeline diagram click-to-describe**: each of the 8 stage cards in the
+  closed-loop pipeline diagram (`frontend/src/components/pipeline/pipeline-diagram.tsx`) is now
+  clickable and shows a short plain-language explanation of that stage — a real request from
+  earlier in the project that had never been implemented (no `onClick` existed anywhere in
+  `frontend/src` before this). Verified with a local Playwright script against the running dev
+  server and `npm run build`.
 - **Ryu 4.34 controller**: working in `.venv-ryu` (Python 3.8), reproducible via
   `sdn/setup_ryu_venv.sh`. Verified with `ryu-manager --version` and a successful
   `ryu.app.simple_switch_13` load.

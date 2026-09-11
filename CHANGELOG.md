@@ -128,6 +128,19 @@ attempt (more epochs, different learning rate, or excluding them from GAN augmen
 already-excluded too-rare classes) before Stage 4 begins — this is a real judgment call to make
 with the repo owner, not something to silently wave through or silently fix by lowering the bar.
 
+## 2026-09-11 (later) — Pipeline diagram click-to-describe
+
+The Next.js Overview page's closed-loop pipeline diagram (`frontend/src/components/pipeline/
+pipeline-diagram.tsx`) previously only showed live run data per stage, with no way to click a
+stage for a plain-language explanation — a real request from earlier in the project that was
+never implemented. Each of the 8 stage cards is now a button; clicking one toggles a short
+(1-3 sentence) explanation of what that stage does in an info panel below the grid, styled to
+match the existing SOC-console design system (network-accent border/text, mono label). Default
+state shows a neutral "click a stage above to see what it does" prompt rather than nothing.
+Verified with a local Playwright script driving the running dev server: default prompt renders,
+clicking a stage swaps in its explanation, clicking the same stage again toggles back to the
+default, and `npm run build` passes with no TypeScript errors.
+
 ## Current open items
 
 See `STATUS.md` — kept current there instead of duplicated here, so there's exactly one place
