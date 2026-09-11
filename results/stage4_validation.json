@@ -1,0 +1,167 @@
+{
+  "drift_detector_validation": {
+    "train_days": [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday"
+    ],
+    "holdout_day": "Friday",
+    "n_train_rows": 1241963,
+    "n_stable_holdout_rows": 310491,
+    "n_friday_rows": 547567,
+    "friday_only_attack_classes": [
+      "Bot",
+      "Bot - Attempted",
+      "DDoS",
+      "PortScan"
+    ],
+    "known_stable_result": {
+      "fired": false,
+      "statistic": 0.0027493479038039753,
+      "p_value": 0.8997989192978728,
+      "alpha": 0.05
+    },
+    "known_drifted_result": {
+      "fired": true,
+      "statistic": 0.32863123573918807,
+      "p_value": 0.0,
+      "alpha": 0.05
+    },
+    "correctly_separated": true
+  },
+  "fidelity_gate_validation": {
+    "threshold": 0.25,
+    "entries": [
+      {
+        "class": "DoS Hulk - Attempted",
+        "kind": "real_synthetic_batch",
+        "mmd_score": 0.01021829874269875,
+        "admitted": true,
+        "expected_admitted": true
+      },
+      {
+        "class": "DoS Hulk - Attempted",
+        "kind": "injected_noise",
+        "mmd_score": 0.6596554067648669,
+        "admitted": false,
+        "expected_admitted": false
+      },
+      {
+        "class": "Web Attack - XSS - Attempted",
+        "kind": "real_synthetic_batch",
+        "mmd_score": 0.2810597032706868,
+        "admitted": false,
+        "expected_admitted": true
+      },
+      {
+        "class": "Web Attack - XSS - Attempted",
+        "kind": "injected_noise",
+        "mmd_score": 0.8004104726621354,
+        "admitted": false,
+        "expected_admitted": false
+      },
+      {
+        "class": "Bot",
+        "kind": "real_synthetic_batch",
+        "mmd_score": 0.76791425678768,
+        "admitted": false,
+        "expected_admitted": true
+      },
+      {
+        "class": "Bot",
+        "kind": "injected_noise",
+        "mmd_score": 0.8707640102569467,
+        "admitted": false,
+        "expected_admitted": false
+      },
+      {
+        "class": "Web Attack - Brute Force - Attempted",
+        "kind": "real_synthetic_batch",
+        "mmd_score": 0.26418804914762345,
+        "admitted": false,
+        "expected_admitted": true
+      },
+      {
+        "class": "Web Attack - Brute Force - Attempted",
+        "kind": "injected_noise",
+        "mmd_score": 0.6144245423694484,
+        "admitted": false,
+        "expected_admitted": false
+      },
+      {
+        "class": "DoS Slowhttptest",
+        "kind": "real_synthetic_batch",
+        "mmd_score": 0.021417492048403375,
+        "admitted": true,
+        "expected_admitted": true
+      },
+      {
+        "class": "DoS Slowhttptest",
+        "kind": "injected_noise",
+        "mmd_score": 0.6496124424657994,
+        "admitted": false,
+        "expected_admitted": false
+      },
+      {
+        "class": "SSH-Patator",
+        "kind": "real_synthetic_batch",
+        "mmd_score": 0.3096511102898429,
+        "admitted": false,
+        "expected_admitted": true
+      },
+      {
+        "class": "SSH-Patator",
+        "kind": "injected_noise",
+        "mmd_score": 0.5490386582602714,
+        "admitted": false,
+        "expected_admitted": false
+      },
+      {
+        "class": "DoS Slowhttptest - Attempted",
+        "kind": "real_synthetic_batch",
+        "mmd_score": 0.46780949132108546,
+        "admitted": false,
+        "expected_admitted": true
+      },
+      {
+        "class": "DoS Slowhttptest - Attempted",
+        "kind": "injected_noise",
+        "mmd_score": 0.4678094913145763,
+        "admitted": false,
+        "expected_admitted": false
+      },
+      {
+        "class": "DoS slowloris",
+        "kind": "real_synthetic_batch",
+        "mmd_score": 0.009480346854787935,
+        "admitted": true,
+        "expected_admitted": true
+      },
+      {
+        "class": "DoS slowloris",
+        "kind": "injected_noise",
+        "mmd_score": 0.5467514273223354,
+        "admitted": false,
+        "expected_admitted": false
+      },
+      {
+        "class": "DoS GoldenEye",
+        "kind": "real_synthetic_batch",
+        "mmd_score": 0.013431049758055535,
+        "admitted": true,
+        "expected_admitted": true
+      },
+      {
+        "class": "DoS GoldenEye",
+        "kind": "injected_noise",
+        "mmd_score": 0.49024244435029274,
+        "admitted": false,
+        "expected_admitted": false
+      }
+    ],
+    "n_correct": 13,
+    "n_total": 18
+  },
+  "wall_clock_seconds": 596.9264266490936
+}

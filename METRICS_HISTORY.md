@@ -114,6 +114,48 @@ expected since sample generation uses fresh random noise each call.)
   than this static, one-shot augmentation baseline is the real open question the full evaluation
   needs to answer.
 
+## 2026-09-11 (later) — Drift detector + fidelity gate validated at real scale (Stage 4)
+
+**Component**: `proteus/validate_full.py::run_stage4()` → `results/stage4_validation.json`
+**Scale**: real CICIDS2017, real temporal (day-based) split, single run.
+
+### Drift detector — clean pass
+
+Real temporal structure, not synthetic injection: trained a reference classifier on
+Monday-Thursday (1,241,963 rows), validated against a Mon-Thu holdout (known-stable, IID with
+training) and the full Friday capture (known-drifted — 547,567 rows). Friday genuinely contains
+attack families absent from Monday-Thursday entirely: **Bot, Bot - Attempted, DDoS, PortScan**.
+
+| Holdout | Expected | KS statistic | p-value | Fired |
+|---|---|---:|---:|---|
+| Mon-Thu (known-stable) | should NOT fire | 0.0027 | 0.900 | No |
+| Friday (known-drifted) | should fire | 0.329 | ~0.0 | **Yes** |
+
+**Correctly separated known-good from known-bad.** This is a real pass on real data's actual
+temporal structure, per the ground rule requiring exactly this before Stage 5.
+
+### Fidelity gate — passes on the safety-critical side, weaker on the other
+
+Same test as the demo, at full scale: a real WGAN-GP-generated batch (9 GAN-admitted classes)
+vs. real recent data (should admit) and injected Gaussian noise at 5x the real per-feature
+scale (should reject). Threshold = 0.25 MMD (unchanged from the demo).
+
+- **Noise rejection: 9/9 (100%)** — the gate never once let injected noise through. This is the
+  safety-critical direction (never trust something it shouldn't) and it's perfect.
+- **Real-batch admission: 4/9 (44%)** — `DoS Hulk - Attempted` (0.010), `DoS Slowhttptest`
+  (0.021), `DoS slowloris` (0.010), `DoS GoldenEye` (0.013) were correctly admitted; `Web Attack
+  - XSS - Attempted` (0.281), `Bot` (0.768), `Web Attack - Brute Force - Attempted` (0.264),
+  `SSH-Patator` (0.310), `DoS Slowhttptest - Attempted` (0.468) were rejected despite being real
+  generator output, not noise.
+- **Overall: 13/18 correct.**
+- **Honest interpretation**: this is not a failure of the safety property (nothing bad gets
+  through), but it does mean the gate is currently more conservative than the diversity
+  diagnostic from Stage 3 alone would suggest — several classes that passed the per-class
+  diversity check (not mode-collapsed, not over-dispersed) still fail the stricter
+  distribution-level MMD comparison against real data. This is a real, not-yet-resolved
+  tension between two different fidelity signals, worth noting for the paper rather than only
+  reporting the flattering noise-rejection number.
+
 ## Template for future entries
 
 ```
