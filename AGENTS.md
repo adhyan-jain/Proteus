@@ -49,3 +49,10 @@ Quick orientation: `proteus/{data,baseline,gan,drift,fidelity,stream,pipeline}.p
 demo backend behind `app.py`; `proteus/{data_full,gan_full}.py` is the active
 full-scale/paper-grade backend; `api/` + `frontend/` is the separate Next.js UI; `sdn/` is the
 Ryu controller venv setup; `data/MANIFEST.md` is the verified-source record for every dataset.
+
+## Metrics tracking — standing rule
+
+**Append to `METRICS_HISTORY.md` every time a run produces new real metrics** (training,
+evaluation, diagnostics) — follow its template, cite the real artifact path, never a backfilled
+or estimated number. This is how the project tracks whether things are actually improving over
+time; don't let a run's numbers live only in a JSON file or a chat transcript.

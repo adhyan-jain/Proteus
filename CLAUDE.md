@@ -110,3 +110,8 @@ Code session working in this repo. Read it before making changes. See also `ARCH
 4. Update `ARCHITECTURE.md` and `CHANGELOG.md` when you land a real architectural or
    pipeline-stage change — not for every commit, but whenever a future session would need this
    context to understand the system's current shape or why it diverged from an earlier plan.
+5. **Append to `METRICS_HISTORY.md` whenever a run produces new real metrics** — a training
+   run, an evaluation pass, a diagnostic. This is a standing rule, not optional: the file exists
+   specifically so metrics are comparable across runs over time instead of scattered across
+   individual JSON artifacts and scrollback. Follow its template; every number must trace to an
+   artifact that actually exists on disk (note the path), never a backfilled or estimated value.

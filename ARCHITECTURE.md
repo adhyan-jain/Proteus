@@ -1,7 +1,8 @@
 # Proteus — Current Architecture
 
 Snapshot of what exists right now and how it fits together. For how it got here, see
-`CHANGELOG.md`. For operating rules, see `CLAUDE.md`/`AGENTS.md`.
+`CHANGELOG.md`. For every real metric any run has produced, over time, see
+`METRICS_HISTORY.md`. For operating rules, see `CLAUDE.md`/`AGENTS.md`.
 
 ## The idea, in one paragraph
 
