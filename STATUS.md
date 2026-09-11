@@ -24,9 +24,14 @@ or reboot since this was written would have stopped them):
 # Proteus API (serves results.pkl + dataset summaries as JSON for the Next.js UI)
 .venv/bin/uvicorn api.server:app --port 8000    # http://localhost:8000
 
-# Next.js mission-control UI        — http://localhost:3000
-cd frontend && npm run dev
+# Next.js mission-control UI        — http://localhost:3300
+cd frontend && npm run dev -- -p 3300
 ```
+**Port note, learned the hard way**: this machine runs other, unrelated Node/Next.js projects
+(StoryTrace on :3000, EchoTales on :3100) — don't assume a 200 response on :3000/:3100 means
+Proteus's frontend is up; it might be someone else's dev server. Always confirm with the page
+`<title>` (`curl -s http://localhost:PORT | grep -o "<title>[^<]*</title>"`) before trusting a
+status check, not just the HTTP code. Proteus's frontend now runs on :3300 to avoid this.
 Check with `curl -s -o /dev/null -w "%{http_code}\n" http://localhost:PORT` — if any return
 `000`, that server isn't up; restart with the commands above.
 
