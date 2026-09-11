@@ -141,6 +141,34 @@ Verified with a local Playwright script driving the running dev server: default 
 clicking a stage swaps in its explanation, clicking the same stage again toggles back to the
 default, and `npm run build` passes with no TypeScript errors.
 
+## 2026-09-11 (later still) — Stage 5: Mininet topology + Ryu IDS controller app (written, not yet run)
+
+With Mininet 2.3.1b4 now installed on this machine, built the pieces Stage 0's smoke test and
+Stage 5 need: a trivial 4-host/2-switch Mininet topology (`sdn/topology/topo.py`, run under
+system python3 since Mininet lives there, not `.venv-ryu`) pointed at a real Ryu controller app
+(`sdn/topology/ryu_ids_app.py`, `.venv-ryu`), extending `ryu.app.simple_switch_13` with L2
+forwarding widened to match on L3/L4 fields plus a periodic OpenFlow flow-stats poll.
+
+The flow-stats export is mapped onto `proteus/data_full.py`'s unified schema column-naming
+convention by a new pure function, `sdn/topology/feature_mapper.py`, deliberately factored out
+stdlib-only so it's unit-testable without importing ryu. Its docstring is explicit about the
+real gap between what CICFlowMeter computes over a completed bidirectional flow (~80 features
+incl. inter-arrival-time stats, TCP flag counts, backward-direction everything) and what a live
+OpenFlow flow-stats poll can give (aggregate packet/byte counters, duration, ports, protocol) —
+10 schema columns are honestly derivable, the rest are left absent rather than fabricated.
+7 unit tests, all passing.
+
+This session had no sudo access, and Mininet requires root at runtime (not just install time),
+so none of this could be run end-to-end here — only syntax/import-checked, and `ryu-manager
+--verbose` confirmed to load the app cleanly with no live switch involved. A smoke-test script
+(`sdn/topology/smoke_test.sh`) is written for the repo owner to run with `sudo`, doing exactly
+what Stage 0 originally asked: bring the topology up, confirm the controller attaches, inject a
+benign and an attack-like traffic sample (via a new stdlib-only `gen_traffic.py`, since
+hping3/nmap aren't installed here), confirm both flow through the controller path, tear down
+cleanly. See `STATUS.md`'s Blocked section for the exact command and what success looks like.
+Stage 6 (wiring a trained classifier onto this live stream) is intentionally not started —
+`ryu_ids_app.py`'s `on_schema_row()` is the documented extension point for it.
+
 ## Current open items
 
 See `STATUS.md` — kept current there instead of duplicated here, so there's exactly one place

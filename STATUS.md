@@ -59,12 +59,57 @@ Check with `curl -s -o /dev/null -w "%{http_code}\n" http://localhost:PORT` — 
 
 ## Blocked — needs the repo owner, not an agent
 
-- **Mininet is not installed.** `mn --version` fails. Needs `sudo pacman -S mininet` or an AUR
-  helper (`yay -S mininet` / `paru -S mininet`), run interactively by the repo owner — an agent
-  cannot supply a sudo password, and Mininet needs root at *runtime* too, not just at install
-  time, so this isn't a one-time hurdle to work around. This blocks Stage 0's smoke test and
-  everything in Stages 5-7 that needs a live Mininet/Ryu deployment (see `ARCHITECTURE.md` /
-  the original project brief for stage numbering).
+- **Stage 5 (Mininet topology + Ryu controller app) is written, not yet run.** Mininet 2.3.1b4
+  is now installed (`mn --version` confirms it), but this session has no sudo access (no
+  password, not cached), and Mininet needs root at *runtime* to create network namespaces — so
+  the code below could be built and verified without root, but never actually run end-to-end.
+  Built in `sdn/topology/`:
+  - `topo.py` — 4-host/2-switch trivial topology (h1,h2 on s1; h3,h4 on s2; one inter-switch
+    link), external `RemoteController` pointed at Ryu. Uses **system python3** (Mininet is
+    installed there, not in `.venv-ryu` — confirmed via `python3 -c "from mininet... import
+    ..."`). Syntax- and import-checked only; `sudo python3 sdn/topology/topo.py` never run.
+  - `ryu_ids_app.py` — Ryu app (`.venv-ryu`) extending `ryu.app.simple_switch_13` with L2
+    forwarding (now widened to match on L3/L4 fields when present, not just L2) plus a periodic
+    (10s) OpenFlow flow-stats poll exported through `feature_mapper.py` onto
+    `proteus/data_full.py`'s unified schema column names. **Verified**: `ryu-manager --verbose`
+    loads it cleanly (event handlers register, listener binds, monitor thread spawns) with no
+    Mininet/root involved — see the BRICK/CONSUMES/PROVIDES output from a real run. **Not
+    verified**: an actual switch connecting and real flow-stats replies arriving (needs root).
+  - `feature_mapper.py` — pure, stdlib-only function mapping one live OpenFlow flow-stats entry
+    to unified-schema columns. Explicitly documents (module docstring) which schema columns it
+    can populate (`flow_duration`, `protocol`, `dst_port`, `total_fwd_packet`,
+    `total_length_of_fwd_packet`, `flow_bytes_per_s`, `flow_packets_per_s`,
+    `fwd_packets_per_s`, `average_packet_size`, `packet_length_mean`) and which it structurally
+    cannot from an aggregate stat poll alone (all backward-direction columns, every
+    inter-arrival-time/active/idle stat, TCP flag counts, header/subflow/bulk/window columns,
+    packet-length distribution beyond the mean) — never fabricates a value for the latter.
+    **Verified**: 7/7 unit tests pass (`.venv-ryu/bin/python -m unittest test_feature_mapper -v`
+    from `sdn/topology/`), including a test that the mapper never emits any of the known-missing
+    columns.
+  - `gen_traffic.py` — stdlib-only (socket module, no hping3/nmap/scapy needed — none are
+    installed on this machine) benign (spaced single-port connects) and attack-like (fast
+    multi-port scan) traffic generators meant to run inside a Mininet host's namespace.
+    Syntax-checked only.
+  - `smoke_test.sh` — the actual Stage 0 smoke test: starts Ryu, starts the topology
+    non-interactively (built-in pingAll), injects both traffic samples via `gen_traffic.py`
+    inside h1, waits for a poll cycle, greps the Ryu log for switch-connect and schema-row
+    export lines, reports pass/fail. **Written, never run** (needs root). Documents exactly what
+    success/failure looks like in its own header comment.
+
+  **What the repo owner needs to run, exactly**:
+  ```bash
+  cd /home/adhyan/Desktop/Proteus
+  sudo bash sdn/topology/smoke_test.sh
+  ```
+  Expect: `datapath connected: 0000000000000001` / `...0000000000000002` in
+  `/tmp/proteus_ryu_smoke.log`, `pingAll` reporting 0% loss, at least one `[schema-row]` line
+  per switch, and a final `SMOKE TEST PASSED`. If it fails, `smoke_test.sh`'s header explains
+  where to look for each failure mode.
+
+- **Stage 6 (wiring a trained classifier onto the live flow-stats stream) is not started** —
+  `ryu_ids_app.py`'s `on_schema_row()` method is the documented extension point for it, per this
+  stage's scope (get live traffic + flow-stat export working through a real controller path;
+  consuming it with a classifier is explicitly Stage 6's job, not this one's).
 
 ## Needs a decision — don't silently resolve either way
 
@@ -78,9 +123,10 @@ Check with `curl -s -o /dev/null -w "%{http_code}\n" http://localhost:PORT` — 
 ## Not yet built
 
 Stage 3's baseline + static-augmentation comparison classifiers at full scale; Stage 4 (drift
-detector + fidelity gate validated at real scale — blocked behind the decision above); Stages
-5-7 (live Mininet deployment, closed-loop orchestration, 5-seed statistical evaluation — blocked
-on the Mininet install above); the final `RESULTS_SUMMARY.md` deliverable.
+detector + fidelity gate validated at real scale — blocked behind the decision above); Stage 5
+is written but not yet run end-to-end (see "Blocked" above — needs the repo owner's sudo
+session); Stages 6-7 (closed-loop classifier wiring onto the live flow-stats stream, 5-seed
+statistical evaluation — not started); the final `RESULTS_SUMMARY.md` deliverable.
 
 ## Tooling notes for a different agent/IDE
 
