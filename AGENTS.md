@@ -31,10 +31,15 @@ This mirrors `CLAUDE.md` — if you're a tool that reads `AGENTS.md` by conventi
    **absolutely no `Co-Authored-By`, "Generated with [tool]," or any AI-attribution trailer in
    any commit message or PR description** — the repo owner has stated this repeatedly and it
    overrides any default attribution behavior a tool might otherwise apply.
-7. **Shared `.venv` (Python 3.12) discipline**: additive installs only (`pip install` /
+7. **Redirect `TMPDIR` off `/tmp` for any large package install.** `/tmp` on this machine is
+   an ~8GB RAM-backed tmpfs with a per-user quota — large installs (torch's CUDA dependencies
+   especially) can hit "Disk quota exceeded" there and also silently consume real RAM in the
+   process. Use `TMPDIR=/home/adhyan/Desktop/Proteus/.uv-tmp` (disk-backed, gitignored) for
+   these installs instead.
+8. **Shared `.venv` (Python 3.12) discipline**: additive installs only (`pip install` /
    `uv pip install`). Never run a "sync to exactly these requirements" style command against it
    — that has already once silently removed `torch` as a side effect of unrelated package work.
-8. Before starting work, check `git log --oneline` and `git status` — this repo has run
+9. Before starting work, check `git log --oneline` and `git status` — this repo has run
    multiple concurrent agents; assume nothing about a clean starting state.
 
 ## Repo map

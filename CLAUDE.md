@@ -59,7 +59,15 @@ Code session working in this repo. Read it before making changes. See also `ARCH
    - Before staging, run `git status` and only `git add` the specific files you actually
      changed — this repo has had multiple agents working in it concurrently; never sweep up
      unrelated in-flight changes with `git add -A`.
-9. **Shared environment discipline**: `.venv` (Python 3.12) is shared across the whole backend
+9. **`/tmp` is a small RAM-backed tmpfs on this machine** (`df -h /tmp` → ~8GB, with a
+   per-user quota that can bite before the filesystem even looks full — a "Disk quota exceeded"
+   error rather than "No space left on device" is the tell). Extracting large packages there
+   (e.g. torch's CUDA dependencies, several hundred MB to 1GB+ each) both risks that quota and
+   silently eats real system RAM, worsening OOM risk. For any large `pip`/`uv pip install`,
+   set `TMPDIR` to a disk-backed path first, e.g.
+   `TMPDIR=/home/adhyan/Desktop/Proteus/.uv-tmp uv pip install ...` (that directory is
+   gitignored; create it if it doesn't exist) — don't let a large install default to `/tmp`.
+10. **Shared environment discipline**: `.venv` (Python 3.12) is shared across the whole backend
    (data pipeline, baseline classifier, both WGAN-GP modules, the API layer). Adding packages to
    it is fine; **removing or syncing it to a narrower requirement set is not** — that has
    already once silently deleted `torch` from the shared venv as a side effect of another
