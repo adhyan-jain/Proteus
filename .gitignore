@@ -5,6 +5,7 @@ __pycache__/
 *.pyc
 data/raw/
 *.pkl
+results/*_loss_log.json
 checkpoints/
 .uv-tmp/
 node_modules/

@@ -87,6 +87,45 @@ contrary to the assumption that a `nohup`'d process is fully independent of its 
 session. Treat any long-running background job as at-risk if the agent that launched it gets
 stopped; verify it's still alive with a fresh `ps` check rather than assuming.
 
+## 2026-09-11 (later) — Full-scale WGAN-GP trained on GPU; real, mixed diversity results
+
+Restarted Stage 3's WGAN-GP training clean after the GPU fix (previous CPU run had also died
+mid-way, likely collateral from an earlier agent-stop event). 80 epochs, ~30 minutes wall-clock
+on the RTX 4060 (vs. an estimated ~65+ minutes the same run would have taken on CPU at the rate
+observed before). GPU utilization during training was modest (~8%) — this particular model
+(3-layer generator/critic, batch size 64) is small enough that per-step Python/numpy batch
+construction dominates over GPU compute time; the GPU rule is satisfied (training genuinely runs
+on CUDA, not silently falling back to CPU) but this is not a compute-bound workload, worth
+knowing honestly rather than implying a bigger speedup than what actually happened.
+
+The loss-plateau stopping criterion never triggered — generator loss climbed from ~5.5 to
+~212 over the full 80 epochs and never dropped below the configured std threshold, even though
+by the last ~10 epochs the loss had visibly flattened out numerically (208-212 range). The
+threshold as configured is miscalibrated for a loss at this scale; this is a diagnostic-code
+issue to fix before relying on the plateau criterion for early stopping in a future run, not
+evidence the generator failed to train.
+
+**Real, honest finding from the diversity diagnostics** (built to catch mode collapse — real
+attack samples vs. generated ones, per class, compared by mean pairwise distance): **zero
+classes showed mode collapse** (the classic failure mode: generator producing near-identical
+samples). But the diagnostic as originally written only checked for *under*-diversity — it
+would have silently missed the opposite failure, which did occur: **3 of 12 GAN-target classes
+show generated samples far more scattered than the real distribution** ("Bot - Attempted" at
+~3160x the real class's pairwise distance, "DoS slowloris - Attempted" at ~11x, "FTP-Patator" at
+~3.2x, borderline). This means the generator hasn't actually learned those classes' real
+(sometimes very tightly-clustered) distributions — it's producing statistically implausible,
+over-scattered synthetic data for them, not useful augmentation. Added a symmetric
+`likely_overdispersed` flag (ratio > 3.0, mirroring the existing `likely_mode_collapse` at
+ratio < 0.3) to `proteus/gan_full.py` so this failure mode is caught automatically going
+forward, and recomputed diagnostics from the saved epoch-80 checkpoint with the new flag.
+Real numbers in `results/gan_full_diagnostics.json`.
+
+**Not yet decided**: whether these 3 over-dispersed classes are an acceptable, documented
+limitation for Stage 3's "sanity check must pass" bar, or whether they need another training
+attempt (more epochs, different learning rate, or excluding them from GAN augmentation like the
+already-excluded too-rare classes) before Stage 4 begins — this is a real judgment call to make
+with the repo owner, not something to silently wave through or silently fix by lowering the bar.
+
 ## Open items as of this entry
 
 - Full-scale WGAN-GP training: restarted on GPU, in progress at time of writing — see the most

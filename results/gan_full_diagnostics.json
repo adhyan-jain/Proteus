@@ -1,0 +1,149 @@
+{
+  "epochs_run": 80,
+  "max_epochs": 80,
+  "stopped_reason": "reached max_epochs=80 without loss plateau",
+  "wall_clock_seconds": 1806.0887472629547,
+  "steps_per_epoch": 328,
+  "gan_target_classes": [
+    "DoS Hulk - Attempted",
+    "Web Attack - XSS - Attempted",
+    "Bot",
+    "Web Attack - Brute Force - Attempted",
+    "Bot - Attempted",
+    "DoS slowloris - Attempted",
+    "DoS Slowhttptest",
+    "SSH-Patator",
+    "DoS Slowhttptest - Attempted",
+    "FTP-Patator",
+    "DoS slowloris",
+    "DoS GoldenEye"
+  ],
+  "train_counts_per_target_class": {
+    "DoS Hulk - Attempted": 405,
+    "Web Attack - XSS - Attempted": 456,
+    "Bot": 517,
+    "Web Attack - Brute Force - Attempted": 850,
+    "Bot - Attempted": 1029,
+    "DoS slowloris - Attempted": 1194,
+    "DoS Slowhttptest": 1219,
+    "SSH-Patator": 2086,
+    "DoS Slowhttptest - Attempted": 2357,
+    "FTP-Patator": 2781,
+    "DoS slowloris": 2801,
+    "DoS GoldenEye": 5297
+  },
+  "final_epoch_g_loss": 212.1014145641792,
+  "final_epoch_g_loss_window_std": 0.24762207320012944,
+  "diversity_diagnostics": {
+    "DoS Hulk - Attempted": {
+      "n_val_real": 87,
+      "n_synth_checked": 87,
+      "real_diversity_mean_pairwise_dist": 68923440.0,
+      "synth_diversity_mean_pairwise_dist": 73637016.0,
+      "synth_to_real_diversity_ratio": 1.068388577238745,
+      "likely_mode_collapse": false,
+      "likely_overdispersed": false
+    },
+    "Web Attack - XSS - Attempted": {
+      "n_val_real": 98,
+      "n_synth_checked": 98,
+      "real_diversity_mean_pairwise_dist": 1415898.375,
+      "synth_diversity_mean_pairwise_dist": 3067038.0,
+      "synth_to_real_diversity_ratio": 2.1661427501814883,
+      "likely_mode_collapse": false,
+      "likely_overdispersed": false
+    },
+    "Bot": {
+      "n_val_real": 111,
+      "n_synth_checked": 111,
+      "real_diversity_mean_pairwise_dist": 2636620.25,
+      "synth_diversity_mean_pairwise_dist": 5379309.5,
+      "synth_to_real_diversity_ratio": 2.040229153212337,
+      "likely_mode_collapse": false,
+      "likely_overdispersed": false
+    },
+    "Web Attack - Brute Force - Attempted": {
+      "n_val_real": 182,
+      "n_synth_checked": 182,
+      "real_diversity_mean_pairwise_dist": 1616517.75,
+      "synth_diversity_mean_pairwise_dist": 3053209.75,
+      "synth_to_real_diversity_ratio": 1.8887573303788343,
+      "likely_mode_collapse": false,
+      "likely_overdispersed": false
+    },
+    "Bot - Attempted": {
+      "n_val_real": 220,
+      "n_synth_checked": 200,
+      "real_diversity_mean_pairwise_dist": 1139.6043701171875,
+      "synth_diversity_mean_pairwise_dist": 3601195.0,
+      "synth_to_real_diversity_ratio": 3160.039654489639,
+      "likely_mode_collapse": false,
+      "likely_overdispersed": true
+    },
+    "DoS slowloris - Attempted": {
+      "n_val_real": 256,
+      "n_synth_checked": 200,
+      "real_diversity_mean_pairwise_dist": 317736.75,
+      "synth_diversity_mean_pairwise_dist": 3475752.75,
+      "synth_to_real_diversity_ratio": 10.939095808086412,
+      "likely_mode_collapse": false,
+      "likely_overdispersed": true
+    },
+    "DoS Slowhttptest": {
+      "n_val_real": 261,
+      "n_synth_checked": 200,
+      "real_diversity_mean_pairwise_dist": 146493248.0,
+      "synth_diversity_mean_pairwise_dist": 141854064.0,
+      "synth_to_real_diversity_ratio": 0.9683317554676649,
+      "likely_mode_collapse": false,
+      "likely_overdispersed": false
+    },
+    "SSH-Patator": {
+      "n_val_real": 447,
+      "n_synth_checked": 200,
+      "real_diversity_mean_pairwise_dist": 5572314.5,
+      "synth_diversity_mean_pairwise_dist": 4786405.0,
+      "synth_to_real_diversity_ratio": 0.8589617474031661,
+      "likely_mode_collapse": false,
+      "likely_overdispersed": false
+    },
+    "DoS Slowhttptest - Attempted": {
+      "n_val_real": 505,
+      "n_synth_checked": 200,
+      "real_diversity_mean_pairwise_dist": 30717942.0,
+      "synth_diversity_mean_pairwise_dist": 33070592.0,
+      "synth_to_real_diversity_ratio": 1.076588789704727,
+      "likely_mode_collapse": false,
+      "likely_overdispersed": false
+    },
+    "FTP-Patator": {
+      "n_val_real": 596,
+      "n_synth_checked": 200,
+      "real_diversity_mean_pairwise_dist": 1130874.375,
+      "synth_diversity_mean_pairwise_dist": 3658471.5,
+      "synth_to_real_diversity_ratio": 3.235082146060653,
+      "likely_mode_collapse": false,
+      "likely_overdispersed": true
+    },
+    "DoS slowloris": {
+      "n_val_real": 600,
+      "n_synth_checked": 200,
+      "real_diversity_mean_pairwise_dist": 168120784.0,
+      "synth_diversity_mean_pairwise_dist": 153241712.0,
+      "synth_to_real_diversity_ratio": 0.91149772416003,
+      "likely_mode_collapse": false,
+      "likely_overdispersed": false
+    },
+    "DoS GoldenEye": {
+      "n_val_real": 1135,
+      "n_synth_checked": 200,
+      "real_diversity_mean_pairwise_dist": 85298984.0,
+      "synth_diversity_mean_pairwise_dist": 73569696.0,
+      "synth_to_real_diversity_ratio": 0.8624920550050162,
+      "likely_mode_collapse": false,
+      "likely_overdispersed": false
+    }
+  },
+  "n_likely_mode_collapse": 0,
+  "n_likely_overdispersed": 3
+}

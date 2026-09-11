@@ -318,19 +318,29 @@ def run_stage2(max_epochs=MAX_EPOCHS):
         synth_div = mean_pairwise_distance(synth)
         ratio = synth_div / real_div if real_div and not np.isnan(real_div) and real_div > 0 \
             else float("nan")
+        # Mode collapse (ratio << 1, generator producing near-identical samples) is the
+        # classic failure mode this diagnostic was built to catch. But the opposite failure --
+        # the generator producing samples far MORE scattered than the real distribution, i.e.
+        # not learning the real (possibly tightly-clustered) distribution at all and instead
+        # emitting near-random output in feature space -- is just as real a quality problem and
+        # was going undetected: a class could show ratio=2900 (wildly over-dispersed, clearly
+        # not modeling the real distribution) and this diagnostic would report nothing wrong.
+        # 3.0 is the symmetric counterpart to the 0.3 mode-collapse threshold (roughly 1/0.3).
+        likely_mode_collapse = bool(not np.isnan(ratio) and ratio < 0.3)
+        likely_overdispersed = bool(not np.isnan(ratio) and ratio > 3.0)
         diagnostics[cname] = {
             "n_val_real": int(len(real_val)), "n_synth_checked": int(n_sample),
             "real_diversity_mean_pairwise_dist": real_div,
             "synth_diversity_mean_pairwise_dist": synth_div,
             "synth_to_real_diversity_ratio": ratio,
-            "likely_mode_collapse": bool(not np.isnan(ratio) and ratio < 0.3),
+            "likely_mode_collapse": likely_mode_collapse,
+            "likely_overdispersed": likely_overdispersed,
         }
+        flag = ("  <-- POSSIBLE MODE COLLAPSE" if likely_mode_collapse else
+                "  <-- OVER-DISPERSED (not modeling real distribution)" if likely_overdispersed
+                else "")
         log.info(f"  diversity[{cname}]: real={real_div:.3f} synth={synth_div:.3f} "
-                 f"ratio={ratio:.3f}{'  <-- POSSIBLE MODE COLLAPSE' if diagnostics[cname]['likely_mode_collapse'] else ''}")
-
-    excluded_too_rare = [c for c, n in
-                          sorted(train_counts.items(), key=lambda x: x[1])] \
-        if False else None  # placeholder not used; see report below
+                 f"ratio={ratio:.3f}{flag}")
 
     summary = {
         "epochs_run": epoch,
