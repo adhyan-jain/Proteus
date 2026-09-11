@@ -49,12 +49,24 @@ each (83 CICFlowMeter features + `Label`).
 
 ## InSDN
 
-**Source**: Kaggle dataset `badcodebuilder/insdn-dataset` (re-upload of Elsayed et al.'s InSDN:
-A Novel SDN Intrusion Dataset, IEEE Access 8, 2020). No official non-Kaggle mirror exists;
-acquired via the Kaggle API once credentials were available.
+**Source**: official distribution from the dataset authors' own institutional lab page —
+UCD ASEADOS Lab (School of Computer Science, University College Dublin), the home
+institution of Elsayed, Le-Khac & Jurcut, "InSDN: A Novel SDN Intrusion Dataset," IEEE
+Access, vol. 8, pp. 165263–165284, 2020.
 
-- Retrieved: 2026-09-10
-- Extracted to `data/raw/insdn/InSDN_DatasetCSV/` (gitignored, not committed)
+- Download URL: `https://aseados.ucd.ie/datasets/SDN/InSDN_DatasetCSV.zip`
+- Institutional page: `https://aseados.ucd.ie/datasets/SDN/`
+- Paper/repository record: `http://hdl.handle.net/10197/12615` (UCD Research Repository)
+- Retrieved: 2026-09-11
+- File size: 19,302,607 bytes (matches the page's reported ~18M)
+- `sha256(InSDN_DatasetCSV.zip) = ee89ec66705c529fef26b27dd18c6aa56d469006f7ade9cd92fd4a503e320d7`
+- Extracted to `data/raw/insdn_official/extracted/InSDN_DatasetCSV/` (gitignored, not committed)
+
+An earlier version of this pipeline used a Kaggle community re-upload
+(`badcodebuilder/insdn-dataset`) before this official source was located — that copy has been
+superseded and is no longer referenced by `proteus/data_full.py`. Row-for-row content is
+identical (verified by matching row counts across all three files), but the official UCD
+source is now the source of record.
 
 | File | Rows | SHA256 |
 |---|---|---|

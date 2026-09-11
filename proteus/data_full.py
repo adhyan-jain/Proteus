@@ -19,7 +19,7 @@ log = logging.getLogger("proteus.data_full")
 
 DATA_DIR = Path(__file__).parent.parent / "data"
 CICIDS2017_DIR = DATA_DIR / "raw" / "cicids2017"
-INSDN_DIR = DATA_DIR / "raw" / "insdn" / "InSDN_DatasetCSV"
+INSDN_DIR = DATA_DIR / "raw" / "insdn_official" / "extracted" / "InSDN_DatasetCSV"
 
 CICIDS2017_FILES = [
     "Monday-WorkingHours.csv",
