@@ -102,6 +102,13 @@ def build_static_augmented_set(X_train, y_train, class_names, device="cuda"):
         y_aug = np.concatenate([y_aug, np.full(len(synth), c, dtype=y_train.dtype)])
         added_counts[cname] = len(synth)
 
+    del gan, ckpt
+    torch.cuda.empty_cache()  # this GPU-resident generator's job is done -- free VRAM before
+    # the next phase creates its own (ClosedLoopOrchestrator does, right after this returns).
+    # This machine's 8GB GPU is sometimes shared with other real GPU workloads (observed: an
+    # ollama LLM runner competing for VRAM caused a real CUDA OOM mid-run) -- don't hold GPU
+    # memory longer than the phase that needs it.
+
     log.info(f"Static augmentation: added {sum(added_counts.values()):,} synthetic rows across "
              f"{len(admit_idx)} admitted classes ({SYNTHETIC_SAMPLES_PER_CLASS}/class): "
              f"{added_counts}")

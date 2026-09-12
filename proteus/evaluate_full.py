@@ -115,6 +115,11 @@ def run_one_seed(seed, X_stable, y_stable, X_drifted, y_drifted, class_names):
     retrain_events = orch.retrain_events
     gate_log = orch.gate.entries
 
+    del orch
+    import torch
+    torch.cuda.empty_cache()  # free this seed's GPU-resident GAN before the next seed starts
+    # a fresh one -- this machine's 8GB GPU is sometimes shared with other real GPU workloads.
+
     return {
         "seed": seed,
         "wall_clock_seconds": time.time() - t0,
