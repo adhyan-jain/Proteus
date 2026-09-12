@@ -151,6 +151,41 @@ class ClosedLoopOrchestrator:
         return float(f1_score(y, y_pred, labels=list(range(len(self.class_names))),
                                average="macro", zero_division=0))
 
+    def _resume_gan_on_recent_window(self, X_recent, y_recent, steps=20, batch_size=32):
+        """Resume-train the GAN (not from scratch) on the drift window. `train_one_epoch`
+        needs `idx_by_class` covering every class the GAN was originally built with -- its
+        one-hot encoding has a fixed dimension across all `self.gan.class_labels`, not just
+        whichever classes happen to appear in this window. For classes present in the recent
+        window, use those (the actual point -- adapt to what just drifted); for classes the
+        window doesn't happen to contain, fall back to the original training pool so the
+        generator doesn't lose what it already knew about them."""
+        idx_by_class = {}
+        rows = []
+        for c in self.gan.class_labels:
+            recent_local = np.where(y_recent == c)[0]
+            if len(recent_local) >= 1:
+                start = len(rows)
+                rows.append(X_recent[recent_local])
+                idx_by_class[c] = np.arange(start, start + len(recent_local))
+            else:
+                fallback_local = np.where(self.y_train == c)[0]
+                if len(fallback_local) == 0:
+                    continue  # genuinely no examples anywhere -- skip this class this round
+                n = min(50, len(fallback_local))
+                sample = np.random.default_rng(0).choice(fallback_local, size=n, replace=False)
+                start = len(rows)
+                rows.append(self.X_train[sample])
+                idx_by_class[c] = np.arange(start, start + n)
+
+        if len(idx_by_class) < 2:
+            return  # not enough class coverage to run a meaningful GAN training step
+        X_combined = np.vstack(rows).astype(np.float32)
+        X_norm = self.gan._normalize(X_combined)
+        # y aligned to X_combined's rows, built in the same order idx_by_class was populated
+        y_combined = np.concatenate([np.full(len(v), c) for c, v in idx_by_class.items()])
+        self.gan.train_one_epoch(X_norm, y_combined, epoch=-1, idx_by_class=idx_by_class,
+                                  steps_per_epoch=steps)
+
     def step(self, t, X, y):
         macro_f1_before = self._macro_f1(X, y)
         conf = self.clf.predict_proba(X).max(axis=1)
@@ -161,16 +196,24 @@ class ClosedLoopOrchestrator:
         if result["fired"]:
             log.info(f"[t={t}] drift fired (stat={result['statistic']:.4f} "
                      f"p={result['p_value']:.4g}) -- retraining")
-            recent_admit_mask = np.isin(y, self.admit_idx)
-            if recent_admit_mask.sum() >= 2:
-                self.gan.train(X[recent_admit_mask].astype(np.float32), y[recent_admit_mask],
-                                n_steps=20, batch_size=min(32, int(recent_admit_mask.sum())))
+            self._resume_gan_on_recent_window(X, y)
 
             n_admitted_total = 0
             X_new, y_new = [], []
             for c in self.admit_idx:
                 real_recent = X[y == c] if (y == c).sum() >= 5 else \
                     self.X_train[self.y_train == c]
+                if len(real_recent) == 0:
+                    # No real reference data anywhere (neither this window nor the accumulated
+                    # training pool) for this class -- there is nothing to compare a synthetic
+                    # batch against, so there is no honest fidelity judgment to make. Skip and
+                    # log why, rather than let compute_mmd silently divide over an empty array
+                    # (produces NaN, which happens to compare as "not admitted" -- fail-closed,
+                    # but for the wrong reason: "no data" is not the same claim as "failed the
+                    # fidelity check").
+                    log.info(f"[t={t}] class={self.class_names[c]}: no real reference data "
+                             f"available anywhere -- skipping fidelity check, not admitting")
+                    continue
                 synth = self.gan.generate_synthetic_batch(c, n_samples=200)
                 admitted, score = self.gate.check(t, synth, real_recent, len(synth))
                 if admitted:
