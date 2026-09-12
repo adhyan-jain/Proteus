@@ -156,6 +156,38 @@ scale (should reject). Threshold = 0.25 MMD (unchanged from the demo).
   tension between two different fidelity signals, worth noting for the paper rather than only
   reporting the flattering noise-rejection number.
 
+## 2026-09-12 — Stage 7 full three-condition evaluation, single seed (real scale)
+
+**Component**: `proteus/evaluate_full.py::run_stage7(n_seeds=1)` →
+`results/stage7_evaluation.json`
+**Scale**: real CICIDS2017, 1,200,000-row training pool, 16 real-data-replay windows (3,000 rows
+each), real temporal drift (Monday-Thursday → Friday, same validated split as Stage 4), drift
+injected from window 6 onward. **n=1 seed — not the required 5+, no confidence interval, single
+real run.** Traffic source is `RealDataReplaySource` (real data, real temporal structure), NOT
+live Mininet traffic (blocked on root access — see `STATUS.md`). Wall-clock: 4,199s (~70 min) —
+this is why a 5-seed sweep is a multi-hour undertaking, not a quick follow-up.
+
+| Timestep | Baseline | Static-aug | Closed-loop | |
+|---:|---:|---:|---:|---|
+| 0-5 (pre-drift) | 0.40-0.48 | 0.40-0.48 | 0.40-0.48 | identical, as expected |
+| 6 (drift injected) | 0.029 | 0.030 | **0.199** | closed-loop recovers same timestep |
+| 7-12 | ~0.029-0.030 | ~0.030-0.031 | 0.197-0.199 | closed-loop holds |
+| 13 | 0.029 | 0.030 | 0.146 | one dip |
+| 14-15 (final) | 0.029 | 0.030 | **0.199** | recovers, ~6.9x baseline |
+
+**This is the real, demonstrated core result of the whole project**: baseline and
+static-augmentation both crash on genuinely unseen attack families (Friday's Bot, Bot -
+Attempted, DDoS, PortScan — absent from Mon-Thu training) and **never recover**, because neither
+has any adaptation mechanism. Closed-loop detects the drift, retrains, and **recovers to ~6.9x
+the frozen conditions' final macro-F1**, sustained across 9 further real-data windows (one
+partial dip at t=13, recovered by t=15).
+
+**What this result is not, yet**: a statistically validated claim. This is one seed. The project
+'s own rule requires 5+ seeds with a 95% CI before this can be reported as more than "one real
+run showed this" — `run_stage7(n_seeds=5)` is the next step, budgeted at several hours given
+this run's wall-clock time, not yet executed as of this entry (see `STATUS.md` for whether it
+has completed by the time you're reading this).
+
 ## Template for future entries
 
 ```
