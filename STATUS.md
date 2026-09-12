@@ -10,7 +10,17 @@ here, and `METRICS_HISTORY.md` for every real number any run has produced.
 **Standing rule**: update this file at the end of every real work session — not after every
 commit, but whenever you stop, hand off, or finish a stage. A stale STATUS.md defeats the point.
 
-Last updated: 2026-09-11, by a Claude Code session.
+Last updated: 2026-09-12, by a Claude Code session.
+
+## ⚠️ Unexplained file found — check this first
+
+A `.agents/hooks.json` appeared in the repo root (untracked, not created by this session
+deliberately, not committed to git). It configures a hook that **auto-approves every single
+tool call unconditionally** (`PreToolUse` → `"*"` → always `"allow"`). Origin unknown — possibly
+dropped by the `ecc` (everything-claude-code) plugin marketplace installation. This was flagged
+to the repo owner and deliberately left uncommitted and unactioned. **Look at this yourself
+before trusting it or deleting it** — an auto-approve-everything hook is a real security-relevant
+artifact, not routine project scaffolding.
 
 ## What's running right now
 
@@ -43,9 +53,24 @@ Check with `curl -s -o /dev/null -w "%{http_code}\n" http://localhost:PORT` — 
 - **Stage 1 (full-scale data)**: CICIDS2017 (WTMC-2021 corrected, from DistriNet/KU Leuven) +
   InSDN (from UCD ASEADOS Lab, the authors' own institution) — both verified-source, hashed in
   `data/MANIFEST.md`. Unified schema in `proteus/data_full.py`.
-- **Stage 3 (WGAN-GP, full scale)**: trained on GPU, 80 epochs, real diversity diagnostics.
-  **0/12 classes mode-collapsed; 3/12 classes flagged over-dispersed** (see next section — this
-  needs a decision, not yet made). Numbers in `METRICS_HISTORY.md`.
+- **Stage 3, all of it (baseline / static-augmentation / WGAN-GP), full scale**: trained on GPU.
+  WGAN-GP: 80 epochs, real diversity diagnostics, 0/12 classes mode-collapsed, 3/12 flagged
+  over-dispersed — **decided**: excluded from augmentation (`proteus/gan_full.py::
+  GAN_ADMIT_CLASSES`), not silently kept or retrained, see `CHANGELOG.md`. Baseline RF macro-F1
+  0.8922; static-augmentation macro-F1 0.8915 — **honest finding: augmentation did not help**,
+  marginally hurt. Full numbers in `METRICS_HISTORY.md`.
+- **Stage 4 (drift detector + fidelity gate, real scale)**: drift detector cleanly separates a
+  real temporal holdout (Monday-Thursday vs. Friday, genuine unseen attack families) — full
+  pass. Fidelity gate: 100% correct rejecting injected noise, only 44% correct admitting real
+  synthetic batches it should have — an honest, not-fully-resolved tension between the Stage 3
+  diversity check and this stricter MMD check. Full numbers in `METRICS_HISTORY.md`.
+- **Stage 6 (closed-loop orchestrator), code + logic verification**:
+  `proteus/closed_loop_full.py` implements drift-trigger → GAN resume-train → fidelity gate →
+  classifier retrain. Verified end-to-end against real data at a reduced scale (found and fixed
+  two real bugs in the process: a wrong GAN method name, and an empty-reference-data edge case
+  in the fidelity check that was silently producing NaN). **Not yet run at full scale or against
+  live Mininet traffic** — see "Stage 7 running now" below for the full-scale run in progress,
+  and "Blocked" below for why it can't be live-Mininet-sourced yet.
 - **Next.js mission-control UI**: 10 screens, real-data-or-explicit-empty-state, QA'd with
   Playwright (locally installed npm package — no Playwright MCP existed in this installation
   at the time; check again now, see "Tooling notes" below).
@@ -61,6 +86,24 @@ Check with `curl -s -o /dev/null -w "%{http_code}\n" http://localhost:PORT` — 
 - **GPU training confirmed working**: RTX 4060 via CUDA-build torch
   (`torch==2.11.0+cu128`, NOT the `+cpu` build — see `CLAUDE.md` rule 1 for why this matters and
   how to check). Verified with a real GPU matmul, not just `torch.cuda.is_available()`.
+
+## Stage 7 running right now (single seed, full scale)
+
+`proteus/evaluate_full.py::run_stage7(n_seeds=1)` is running in the background as of this
+writing — baseline + static-augmentation (frozen) + closed-loop (adaptive) evaluated against an
+identical real drift schedule (`RealDataReplaySource`: real Mon-Thu vs. Friday data, 16 windows,
+drift from window 6 onward), at full scale (~1.2M-row training pool). **This is a single seed,
+not the required 5+** — a full-scale closed-loop run retrains a 100-tree Random Forest at every
+drift-fired timestep (~350-400s each), so 5 seeds is genuinely a multi-hour job, not something
+to run casually. Check `results/stage7_evaluation.json` for whether it finished; if a fresh
+session finds this file with `"n_seeds": 1`, that's this run's single-seed result, reported
+honestly as n=1 with **no confidence interval** (the file itself won't claim one below 5 seeds —
+see `confidence_interval_valid` in the JSON). To run the full 5-seed sweep once this single-seed
+run is confirmed correct:
+```python
+from proteus.evaluate_full import run_stage7
+run_stage7(n_seeds=5)  # budget several hours; monitor memory (this machine runs tight on 16GB)
+```
 
 ## Blocked — needs the repo owner, not an agent
 
@@ -111,27 +154,17 @@ Check with `curl -s -o /dev/null -w "%{http_code}\n" http://localhost:PORT` — 
   per switch, and a final `SMOKE TEST PASSED`. If it fails, `smoke_test.sh`'s header explains
   where to look for each failure mode.
 
-- **Stage 6 (wiring a trained classifier onto the live flow-stats stream) is not started** —
-  `ryu_ids_app.py`'s `on_schema_row()` method is the documented extension point for it, per this
-  stage's scope (get live traffic + flow-stat export working through a real controller path;
-  consuming it with a classifier is explicitly Stage 6's job, not this one's).
-
-## Needs a decision — don't silently resolve either way
-
-- **3 WGAN-GP target classes are over-dispersed** (`Bot - Attempted` ~3160x, `DoS slowloris -
-  Attempted` ~11x, `FTP-Patator` ~3.2x borderline — see `METRICS_HISTORY.md`'s Stage 3 entry).
-  Options: (a) accept as a documented limitation and proceed to Stage 4, (b) retrain with more
-  epochs / a different learning rate, (c) exclude these 3 from GAN augmentation like the
-  already-excluded too-rare classes. Not yet decided as of this writing — ask the repo owner
-  before picking one.
+- **Wiring the closed-loop orchestrator onto Stage 5's live flow-stats stream** (as opposed to
+  `RealDataReplaySource`) is not started — `ryu_ids_app.py`'s `on_schema_row()` is the documented
+  extension point, and `proteus/closed_loop_full.py`'s `LiveMininetSource` is a deliberate
+  `NotImplementedError` stub for exactly this, both blocked on the same root-access gap.
 
 ## Not yet built
 
-Stage 3's baseline + static-augmentation comparison classifiers at full scale; Stage 4 (drift
-detector + fidelity gate validated at real scale — blocked behind the decision above); Stage 5
-is written but not yet run end-to-end (see "Blocked" above — needs the repo owner's sudo
-session); Stages 6-7 (closed-loop classifier wiring onto the live flow-stats stream, 5-seed
-statistical evaluation — not started); the final `RESULTS_SUMMARY.md` deliverable.
+The full 5-seed Stage 7 sweep (single seed running now, see above); wiring the closed-loop
+orchestrator onto live Mininet traffic instead of `RealDataReplaySource` (blocked on root
+access, see above); the final `RESULTS_SUMMARY.md` deliverable (should be written once the
+5-seed sweep completes, pulling from `METRICS_HISTORY.md` and `results/stage7_evaluation.json`).
 
 ## Tooling notes for a different agent/IDE
 
