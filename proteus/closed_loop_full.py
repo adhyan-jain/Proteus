@@ -39,6 +39,8 @@ import time
 from abc import ABC, abstractmethod
 from pathlib import Path
 
+from proteus.config import DEFAULT_N_JOBS  # noqa: F401 -- must import before numpy/torch/sklearn to cap BLAS/OMP threads
+
 import numpy as np
 import torch
 from sklearn.ensemble import RandomForestClassifier
@@ -121,7 +123,7 @@ class ClosedLoopOrchestrator:
 
         self.X_train = X_train_init.copy()
         self.y_train = y_train_init.copy()
-        self.clf = RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=-1)
+        self.clf = RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=DEFAULT_N_JOBS)
         self.clf.fit(self.X_train, self.y_train)
         self.ref_confidence = self.clf.predict_proba(
             self.X_train[:min(50000, len(self.X_train))]).max(axis=1)
@@ -223,7 +225,7 @@ class ClosedLoopOrchestrator:
 
             self.X_train = np.vstack([self.X_train, X] + X_new)
             self.y_train = np.concatenate([self.y_train, y] + y_new)
-            self.clf = RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=-1)
+            self.clf = RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=DEFAULT_N_JOBS)
             self.clf.fit(self.X_train, self.y_train)
             macro_f1_after = self._macro_f1(X, y)
             self.retrain_events.append({
