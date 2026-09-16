@@ -1,5 +1,4 @@
 """Orchestrates the three-condition evaluation: baseline / static-aug / closed-loop."""
-import copy
 import time
 
 import proteus.config  # noqa: F401 -- must import before numpy/sklearn to cap BLAS/OMP threads
@@ -12,6 +11,23 @@ from . import baseline, data as data_mod, drift as drift_mod, fidelity, gan as g
 
 RARE_FRACTION_THRESHOLD = 0.03  # classes under this fraction of training data are "rare"
 MMD_THRESHOLD = 0.25
+EVAL_HOLDOUT_FRACTION = 0.3  # see _split_eval_fit
+
+
+def _split_eval_fit(X, y, fraction, rng):
+    """Held-out split of one stream batch, fixed before any retraining touches it: the fit
+    portion is what gets absorbed into the closed-loop training set; the eval portion is never
+    trained on this round and is what f1_after must be measured against. Without this split, a
+    fired-drift retrain would fit the classifier on (train + X) and then score f1_after on that
+    same X -- in-sample training accuracy, not a fair post-adaptation number, and not comparable
+    to the baseline/static-augmentation conditions, which are always scored on batches they
+    never trained on. Mirrors proteus/closed_loop_full.py's ClosedLoopOrchestrator.split_eval_fit
+    (the full-scale backend) -- same bug, same fix, kept separate since the two pipelines are
+    intentionally independent implementations at different scales."""
+    n_eval = max(1, int(len(X) * fraction))
+    perm = rng.permutation(len(X))
+    eval_idx, fit_idx = perm[:n_eval], perm[n_eval:]
+    return X[eval_idx], y[eval_idx], X[fit_idx], y[fit_idx]
 
 
 def _identify_rare_classes(y_train, class_names):
@@ -78,7 +94,7 @@ def run_pipeline(progress_cb=None):
 
     report(0.35, "Building static-augmentation condition...")
     X_aug, y_aug = X_train.copy(), y_train.copy()
-    static_admission_log = []
+    static_augmentation_errors = []
     gate = fidelity.FidelityGateLog(threshold=MMD_THRESHOLD)
     for rc in rare_classes:
         try:
@@ -89,10 +105,13 @@ def run_pipeline(progress_cb=None):
             if admitted:
                 X_aug = np.vstack([X_aug, synth])
                 y_aug = np.concatenate([y_aug, np.full(len(synth), rc)])
-        except Exception:
-            pass
+        except Exception as e:
+            # Generation/fidelity-check failure for one rare class must not silently vanish --
+            # a failed stage is a visible failure, not a plausible-looking made-up number.
+            static_augmentation_errors.append({"class": class_names[rc], "error": str(e)})
     clf_static = baseline.train_classifier(X_aug, y_aug)
     results["static_gate_log"] = gate.entries
+    results["static_augmentation_errors"] = static_augmentation_errors
 
     report(0.45, "Building simulated traffic stream...")
     benign_idx = class_names.index("benign") if "benign" in class_names else 0
@@ -107,17 +126,25 @@ def run_pipeline(progress_cb=None):
     ref_confidences = baseline.confidence_distribution(clf_baseline, X_test)
 
     # ---- run 3 conditions over identical stream ----
+    from proteus.closed_loop_full import BoundedBufferClassifier
+
+    closed_loop_clf = BoundedBufferClassifier(
+        lambda: baseline.train_classifier(X_train, y_train),
+        max_ref_samples=5000, max_recent_samples=2000
+    )
+    closed_loop_clf.fit_initial(X_train, y_train)
+
     conditions = {
         "baseline": {"clf": clf_baseline, "macro_f1": [], "per_class_f1": []},
         "static_augmentation": {"clf": clf_static, "macro_f1": [], "per_class_f1": []},
-        "closed_loop": {"clf": copy.deepcopy(clf_baseline), "macro_f1": [], "per_class_f1": []},
+        "closed_loop": {"clf": closed_loop_clf, "macro_f1": [], "per_class_f1": []},
     }
 
     closed_loop_gan = gan  # continues training in place (resume, not from scratch)
     closed_loop_gate = fidelity.FidelityGateLog(threshold=MMD_THRESHOLD)
     drift_events = []  # {timestep, fired, statistic, p_value}
     retrain_events = []  # {timestep, f1_before, f1_after, n_admitted}
-    closed_loop_train_X, closed_loop_train_y = X_train.copy(), y_train.copy()
+    eval_split_rng = np.random.default_rng(123)
 
     n_batches = len(batches)
     for i, b in enumerate(batches):
@@ -137,34 +164,36 @@ def run_pipeline(progress_cb=None):
 
         if dr["fired"]:
             f1_before = conditions["closed_loop"]["macro_f1"][-1]
-            closed_loop_train_X = np.vstack([closed_loop_train_X, X_b])
-            closed_loop_train_y = np.concatenate([closed_loop_train_y, y_b])
+            X_eval, y_eval, X_fit, y_fit = _split_eval_fit(
+                X_b, y_b, EVAL_HOLDOUT_FRACTION, eval_split_rng)
 
             try:
-                recent_rare = [c for c in rare_classes if np.sum(y_b == c) >= 2]
+                recent_rare = [c for c in rare_classes if np.sum(y_fit == c) >= 2]
                 if recent_rare:
                     closed_loop_gan.retrain(
-                        X_b[np.isin(y_b, recent_rare)], y_b[np.isin(y_b, recent_rare)],
+                        X_fit[np.isin(y_fit, recent_rare)], y_fit[np.isin(y_fit, recent_rare)],
                         extra_steps=25)
                     results["gan_loss_log"] = closed_loop_gan.loss_log
 
                 n_admitted = 0
+                X_synth_list, y_synth_list = [], []
                 for rc in rare_classes:
                     synth = closed_loop_gan.generate_synthetic_batch(rc, n_samples=80)
-                    real_recent = X_b if np.sum(y_b == rc) >= 5 else X_train[y_train == rc]
+                    real_recent = X_fit if np.sum(y_fit == rc) >= 5 else X_train[y_train == rc]
                     admitted, score = closed_loop_gate.check(
                         step=t, synthetic_batch=synth, real_batch=real_recent,
                         n_samples=len(synth))
                     if admitted:
-                        closed_loop_train_X = np.vstack([closed_loop_train_X, synth])
-                        closed_loop_train_y = np.concatenate(
-                            [closed_loop_train_y, np.full(len(synth), rc)])
+                        X_synth_list.append(synth)
+                        y_synth_list.append(np.full(len(synth), rc))
                         n_admitted += len(synth)
 
-                conditions["closed_loop"]["clf"] = baseline.train_classifier(
-                    closed_loop_train_X, closed_loop_train_y)
+                X_synth_combined = np.vstack(X_synth_list) if X_synth_list else None
+                y_synth_combined = np.concatenate(y_synth_list) if y_synth_list else None
+
+                closed_loop_clf.partial_fit_adaptation(X_fit, y_fit, X_synth_combined, y_synth_combined)
                 mf1_after, _ = _per_timestep_metrics(
-                    conditions["closed_loop"]["clf"], X_b, y_b, n_classes)
+                    closed_loop_clf, X_eval, y_eval, n_classes)
                 retrain_events.append({"timestep": t, "f1_before": f1_before,
                                         "f1_after": mf1_after, "n_admitted": n_admitted})
             except Exception as e:
