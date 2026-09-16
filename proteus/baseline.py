@@ -1,7 +1,6 @@
 """Baseline Random Forest classifier + metrics."""
 from proteus.config import DEFAULT_N_JOBS  # noqa: F401 -- must import before numpy/sklearn to cap BLAS/OMP threads
 
-import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, confusion_matrix
 
