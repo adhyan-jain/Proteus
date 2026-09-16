@@ -9,7 +9,7 @@
   "per_seed_results": [
     {
       "seed": 0,
-      "wall_clock_seconds": 4199.060112953186,
+      "wall_clock_seconds": 14064.869583845139,
       "n_train_rows": 1200000,
       "drift_schedule_timesteps": [
         6,
@@ -116,43 +116,43 @@
         },
         {
           "timestep": 6,
-          "macro_f1": 0.02989262705798139
+          "macro_f1": 0.03058881016369411
         },
         {
           "timestep": 7,
-          "macro_f1": 0.03007847800237812
+          "macro_f1": 0.030788704965920156
         },
         {
           "timestep": 8,
-          "macro_f1": 0.030708401976935747
+          "macro_f1": 0.03141411708022163
         },
         {
           "timestep": 9,
-          "macro_f1": 0.030102016607354686
+          "macro_f1": 0.03066053714009194
         },
         {
           "timestep": 10,
-          "macro_f1": 0.030452830188679246
+          "macro_f1": 0.03118840579710145
         },
         {
           "timestep": 11,
-          "macro_f1": 0.030534921747255313
+          "macro_f1": 0.031261067240966736
         },
         {
           "timestep": 12,
-          "macro_f1": 0.030336971998101564
+          "macro_f1": 0.03101407083939835
         },
         {
           "timestep": 13,
-          "macro_f1": 0.03018939393939394
+          "macro_f1": 0.031049427806184565
         },
         {
           "timestep": 14,
-          "macro_f1": 0.029696092619392184
+          "macro_f1": 0.03046016823354775
         },
         {
           "timestep": 15,
-          "macro_f1": 0.029641585568478516
+          "macro_f1": 0.0304140282513395
         }
       ],
       "closed_loop_macro_f1_series": [
@@ -186,7 +186,7 @@
         },
         {
           "timestep": 7,
-          "macro_f1": 0.19899829905315894
+          "macro_f1": 0.1990703550753333
         },
         {
           "timestep": 8,
@@ -194,11 +194,11 @@
         },
         {
           "timestep": 9,
-          "macro_f1": 0.198694602669102
+          "macro_f1": 0.19873021548284117
         },
         {
           "timestep": 10,
-          "macro_f1": 0.1970830608598218
+          "macro_f1": 0.1971196233665441
         },
         {
           "timestep": 11,
@@ -206,19 +206,19 @@
         },
         {
           "timestep": 12,
-          "macro_f1": 0.1992103058429956
+          "macro_f1": 0.19760305254281157
         },
         {
           "timestep": 13,
-          "macro_f1": 0.14591372202908487
+          "macro_f1": 0.1459502576242863
         },
         {
           "timestep": 14,
-          "macro_f1": 0.18179498141490164
+          "macro_f1": 0.18190154132259395
         },
         {
           "timestep": 15,
-          "macro_f1": 0.1992599202166634
+          "macro_f1": 0.19915355952427735
         }
       ],
       "drift_events": [
@@ -274,64 +274,64 @@
         {
           "timestep": 7,
           "fired": true,
-          "statistic": 0.15094,
-          "p_value": 9.368603359606605e-57,
+          "statistic": 0.14894,
+          "p_value": 2.8935019511699503e-55,
           "alpha": 0.05
         },
         {
           "timestep": 8,
           "fired": true,
-          "statistic": 0.12427333333333333,
-          "p_value": 1.4922790920862855e-38,
+          "statistic": 0.12227333333333333,
+          "p_value": 2.481443613865418e-37,
           "alpha": 0.05
         },
         {
           "timestep": 9,
           "fired": true,
-          "statistic": 0.14393999999999998,
-          "p_value": 1.2507828265181681e-51,
+          "statistic": 0.14360666666666666,
+          "p_value": 2.1630630654507663e-51,
           "alpha": 0.05
         },
         {
           "timestep": 10,
           "fired": true,
-          "statistic": 0.13060666666666665,
-          "p_value": 1.49724695534145e-42,
+          "statistic": 0.12727333333333332,
+          "p_value": 2.0179943304021524e-40,
           "alpha": 0.05
         },
         {
           "timestep": 11,
           "fired": true,
-          "statistic": 0.12460666666666666,
-          "p_value": 9.298711391810016e-39,
+          "statistic": 0.11960666666666665,
+          "p_value": 9.801727839055106e-36,
           "alpha": 0.05
         },
         {
           "timestep": 12,
           "fired": true,
-          "statistic": 0.12094,
-          "p_value": 1.5756512922492518e-36,
+          "statistic": 0.11994,
+          "p_value": 6.218382083158604e-36,
           "alpha": 0.05
         },
         {
           "timestep": 13,
           "fired": true,
-          "statistic": 0.11027333333333333,
-          "p_value": 1.990454385452508e-30,
+          "statistic": 0.11260666666666666,
+          "p_value": 1.0301402881535171e-31,
           "alpha": 0.05
         },
         {
           "timestep": 14,
           "fired": true,
-          "statistic": 0.11360666666666666,
-          "p_value": 2.8405122597109963e-32,
+          "statistic": 0.11294,
+          "p_value": 6.71354877950791e-32,
           "alpha": 0.05
         },
         {
           "timestep": 15,
           "fired": true,
-          "statistic": 0.11127333333333334,
-          "p_value": 5.637905730903525e-31,
+          "statistic": 0.10927333333333333,
+          "p_value": 6.946879309342401e-30,
           "alpha": 0.05
         }
       ],
@@ -345,600 +345,600 @@
         },
         {
           "timestep": 7,
-          "macro_f1_before": 0.14519727342684507,
-          "macro_f1_after": 0.19899829905315894,
+          "macro_f1_before": 0.15279290306685578,
+          "macro_f1_after": 0.1990703550753333,
           "n_synthetic_admitted": 400,
           "n_train_rows_after": 1207200
         },
         {
           "timestep": 8,
-          "macro_f1_before": 0.1608133720416476,
+          "macro_f1_before": 0.1607688136595701,
           "macro_f1_after": 0.1987532459038811,
-          "n_synthetic_admitted": 0,
-          "n_train_rows_after": 1210200
+          "n_synthetic_admitted": 400,
+          "n_train_rows_after": 1210600
         },
         {
           "timestep": 9,
           "macro_f1_before": 0.14881038793054746,
-          "macro_f1_after": 0.198694602669102,
+          "macro_f1_after": 0.19873021548284117,
           "n_synthetic_admitted": 0,
-          "n_train_rows_after": 1213200
+          "n_train_rows_after": 1213600
         },
         {
           "timestep": 10,
-          "macro_f1_before": 0.17564428292686324,
-          "macro_f1_after": 0.1970830608598218,
+          "macro_f1_before": 0.16868284948169174,
+          "macro_f1_after": 0.1971196233665441,
           "n_synthetic_admitted": 0,
-          "n_train_rows_after": 1216200
+          "n_train_rows_after": 1216600
         },
         {
           "timestep": 11,
-          "macro_f1_before": 0.15709038056132246,
+          "macro_f1_before": 0.15717318504293254,
           "macro_f1_after": 0.19931591069749888,
           "n_synthetic_admitted": 200,
-          "n_train_rows_after": 1219400
+          "n_train_rows_after": 1219800
         },
         {
           "timestep": 12,
-          "macro_f1_before": 0.1652836896615301,
-          "macro_f1_after": 0.1992103058429956,
+          "macro_f1_before": 0.16516381605126895,
+          "macro_f1_after": 0.19760305254281157,
           "n_synthetic_admitted": 200,
-          "n_train_rows_after": 1222600
+          "n_train_rows_after": 1223000
         },
         {
           "timestep": 13,
-          "macro_f1_before": 0.11956336473983534,
-          "macro_f1_after": 0.14591372202908487,
+          "macro_f1_before": 0.11960347622287346,
+          "macro_f1_after": 0.1459502576242863,
           "n_synthetic_admitted": 200,
-          "n_train_rows_after": 1225800
+          "n_train_rows_after": 1226200
         },
         {
           "timestep": 14,
-          "macro_f1_before": 0.16118208325705347,
-          "macro_f1_after": 0.18179498141490164,
+          "macro_f1_before": 0.16020389023122283,
+          "macro_f1_after": 0.18190154132259395,
           "n_synthetic_admitted": 200,
-          "n_train_rows_after": 1229000
+          "n_train_rows_after": 1229400
         },
         {
           "timestep": 15,
-          "macro_f1_before": 0.17013304072903268,
-          "macro_f1_after": 0.1992599202166634,
+          "macro_f1_before": 0.1702096194920869,
+          "macro_f1_after": 0.19915355952427735,
           "n_synthetic_admitted": 200,
-          "n_train_rows_after": 1232200
+          "n_train_rows_after": 1232600
         }
       ],
       "gate_log": [
         {
           "step": 6,
-          "mmd_score": 0.10672484142767058,
+          "mmd_score": 0.09179388343942674,
           "admitted": true,
           "n_samples": 200
         },
         {
           "step": 6,
-          "mmd_score": 0.7895463247201447,
+          "mmd_score": 0.7912421144143124,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 6,
-          "mmd_score": 0.5852035934696278,
+          "mmd_score": 0.5820237286689424,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 6,
-          "mmd_score": 0.19345696190505934,
+          "mmd_score": 0.13477899634041735,
           "admitted": true,
           "n_samples": 200
         },
         {
           "step": 6,
-          "mmd_score": 0.5206018617434309,
+          "mmd_score": 0.524992725057235,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 6,
-          "mmd_score": 0.4745050043593055,
+          "mmd_score": 0.4745050043590314,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 6,
-          "mmd_score": 0.07327499159917084,
+          "mmd_score": 0.06898448774813914,
           "admitted": true,
           "n_samples": 200
         },
         {
           "step": 6,
-          "mmd_score": 0.13420076368097533,
+          "mmd_score": 0.19366385834518596,
           "admitted": true,
           "n_samples": 200
         },
         {
           "step": 7,
-          "mmd_score": 0.22368309331041436,
+          "mmd_score": 0.21900514035286633,
           "admitted": true,
           "n_samples": 200
         },
         {
           "step": 7,
-          "mmd_score": 0.7700710196587839,
+          "mmd_score": 0.7702605523512979,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 7,
-          "mmd_score": 1.140209162963909,
+          "mmd_score": 1.1063104522709672,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 7,
-          "mmd_score": 0.5760837759912142,
+          "mmd_score": 0.5761777506496897,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 7,
-          "mmd_score": 0.3584154271593618,
+          "mmd_score": 0.3594902908402866,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 7,
-          "mmd_score": 0.5088744537667353,
+          "mmd_score": 0.51100188535428,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 7,
-          "mmd_score": 0.4745050043585986,
+          "mmd_score": 0.474505004358811,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 7,
-          "mmd_score": 0.20875554811359254,
+          "mmd_score": 0.22855801548857313,
           "admitted": true,
           "n_samples": 200
         },
         {
           "step": 7,
-          "mmd_score": 0.3622586595589501,
+          "mmd_score": 0.39869817566263044,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 8,
-          "mmd_score": 0.26026923320449236,
+          "mmd_score": 0.22202032738303057,
+          "admitted": true,
+          "n_samples": 200
+        },
+        {
+          "step": 8,
+          "mmd_score": 0.7653904621098782,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 8,
-          "mmd_score": 0.7648388651292324,
+          "mmd_score": 1.036099608163431,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 8,
-          "mmd_score": 0.7892349712940596,
+          "mmd_score": 0.5743148717859313,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 8,
-          "mmd_score": 0.5746106647859418,
+          "mmd_score": 0.4361154032578337,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 8,
-          "mmd_score": 0.4705331188359084,
+          "mmd_score": 0.5074065364311936,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 8,
-          "mmd_score": 0.508043804264904,
+          "mmd_score": 0.47450500435793397,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 8,
-          "mmd_score": 0.47450500435862036,
-          "admitted": false,
+          "mmd_score": 0.2220052640324599,
+          "admitted": true,
           "n_samples": 200
         },
         {
           "step": 8,
-          "mmd_score": 0.2503671301709909,
-          "admitted": false,
-          "n_samples": 200
-        },
-        {
-          "step": 8,
-          "mmd_score": 0.5359352562524342,
+          "mmd_score": 0.4468663719333416,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 9,
-          "mmd_score": 0.28614039757093734,
+          "mmd_score": 0.2642350350916539,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 9,
-          "mmd_score": 0.7644850892217125,
+          "mmd_score": 0.7644481929632494,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 9,
-          "mmd_score": 0.8100859342207472,
+          "mmd_score": 0.6691340849641171,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 9,
-          "mmd_score": 0.5739538172221269,
+          "mmd_score": 0.5738749391345656,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 9,
-          "mmd_score": 0.5764142807583648,
+          "mmd_score": 0.5539982100687926,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 9,
-          "mmd_score": 0.5070165348243277,
+          "mmd_score": 0.5065363185188595,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 9,
-          "mmd_score": 0.47450500435953,
+          "mmd_score": 0.4745050043585828,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 9,
-          "mmd_score": 0.3220942286684567,
+          "mmd_score": 0.3249510381961618,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 9,
-          "mmd_score": 0.48754312591756016,
+          "mmd_score": 0.5459349827760988,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 10,
-          "mmd_score": 0.2641453025230006,
+          "mmd_score": 0.27905864230449784,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 10,
-          "mmd_score": 0.7641640484284524,
+          "mmd_score": 0.7641303422918178,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 10,
-          "mmd_score": 0.8596329203012953,
+          "mmd_score": 0.6420268663158001,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 10,
-          "mmd_score": 0.5739545665667156,
+          "mmd_score": 0.5737649566531073,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 10,
-          "mmd_score": 0.5794248111615546,
+          "mmd_score": 0.6112007695278673,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 10,
-          "mmd_score": 0.5069122491676812,
+          "mmd_score": 0.5066256243255988,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 10,
-          "mmd_score": 0.4745050043596573,
+          "mmd_score": 0.4745050043590578,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 10,
-          "mmd_score": 0.34948257634325264,
+          "mmd_score": 0.33308256021393934,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 10,
-          "mmd_score": 0.4252156142337673,
+          "mmd_score": 0.5040073420939427,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 11,
-          "mmd_score": 0.1948217406230328,
+          "mmd_score": 0.21101053681063087,
           "admitted": true,
           "n_samples": 200
         },
         {
           "step": 11,
-          "mmd_score": 0.764390684837749,
+          "mmd_score": 0.7642611206989683,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 11,
-          "mmd_score": 0.7531373972649813,
+          "mmd_score": 0.7254796943789426,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 11,
-          "mmd_score": 0.5738183583654222,
+          "mmd_score": 0.5738480451275483,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 11,
-          "mmd_score": 0.5188430115242993,
+          "mmd_score": 0.5608235282926516,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 11,
-          "mmd_score": 0.506402814879195,
+          "mmd_score": 0.5064165145977385,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 11,
-          "mmd_score": 0.4745050043599699,
+          "mmd_score": 0.4745050043593815,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 11,
-          "mmd_score": 0.3251340145880057,
+          "mmd_score": 0.32076731767975564,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 11,
-          "mmd_score": 0.33592047708967737,
+          "mmd_score": 0.47996437882146553,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 12,
-          "mmd_score": 0.13905106053395777,
+          "mmd_score": 0.18696787944717752,
           "admitted": true,
           "n_samples": 200
         },
         {
           "step": 12,
-          "mmd_score": 0.7638725551024048,
+          "mmd_score": 0.7636287158638629,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 12,
-          "mmd_score": 0.7238768915154662,
+          "mmd_score": 0.790972380551006,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 12,
-          "mmd_score": 0.5736838622090731,
+          "mmd_score": 0.5736154483910714,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 12,
-          "mmd_score": 0.4535144917127205,
+          "mmd_score": 0.5722977351102212,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 12,
-          "mmd_score": 0.5062477909706234,
+          "mmd_score": 0.5061893886580987,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 12,
-          "mmd_score": 0.4745050043607022,
+          "mmd_score": 0.4745050043587303,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 12,
-          "mmd_score": 0.32388491496768224,
+          "mmd_score": 0.3158032699680001,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 12,
-          "mmd_score": 0.37213139987662885,
+          "mmd_score": 0.4122640011033135,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 13,
-          "mmd_score": 0.16585880195750413,
+          "mmd_score": 0.17135743128362257,
           "admitted": true,
           "n_samples": 200
         },
         {
           "step": 13,
-          "mmd_score": 0.7632907890456135,
+          "mmd_score": 0.7633514457149245,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 13,
-          "mmd_score": 0.7006245037515918,
+          "mmd_score": 0.6517674817286405,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 13,
-          "mmd_score": 0.5737242347936732,
+          "mmd_score": 0.5736034184963406,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 13,
-          "mmd_score": 0.5045159212776853,
+          "mmd_score": 0.5632928335633197,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 13,
-          "mmd_score": 0.5058644601278165,
+          "mmd_score": 0.5059540079878954,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 13,
-          "mmd_score": 0.47450500435999626,
+          "mmd_score": 0.4745050043591381,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 13,
-          "mmd_score": 0.37324989006225373,
+          "mmd_score": 0.3482938219343372,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 13,
-          "mmd_score": 0.41144569570059425,
+          "mmd_score": 0.4003979101616555,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 14,
-          "mmd_score": 0.12301968940896602,
+          "mmd_score": 0.14310726519342476,
           "admitted": true,
           "n_samples": 200
         },
         {
           "step": 14,
-          "mmd_score": 0.7631834319558197,
+          "mmd_score": 0.7631131146729154,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 14,
-          "mmd_score": 0.5835787069995426,
+          "mmd_score": 0.5869649727896483,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 14,
-          "mmd_score": 0.5735486912774027,
+          "mmd_score": 0.5735436062216596,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 14,
-          "mmd_score": 0.5160761899005143,
+          "mmd_score": 0.550617048831352,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 14,
-          "mmd_score": 0.5059042100843993,
+          "mmd_score": 0.5058915107124576,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 14,
-          "mmd_score": 0.47450500435983656,
+          "mmd_score": 0.4745050043585289,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 14,
-          "mmd_score": 0.38552855854629486,
+          "mmd_score": 0.3161048811163425,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 14,
-          "mmd_score": 0.474369365597607,
+          "mmd_score": 0.41172858409897695,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 15,
-          "mmd_score": 0.12314957599419873,
+          "mmd_score": 0.1325569224560148,
           "admitted": true,
           "n_samples": 200
         },
         {
           "step": 15,
-          "mmd_score": 0.7629691883241452,
+          "mmd_score": 0.7631398772764483,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 15,
-          "mmd_score": 0.6821852923795447,
+          "mmd_score": 0.5962994958183807,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 15,
-          "mmd_score": 0.5735043496802634,
+          "mmd_score": 0.5735660978327844,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 15,
-          "mmd_score": 0.5547954489249901,
+          "mmd_score": 0.4943065682882283,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 15,
-          "mmd_score": 0.5057343836258265,
+          "mmd_score": 0.5057639238329769,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 15,
-          "mmd_score": 0.47450500435888,
+          "mmd_score": 0.4745050043584664,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 15,
-          "mmd_score": 0.38758743680274144,
+          "mmd_score": 0.32405079583087004,
           "admitted": false,
           "n_samples": 200
         },
         {
           "step": 15,
-          "mmd_score": 0.36338309604607566,
+          "mmd_score": 0.4089179127156921,
           "admitted": false,
           "n_samples": 200
         }
@@ -949,9 +949,9 @@
     0.02884064665127021
   ],
   "final_macro_f1_static_augmentation": [
-    0.029641585568478516
+    0.0304140282513395
   ],
   "final_macro_f1_closed_loop": [
-    0.1992599202166634
+    0.19915355952427735
   ]
 }
