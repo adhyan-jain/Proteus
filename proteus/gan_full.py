@@ -189,10 +189,13 @@ class WGANGPFull:
 
     def train_one_epoch(self, X_norm, y, epoch, idx_by_class, steps_per_epoch):
         g_losses, d_losses = [], []
+        available_classes = [c for c in self.class_labels if c in idx_by_class and len(idx_by_class[c]) > 0]
+        if not available_classes:
+            return 0.0, 0.0
         for _ in range(steps_per_epoch):
             d_loss_val = None
             for _ in range(N_CRITIC):
-                batch_labels = np.random.choice(self.class_labels, size=BATCH_SIZE)
+                batch_labels = np.random.choice(available_classes, size=BATCH_SIZE)
                 batch_idx_local = [self.label_to_idx[c] for c in batch_labels]
                 real_rows = np.stack([
                     X_norm[np.random.choice(idx_by_class[c])] for c in batch_labels])
@@ -213,7 +216,7 @@ class WGANGPFull:
                 d_loss_val = d_loss.item()
 
             z = torch.randn(BATCH_SIZE, LATENT_DIM, device=self.device)
-            batch_labels = np.random.choice(self.class_labels, size=BATCH_SIZE)
+            batch_labels = np.random.choice(available_classes, size=BATCH_SIZE)
             batch_idx_local = [self.label_to_idx[c] for c in batch_labels]
             cls_oh = _onehot(torch.tensor(batch_idx_local, device=self.device),
                               self.n_classes, self.device)
