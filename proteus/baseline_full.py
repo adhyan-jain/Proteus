@@ -19,6 +19,8 @@ import logging
 import time
 from pathlib import Path
 
+from proteus.config import DEFAULT_N_JOBS  # noqa: F401 -- must import before numpy/torch/sklearn to cap BLAS/OMP threads
+
 import numpy as np
 import torch
 from sklearn.ensemble import RandomForestClassifier
@@ -40,7 +42,7 @@ SYNTHETIC_SAMPLES_PER_CLASS = 2000
 
 def train_and_evaluate(clf, X_train, y_train, X_test, y_test, class_names, n_estimators=100):
     t0 = time.time()
-    clf = RandomForestClassifier(n_estimators=n_estimators, random_state=42, n_jobs=-1) \
+    clf = RandomForestClassifier(n_estimators=n_estimators, random_state=42, n_jobs=DEFAULT_N_JOBS) \
         if clf is None else clf
     clf.fit(X_train, y_train)
     fit_seconds = time.time() - t0
