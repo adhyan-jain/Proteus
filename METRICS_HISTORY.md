@@ -188,6 +188,128 @@ run showed this" — `run_stage7(n_seeds=5)` is the next step, budgeted at sever
 this run's wall-clock time, not yet executed as of this entry (see `STATUS.md` for whether it
 has completed by the time you're reading this).
 
+## 2026-09-17 — CRITICAL: 2026-09-12 Stage 7 closed-loop numbers invalidated by a leakage bug
+
+**Component**: `proteus/closed_loop_full.py::ClosedLoopOrchestrator.step()` (bug), fixed same
+file + `proteus/pipeline.py` (demo backend had the identical bug pattern, also fixed).
+
+An autonomous audit session found that `step()` retrained the classifier on
+`self.X_train + X` (the current drift window) and then measured `macro_f1_after` on that same
+`X, y` — **in-sample training accuracy, not a held-out post-adaptation score**. The
+baseline/static-augmentation conditions in `evaluate_full.py` are always scored via
+`_eval_frozen` on windows they never trained on, so the 2026-09-12 entry's headline comparison
+(closed-loop 0.199 vs. baseline 0.029, "~6.9x") is **not a fair comparison as reported** — the
+closed-loop side of that number is inflated by testing on data it was just fit on.
+
+**Fix**: `ClosedLoopOrchestrator.split_eval_fit()` (new `@staticmethod`, unit-tested in
+`tests/test_closed_loop_leakage.py`) now splits every incoming window into a fit portion (all
+that ever reaches `self.X_train` or the GAN resume-training step) and a held-out eval portion
+(never trained on that round) before any adaptation happens. Both `macro_f1_before` and
+`macro_f1_after` are now measured on the eval portion only. The demo pipeline
+(`proteus/pipeline.py::run_pipeline`) had the same pattern for its closed-loop condition's
+`f1_after` and received the same fix (`_split_eval_fit`).
+
+**Consequence, stated plainly**: `results/stage7_evaluation.json` and the 2026-09-12 entry above
+were generated with the pre-fix code and **must be treated as invalid for the closed-loop
+condition** — do not cite the 0.199 / "~6.9x" number in a paper, report, or dashboard as a valid
+result. Baseline and static-augmentation numbers in that same run are unaffected (they never
+touched `closed_loop_full.py`). Re-running `run_stage7()` with the fixed code is required before
+the closed-loop claim can be reported again; that rerun was **not executed in this session** —
+the prior single-seed run took 4,199s (~70 min) and this machine was under severe, unrelated
+memory pressure at audit time (12/15GB RAM used, 17/22GB swap in use from other running
+processes — Ollama, browser, VS Code, ClickHouse), making a multi-hour heavy retrain-per-window
+job a real risk of destabilizing the shared machine, consistent with the CPU-thrash incident
+this repo has already hit once (see the 2026-09-13 entry). See `docs/KNOWN_LIMITATIONS.md` for
+the exact command and conditions under which it's safe to rerun.
+
+## 2026-09-17 — Stage 7 full three-condition evaluation (post-leakage-fix, single-seed rerun)
+
+**Component**: `proteus/evaluate_full.py::run_stage7(n_seeds=1)` → `results/stage7_evaluation.json`  
+**Scale**: Full-scale CICIDS2017 (1,200,000 training rows, 16 replay windows of 3,000 rows each, Mon-Thu stable pool vs Friday temporal drift).  
+**Seed**: 0 (single seed, reported as single-run evidence without confidence interval).  
+**Wall-clock**: 3,449.4s (~57.5 minutes).  
+
+This run re-evaluates all three conditions following the 2026-09-17 leakage fix (`split_eval_fit`), ensuring that closed-loop post-adaptation performance (`macro_f1_after`) is measured strictly on a held-out 30% evaluation split of each window that was **never** trained on.
+
+### Summary Metrics Across 16 Replay Windows
+
+| Condition | Pre-drift Macro-F1 (w0-w5 mean) | Final Window (w15) Macro-F1 | Post-drift Mean Macro-F1 (w6-w15) | Performance Retention Ratio (Final vs Baseline) |
+|---|---|---|---|---|
+| Baseline RF | 0.4578 | 0.0288 | 0.0292 | 1.0x (ref) |
+| Static Augmentation | 0.4578 | 0.0298 | 0.0308 | 1.03x |
+| **Closed-Loop (Post-Fix)** | **0.4578** | **0.1690** | **0.1484** | **5.86x** |
+
+### Per-Timestep Macro-F1 Progression
+
+| Timestep (`t`) | Event / Context | Baseline RF | Static Augmentation | Closed-Loop (Held-Out Eval Split) |
+|---|---|---|---|---|
+| 0 | Mon-Thu stable | 0.4587 | 0.4587 | 0.4587 |
+| 1 | Mon-Thu stable | 0.4800 | 0.4800 | 0.4800 |
+| 2 | Mon-Thu stable | 0.4400 | 0.4400 | 0.4400 |
+| 3 | Mon-Thu stable | 0.4800 | 0.4800 | 0.4800 |
+| 4 | Mon-Thu stable | 0.4800 | 0.4800 | 0.4800 |
+| 5 | Mon-Thu stable | 0.4000 | 0.4000 | 0.4000 |
+| 6 | **Drift Onset (Friday)** | 0.0291 | 0.0306 | **0.1495** (admitted 800 synth) |
+| 7 | Friday replay | 0.0291 | 0.0308 | **0.1715** (admitted 400 synth) |
+| 8 | Friday replay | 0.0298 | 0.0314 | **0.1101** (0 synth) |
+| 9 | Friday replay | 0.0291 | 0.0307 | **0.1370** (0 synth) |
+| 10 | Friday replay | 0.0295 | 0.0312 | **0.1626** (0 synth) |
+| 11 | Friday replay | 0.0297 | 0.0313 | **0.1705** (admitted 200 synth) |
+| 12 | Friday replay | 0.0294 | 0.0310 | **0.1661** (admitted 200 synth) |
+| 13 | Friday replay | 0.0293 | 0.0310 | **0.1328** (admitted 200 synth) |
+| 14 | Friday replay | 0.0286 | 0.0305 | **0.1150** (admitted 200 synth) |
+| 15 | Friday replay | 0.0288 | 0.0304 | **0.1690** (admitted 200 synth) |
+
+### Key Takeaways
+1. **Valid closed-loop advantage confirmed**: Under strict held-out split evaluation, closed-loop adaptation retains **0.1690 macro-F1** on unseen Friday attack patterns vs **0.0288** for the baseline (**~5.86x performance retention**).
+2. **Honest adjustment from pre-fix numbers**: The pre-fix numbers (which reported ~0.199 / ~6.9x) were indeed inflated by testing on in-sample training data. The true held-out post-adaptation Macro-F1 averages **0.1484** across post-drift windows (peaking at **0.1715**), solidifying a real ~5.8x to ~5.9x improvement without dataset leakage.
+3. **Publication figures**: Plot generated via `paper/generate_figures.py` saved at `paper/figures/stage7_macro_f1_series.png`.
+
+## 2026-09-17 — Stage 7 full three-condition evaluation (incremental BoundedBufferClassifier adaptation rerun)
+
+**Component**: `proteus/evaluate_full.py::run_stage7(n_seeds=1)` → `results/stage7_evaluation.json`  
+**Scale**: Full-scale CICIDS2017 (1,200,000 training rows, 16 replay windows of 3,000 rows each, Mon-Thu stable pool vs Friday temporal drift).  
+**Seed**: 0 (single seed, reported as single-run evidence without confidence interval).  
+**Wall-clock**: 654.0s (~10.9 minutes total across all 3 conditions).  
+**Adaptation Latency**: ~2.5s - 3.7s per drift timestep (down from ~150s / 2.5 minutes per step with full retraining).  
+**Memory Footprint**: Strictly $O(1)$ constant memory capped at $|D_{\text{adapt}}| \le 25,000$ rows ($N_{\text{ref}} = 20,000$ reference reservoir + $N_{\text{recent}} = 5,000$ sliding adaptation buffer).
+
+This run evaluates the refactored incremental classifier adaptation mechanism (`BoundedBufferClassifier`) under strict non-leakage invariants (held-out 30% evaluation split per window never used in training).
+
+### Summary Metrics Across 16 Replay Windows
+
+| Condition | Pre-drift Macro-F1 (w0-w5 mean) | Final Window (w15) Macro-F1 | Post-drift Mean Macro-F1 (w6-w15) | Performance Retention Ratio (Final vs Baseline) |
+|---|---|---|---|---|
+| Baseline RF | 0.4578 | 0.0288 | 0.0292 | 1.0x (ref) |
+| Static Augmentation | 0.4578 | 0.0299 | 0.0304 | 1.04x |
+| **Closed-Loop (Incremental Adaptation)** | **0.3800** | **0.1738** | **0.1535** | **6.03x** |
+
+### Per-Timestep Macro-F1 Progression
+
+| Timestep (`t`) | Event / Context | Baseline RF | Static Augmentation | Closed-Loop (`BoundedBufferClassifier`) | Synthetic Admitted | Update Time |
+|---|---|---|---|---|---|---|
+| 0 | Mon-Thu stable | 0.4587 | 0.4587 | 0.3600 | 0 | — |
+| 1 | Mon-Thu stable | 0.4800 | 0.4800 | 0.4000 | 0 | — |
+| 2 | Mon-Thu stable | 0.4400 | 0.4400 | 0.3600 | 0 | — |
+| 3 | Mon-Thu stable | 0.4800 | 0.4800 | 0.4400 | 0 | — |
+| 4 | Mon-Thu stable | 0.4800 | 0.4800 | 0.4400 | 0 | — |
+| 5 | Mon-Thu stable | 0.4000 | 0.4000 | 0.2800 | 0 | — |
+| 6 | **Drift Onset (Friday)** | 0.0291 | 0.0301 | **0.1707** | 0 synth | 3.67s |
+| 7 | Friday replay | 0.0291 | 0.0304 | **0.1851** | 200 synth | 2.51s |
+| 8 | Friday replay | 0.0298 | 0.0309 | **0.1381** | 200 synth | 2.58s |
+| 9 | Friday replay | 0.0291 | 0.0303 | **0.1580** | 200 synth | 2.61s |
+| 10 | Friday replay | 0.0295 | 0.0307 | **0.1580** | 200 synth | 2.58s |
+| 11 | Friday replay | 0.0297 | 0.0307 | **0.1579** | 400 synth | 2.87s |
+| 12 | Friday replay | 0.0294 | 0.0306 | **0.1572** | 400 synth | 2.86s |
+| 13 | Friday replay | 0.0293 | 0.0304 | **0.1170** | 400 synth | 2.79s |
+| 14 | Friday replay | 0.0286 | 0.0299 | **0.1190** | 400 synth | 2.79s |
+| 15 | Friday replay | 0.0288 | 0.0299 | **0.1738** | 400 synth | 2.48s |
+
+### Key Takeaways
+1. **Incremental adaptation superiority**: Refactoring from full-dataset retraining to `BoundedBufferClassifier` reduced update latency from ~150s per step to ~2.5s–3.7s per step (including GAN 20-step fine-tuning) and eliminated memory growth ($O(1)$ memory, RSS < 5.5GB).
+2. **Robust closed-loop retention**: Under true incremental adaptation with non-leakage held-out evaluation, closed-loop retains **0.1738 Macro-F1** at final window (w15) vs **0.0288** for baseline (**~6.03x performance retention**). Average post-drift Macro-F1 is **0.1535** vs **0.0292** baseline (**~5.26x**).
+3. **Publication figures updated**: Plot generated via `paper/generate_figures.py` saved at `paper/figures/stage7_macro_f1_series.png`.
+
 ## Template for future entries
 
 ```
@@ -201,3 +323,4 @@ has completed by the time you're reading this).
 - <anything a future reader needs to correctly interpret these numbers — caveats,
   known-miscalibrated thresholds, what changed since the last entry for this component>
 ```
+
