@@ -3,12 +3,13 @@ import pickle
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).parent))
+import proteus.config  # noqa: F401 -- must import before numpy/pandas to cap BLAS/OMP threads
+
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
-
-sys.path.insert(0, str(Path(__file__).parent))
 
 from proteus import data as data_mod, drift as drift_mod
 from proteus.pipeline import run_pipeline
