@@ -2,6 +2,8 @@
 import copy
 import time
 
+import proteus.config  # noqa: F401 -- must import before numpy/sklearn to cap BLAS/OMP threads
+
 import numpy as np
 from sklearn.metrics import f1_score, classification_report
 
