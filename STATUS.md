@@ -10,7 +10,42 @@ here, and `METRICS_HISTORY.md` for every real number any run has produced.
 **Standing rule**: update this file at the end of every real work session — not after every
 commit, but whenever you stop, hand off, or finish a stage. A stale STATUS.md defeats the point.
 
-Last updated: 2026-09-12, by Antigravity session.
+Last updated: 2026-09-13, by Claude Code session.
+
+## Handoff note — CPU-spike bug just fixed, uncommitted, read before doing anything else
+
+The repo owner reported the pipeline spiking CPU hard enough to throttle the machine and kill
+VS Code windows. Root cause and fix are fully written up in `CHANGELOG.md`'s 2026-09-13 entry and
+`ARCHITECTURE.md`'s new "CPU thread management" section — read those for the full story. One-line
+summary: a prior session's thread-cap fix (`proteus/config.py`) was a silent no-op because
+`numpy`/`torch`/`sklearn`/`pandas` were being imported *before* it in every file that used it —
+env vars set after a BLAS/OpenMP library is already loaded do nothing. Fixed by reordering
+imports (`proteus.config` always first) across 9 files, verified via `threadpoolctl` showing
+4 threads instead of 16 on every backend.
+
+**Not yet committed** — these are real, verified, working-tree changes the repo owner has not
+asked to be committed yet:
+```
+ M app.py                       (frozen file — edited with repo owner's explicit approval)
+ M proteus/baseline.py
+ M proteus/baseline_full.py
+ M proteus/closed_loop_full.py
+ M proteus/data_full.py
+ M proteus/evaluate_full.py
+ M proteus/gan_full.py
+ M proteus/pipeline.py
+ M proteus/validate_full.py
+?? proteus/config.py            (new file, the thread-cap module itself)
+```
+If the repo owner asks you to commit, these 10 files are one logical unit (the import-order fix)
+— don't sweep in `.agents/` or `logs/` (see below, unrelated pre-existing untracked items).
+
+`logs/stage7_5seed_20260913_035210.log` is the corroborating evidence: a 5-seed sweep attempt
+that died right after the initial CSV load, before any real training started — consistent with
+the CPU-thrash-and-crash symptom. Worth checking if the repo owner wants the 5-seed sweep
+(`run_stage7_5seed.py`) re-run now that the fix is verified — it's a genuinely multi-hour job at
+this scale (see `proteus/evaluate_full.py`'s module docstring), so confirm before launching it
+unsupervised.
 
 ## ⚠️ Unexplained file found — check this first
 
@@ -75,6 +110,9 @@ Check with `curl -s -o /dev/null -w "%{http_code}\n" http://localhost:PORT` — 
 - **Overview page pipeline diagram click-to-describe**: verified interactive node explanations.
 - **Ryu 4.34 controller**: working in `.venv-ryu` (Python 3.8), reproducible via `sdn/setup_ryu_venv.sh`.
 - **GPU training confirmed working**: RTX 4060 via CUDA-build torch (`torch==2.11.0+cu128`).
+- **CPU-thread-oversubscription bug fixed and verified** (2026-09-13, uncommitted — see handoff
+  note at top of this file and `CHANGELOG.md`): import-order fix across 9 files so
+  `proteus/config.py`'s thread cap actually takes effect instead of silently no-op'ing.
 
 ## Completed Evaluation & Verification
 
