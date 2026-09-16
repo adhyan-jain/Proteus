@@ -169,6 +169,47 @@ cleanly. See `STATUS.md`'s Blocked section for the exact command and what succes
 Stage 6 (wiring a trained classifier onto this live stream) is intentionally not started —
 `ryu_ids_app.py`'s `on_schema_row()` is the documented extension point for it.
 
+## 2026-09-13 — CPU-thread-oversubscription bug: the earlier partial fix didn't actually fix it
+
+The repo owner reported the pipeline spiking CPU hard enough to throttle the machine and kill
+VS Code windows outright — corroborated by `logs/stage7_5seed_20260913_035210.log`, a 5-seed
+Stage 7 sweep attempt that died right after the initial CSV load, before any real training even
+started.
+
+A prior session (see the `proteus/baseline*.py`/`closed_loop_full.py`/`validate_full.py` diffs
+already in the tree, plus the new `proteus/config.py`) had already tried to fix this: cap
+`RandomForestClassifier(n_jobs=...)` to 4 instead of `-1` (all cores), and set
+`OMP_NUM_THREADS`/`OPENBLAS_NUM_THREADS`/`MKL_NUM_THREADS`/`VECLIB_MAXIMUM_THREADS`/
+`NUMEXPR_NUM_THREADS` env vars via `proteus/config.py::configure_environment()`, called at
+import time. **This fix was silently a no-op everywhere it had been applied.** OpenBLAS/MKL/
+OpenMP read those env vars exactly once, at their own C-extension init time (i.e. the moment
+`numpy`/`torch`/`sklearn` is first imported in the process) — and in every file that imported
+`proteus.config`, `numpy`/`torch`/`sklearn`/`pandas` had already been imported *first*, on the
+line above. Setting the env vars after that point does nothing: each library had already spun up
+its thread pool at the hardware default (`os.cpu_count()` = 16 on this machine). Net effect
+before this fix: `n_jobs=4` capped joblib's *process* count, but each of those 4 worker
+processes still ran full-width (16-thread) BLAS/OpenMP math underneath — up to **4 × 16 = 64
+threads on a 16-core machine**, which is what was actually pinning the CPU.
+
+Fixed by reordering imports so `proteus.config` (or `from proteus.config import DEFAULT_N_JOBS`)
+is always the *first* import — ahead of `numpy`/`torch`/`pandas`/`sklearn` — in every module that
+is a real or potential process entrypoint: `proteus/evaluate_full.py`, `baseline_full.py`,
+`closed_loop_full.py`, `validate_full.py`, `baseline.py`, `pipeline.py`, `gan_full.py`,
+`data_full.py`, and (with the repo owner's explicit approval, since it's normally frozen —
+`CLAUDE.md` rule 7) `app.py`. Pure import-order change, no logic/API changes anywhere.
+
+Verified two ways, not just by inspection: (1) `import proteus.config` then `import numpy`
+confirms `OMP_NUM_THREADS` is set before numpy loads; (2) after importing the fixed modules,
+`threadpoolctl.threadpool_info()` shows every actual backend — numpy's OpenBLAS, torch's OpenMP,
+scipy's OpenBLAS, sklearn's OpenMP — reporting `num_threads: 4`, not 16. Also smoke-tested
+`streamlit run app.py` after its edit: boots clean, HTTP 200, no errors.
+
+**Lesson for future thread-cap or env-var-based config in this repo**: an env var read once at a
+C-extension's import/init time cannot be set after that extension is already imported anywhere
+in the process — order matters transitively through the whole import chain, not just within one
+file. Any new module doing heavy numeric work (numpy/torch/pandas/sklearn/scipy) must import
+`proteus.config` as its literal first import, before anything else.
+
 ## Current open items
 
 See `STATUS.md` — kept current there instead of duplicated here, so there's exactly one place
