@@ -58,11 +58,28 @@ work happens.
     torch wheel has been mistakenly installed before; always verify
     `torch.cuda.is_available()` before launching a training run.
 
-Not yet built at full scale (as of this writing): the full baseline/static-augmentation
-comparison classifiers, the production-scale drift detector and fidelity gate validation, the
-live Mininet/Ryu deployment, the closed-loop orchestration, and the 5-seed statistical
-evaluation — these are the remaining stages of the paper-grade scale-up (see `CHANGELOG.md`'s
-most recent entries for exact status and open blockers).
+- **`closed_loop_full.py`** — `ClosedLoopOrchestrator`: drift fires (KS-test on classifier
+  confidence, `proteus/drift.py`) → GAN resumes on the recent window → generated batches pass
+  through the MMD fidelity gate (`proteus/fidelity.py`) → admitted synthetic rows plus the real
+  recent window are absorbed by `BoundedBufferClassifier` (fixed-size 20,000-row reference
+  reservoir + 5,000-row sliding recent buffer, so adaptation cost stays O(1) regardless of
+  stream length — replaced an earlier unbounded full-history Random Forest refit that took
+  minutes per drift event and grew without bound; see `CHANGELOG.md`'s 2026-09-17 entry).
+  `ClosedLoopOrchestrator.split_eval_fit` holds out a fixed 30% partition of every incoming
+  window before any adaptation touches it, so pre/post-adaptation macro-F1 is always measured on
+  rows the classifier was never trained on — this fixed a real leakage bug (same date's
+  `CHANGELOG.md` entry).
+- **`evaluate_full.py`** — Stage 7: runs baseline / static-augmentation / closed-loop over an
+  identical real-data temporal-drift window schedule (`RealDataReplaySource`: Mon-Thu training
+  pool vs. Friday holdout, which contains attack families absent from training). Single-seed
+  result as of this writing (0.1738 closed-loop vs. 0.0288 baseline final macro-F1, ~6.03x); the
+  project's 5-seed/95%-CI statistical-rigor rule has not yet been met — see
+  `METRICS_HISTORY.md` and `docs/KNOWN_LIMITATIONS.md`.
+
+Not yet built at full scale (as of this writing): the live Mininet/Ryu deployment wired to the
+closed loop (blocked on root access, see `STATUS.md`), and the 5-seed statistical evaluation
+(single-seed only so far) — see `CHANGELOG.md`'s most recent entries for exact status and open
+blockers.
 
 ## SDN controller stack (`sdn/`)
 
