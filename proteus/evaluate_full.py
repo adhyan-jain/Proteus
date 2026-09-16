@@ -20,6 +20,8 @@ import logging
 import time
 from pathlib import Path
 
+import proteus.config  # noqa: F401 -- must import before numpy/sklearn to cap BLAS/OMP threads
+
 import numpy as np
 
 from proteus.baseline_full import train_and_evaluate, build_static_augmented_set
