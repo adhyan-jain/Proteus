@@ -24,6 +24,8 @@ import logging
 import time
 from pathlib import Path
 
+from proteus.config import DEFAULT_N_JOBS  # noqa: F401 -- must import before numpy/torch/sklearn to cap BLAS/OMP threads
+
 import numpy as np
 import torch
 from sklearn.ensemble import RandomForestClassifier
@@ -86,7 +88,7 @@ def validate_drift_detector():
              f"patterns): {friday_only}")
 
     log.info(f"Training reference classifier on Mon-Thu ({len(X_fit):,} rows)...")
-    clf = RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=-1)
+    clf = RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=DEFAULT_N_JOBS)
     clf.fit(X_fit, y_fit)
 
     ref_conf = _confidence(clf, X_fit[:min(50000, len(X_fit))])
