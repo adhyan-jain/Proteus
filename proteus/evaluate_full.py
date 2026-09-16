@@ -159,6 +159,7 @@ def run_stage7(n_seeds=1, seeds=None):
         "traffic_source": "RealDataReplaySource",
         "is_live_mininet_traffic": False,
         "confidence_interval_valid": len(seeds) >= 5,
+        "leakage_fix_applied": True,
         "per_seed_results": results,
         "final_macro_f1_baseline": [final_f1(r["baseline_macro_f1_series"]) for r in results],
         "final_macro_f1_static_augmentation":
