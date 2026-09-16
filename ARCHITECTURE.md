@@ -105,6 +105,29 @@ Run:
 cd frontend && npm run dev                         # UI, http://localhost:3000
 ```
 
+## CPU thread management (`proteus/config.py`)
+
+Every module in the pipeline that does heavy numeric work — `numpy`, `torch`, `pandas`, or
+`scikit-learn` — must import `proteus.config` (or `from proteus.config import DEFAULT_N_JOBS`)
+as its literal **first** import, before those libraries. `proteus/config.py` sets
+`OMP_NUM_THREADS`/`OPENBLAS_NUM_THREADS`/`MKL_NUM_THREADS`/`VECLIB_MAXIMUM_THREADS`/
+`NUMEXPR_NUM_THREADS` to `DEFAULT_N_JOBS` (`min(4, os.cpu_count())`) and exposes `DEFAULT_N_JOBS`
+for capping `n_jobs=` on `RandomForestClassifier` and similar.
+
+**Why the ordering matters, and why it's not optional stylistic preference**: OpenBLAS/MKL/
+OpenMP each read their thread-count env var exactly once, at their own C-extension init time —
+the moment the owning Python package (`numpy`, `torch`, `sklearn`, `scipy`) is first imported
+anywhere in the process. Setting the env var after that import has already happened anywhere up
+the import chain does nothing; the library has already spun up its thread pool at the hardware
+default (`os.cpu_count()`, 16 on this machine). Combined with `RandomForestClassifier(n_jobs=4)`,
+getting the ordering wrong means 4 joblib worker processes each running full 16-thread BLAS math
+underneath — up to 64 threads on a 16-core machine, which is what caused a real CPU-spike/
+throttling bug (see `CHANGELOG.md`'s 2026-09-13 entry for the full incident and how it was
+verified fixed via `threadpoolctl`). Every current entrypoint has this ordering fixed:
+`evaluate_full.py`, `baseline_full.py`, `closed_loop_full.py`, `validate_full.py`, `baseline.py`,
+`pipeline.py`, `gan_full.py`, `data_full.py`, and `app.py`. Any new module doing numeric work
+must follow the same pattern or the cap silently does nothing.
+
 ## Environments
 
 - `.venv` (Python 3.12) — shared main backend environment: pandas/numpy/scikit-learn/torch
