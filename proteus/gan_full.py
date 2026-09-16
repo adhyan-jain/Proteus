@@ -40,6 +40,8 @@ import logging
 import time
 from pathlib import Path
 
+import proteus.config  # noqa: F401 -- must import before numpy/torch to cap BLAS/OMP threads
+
 import numpy as np
 import torch
 import torch.nn as nn
