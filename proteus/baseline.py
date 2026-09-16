@@ -1,11 +1,13 @@
 """Baseline Random Forest classifier + metrics."""
+from proteus.config import DEFAULT_N_JOBS  # noqa: F401 -- must import before numpy/sklearn to cap BLAS/OMP threads
+
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, confusion_matrix
 
 
 def train_classifier(X_train, y_train, n_estimators=100):
-    clf = RandomForestClassifier(n_estimators=n_estimators, random_state=42, n_jobs=-1)
+    clf = RandomForestClassifier(n_estimators=n_estimators, random_state=42, n_jobs=DEFAULT_N_JOBS)
     clf.fit(X_train, y_train)
     return clf
 
