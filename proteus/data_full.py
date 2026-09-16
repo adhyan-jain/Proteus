@@ -10,6 +10,8 @@ implemented -- InSDN acquisition is blocked pending Kaggle API credentials. Call
 import logging
 from pathlib import Path
 
+import proteus.config  # noqa: F401 -- must import before numpy/pandas/sklearn to cap BLAS/OMP threads
+
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
