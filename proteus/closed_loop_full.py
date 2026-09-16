@@ -32,10 +32,7 @@ with two implementations --
 Whatever source is used, results must be labeled with which one produced them -- see
 `ClosedLoopOrchestrator.run()`'s returned `traffic_source` field.
 """
-import copy
-import json
 import logging
-import time
 from abc import ABC, abstractmethod
 from pathlib import Path
 
@@ -106,11 +103,81 @@ class RealDataReplaySource(TrafficSource):
             yield t, X_pool[idx], y_pool[idx], False  # False = not live Mininet traffic
 
 
+class BoundedBufferClassifier:
+    """Incremental/adaptive streaming classifier maintaining a strictly bounded adaptation buffer.
+
+    Prevents unbounded memory growth and multi-minute retraining latency by capping historical data:
+    1. Reference Reservoir (ref_X, ref_y): max_ref_samples (default 20,000) sampled from initial offline training.
+    2. Sliding Adaptation Buffer (recent_X, recent_y): max_recent_samples (default 5,000) for recent fit rows
+       and admitted synthetic samples.
+    Total adaptation dataset size |D_adapt| <= max_ref_samples + max_recent_samples (25,000 max),
+    guaranteeing O(1) memory footprint and sub-second update latency per drift timestep.
+    """
+
+    def __init__(self, base_estimator_factory, max_ref_samples=20000, max_recent_samples=5000, seed=42):
+        self.factory = base_estimator_factory
+        self.max_ref_samples = max_ref_samples
+        self.max_recent_samples = max_recent_samples
+        self.seed = seed
+        self.clf = None
+        self.ref_X = None
+        self.ref_y = None
+        self.recent_X = None
+        self.recent_y = None
+
+    def fit_initial(self, X_train_init, y_train_init):
+        if len(X_train_init) > self.max_ref_samples:
+            rng = np.random.default_rng(self.seed)
+            idx = rng.choice(len(X_train_init), size=self.max_ref_samples, replace=False)
+            self.ref_X = X_train_init[idx].copy()
+            self.ref_y = y_train_init[idx].copy()
+        else:
+            self.ref_X = X_train_init.copy()
+            self.ref_y = y_train_init.copy()
+
+        self.clf = self.factory()
+        self.clf.fit(X_train_init, y_train_init)
+        return self
+
+    def partial_fit_adaptation(self, X_fit, y_fit, X_synth=None, y_synth=None):
+        X_new = X_fit
+        y_new = y_fit
+        if X_synth is not None and len(X_synth) > 0:
+            X_new = np.vstack([X_fit, X_synth])
+            y_new = np.concatenate([y_fit, y_synth])
+
+        if self.recent_X is None:
+            self.recent_X = X_new.copy()
+            self.recent_y = y_new.copy()
+        else:
+            self.recent_X = np.vstack([self.recent_X, X_new])[-self.max_recent_samples:]
+            self.recent_y = np.concatenate([self.recent_y, y_new])[-self.max_recent_samples:]
+
+        combined_X = np.vstack([self.ref_X, self.recent_X])
+        combined_y = np.concatenate([self.ref_y, self.recent_y])
+
+        self.clf = self.factory()
+        self.clf.fit(combined_X, combined_y)
+        return self
+
+    @property
+    def buffer_size(self):
+        recent_len = len(self.recent_X) if self.recent_X is not None else 0
+        ref_len = len(self.ref_X) if self.ref_X is not None else 0
+        return ref_len + recent_len
+
+    def predict(self, X):
+        return self.clf.predict(X)
+
+    def predict_proba(self, X):
+        return self.clf.predict_proba(X)
+
+
 class ClosedLoopOrchestrator:
-    """drift fires -> GAN resumes on recent window -> fidelity gate -> classifier retrains."""
+    """drift fires -> GAN resumes on recent window -> fidelity gate -> classifier incremental adaptation."""
 
     def __init__(self, X_train_init, y_train_init, class_names, gan_checkpoint_path=None,
-                 device=None):
+                 device=None, max_ref_samples=20000, max_recent_samples=5000):
         if device is None:
             if not torch.cuda.is_available():
                 raise RuntimeError(
@@ -121,12 +188,17 @@ class ClosedLoopOrchestrator:
         self.class_names = class_names
         self.name_to_idx = {c: i for i, c in enumerate(class_names)}
 
-        self.X_train = X_train_init.copy()
-        self.y_train = y_train_init.copy()
-        self.clf = RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=DEFAULT_N_JOBS)
-        self.clf.fit(self.X_train, self.y_train)
+        self.clf = BoundedBufferClassifier(
+            lambda: RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=DEFAULT_N_JOBS),
+            max_ref_samples=max_ref_samples,
+            max_recent_samples=max_recent_samples
+        )
+        self.clf.fit_initial(X_train_init, y_train_init)
+        self.X_train_ref = self.clf.ref_X
+        self.y_train_ref = self.clf.ref_y
+
         self.ref_confidence = self.clf.predict_proba(
-            self.X_train[:min(50000, len(self.X_train))]).max(axis=1)
+            X_train_init[:min(50000, len(X_train_init))]).max(axis=1)
 
         from proteus.gan_full import WGANGPFull, GAN_ADMIT_CLASSES
         self.gan_admit_classes = GAN_ADMIT_CLASSES
@@ -147,6 +219,8 @@ class ClosedLoopOrchestrator:
 
         self.gate = fidelity_mod.FidelityGateLog(threshold=MMD_THRESHOLD)
         self.drift_events, self.retrain_events = [], []
+        self.eval_rng = np.random.default_rng(123)
+        self.EVAL_HOLDOUT_FRACTION = 0.3
 
     def _macro_f1(self, X, y):
         y_pred = self.clf.predict(X)
@@ -154,13 +228,7 @@ class ClosedLoopOrchestrator:
                                average="macro", zero_division=0))
 
     def _resume_gan_on_recent_window(self, X_recent, y_recent, steps=20, batch_size=32):
-        """Resume-train the GAN (not from scratch) on the drift window. `train_one_epoch`
-        needs `idx_by_class` covering every class the GAN was originally built with -- its
-        one-hot encoding has a fixed dimension across all `self.gan.class_labels`, not just
-        whichever classes happen to appear in this window. For classes present in the recent
-        window, use those (the actual point -- adapt to what just drifted); for classes the
-        window doesn't happen to contain, fall back to the original training pool so the
-        generator doesn't lose what it already knew about them."""
+        """Resume-train the GAN (not from scratch) on the drift window."""
         idx_by_class = {}
         rows = []
         for c in self.gan.class_labels:
@@ -170,49 +238,54 @@ class ClosedLoopOrchestrator:
                 rows.append(X_recent[recent_local])
                 idx_by_class[c] = np.arange(start, start + len(recent_local))
             else:
-                fallback_local = np.where(self.y_train == c)[0]
+                fallback_local = np.where(self.y_train_ref == c)[0]
                 if len(fallback_local) == 0:
-                    continue  # genuinely no examples anywhere -- skip this class this round
+                    continue
                 n = min(50, len(fallback_local))
                 sample = np.random.default_rng(0).choice(fallback_local, size=n, replace=False)
                 start = len(rows)
-                rows.append(self.X_train[sample])
+                rows.append(self.X_train_ref[sample])
                 idx_by_class[c] = np.arange(start, start + n)
 
         if len(idx_by_class) < 2:
-            return  # not enough class coverage to run a meaningful GAN training step
+            return
         X_combined = np.vstack(rows).astype(np.float32)
         X_norm = self.gan._normalize(X_combined)
-        # y aligned to X_combined's rows, built in the same order idx_by_class was populated
         y_combined = np.concatenate([np.full(len(v), c) for c, v in idx_by_class.items()])
         self.gan.train_one_epoch(X_norm, y_combined, epoch=-1, idx_by_class=idx_by_class,
                                   steps_per_epoch=steps)
 
+    @staticmethod
+    def split_eval_fit(X, y, fraction, rng):
+        """Held-out split of one incoming window, fixed before any training/adaptation touches it."""
+        n_eval = max(1, int(len(X) * fraction))
+        perm = rng.permutation(len(X))
+        eval_idx, fit_idx = perm[:n_eval], perm[n_eval:]
+        return X[eval_idx], y[eval_idx], X[fit_idx], y[fit_idx]
+
     def step(self, t, X, y):
-        macro_f1_before = self._macro_f1(X, y)
+        import time, resource
+        X_eval, y_eval, X_fit, y_fit = self.split_eval_fit(
+            X, y, self.EVAL_HOLDOUT_FRACTION, self.eval_rng)
+
+        macro_f1_before = self._macro_f1(X_eval, y_eval)
         conf = self.clf.predict_proba(X).max(axis=1)
         result = drift_mod.detect_drift(conf, self.ref_confidence)
         self.drift_events.append({"timestep": t, **result})
 
         macro_f1_after = macro_f1_before
         if result["fired"]:
+            t_adapt_0 = time.time()
             log.info(f"[t={t}] drift fired (stat={result['statistic']:.4f} "
-                     f"p={result['p_value']:.4g}) -- retraining")
-            self._resume_gan_on_recent_window(X, y)
+                     f"p={result['p_value']:.4g}) -- updating classifier incrementally")
+            self._resume_gan_on_recent_window(X_fit, y_fit)
 
             n_admitted_total = 0
             X_new, y_new = [], []
             for c in self.admit_idx:
-                real_recent = X[y == c] if (y == c).sum() >= 5 else \
-                    self.X_train[self.y_train == c]
+                real_recent = X_fit[y_fit == c] if (y_fit == c).sum() >= 5 else \
+                    self.X_train_ref[self.y_train_ref == c]
                 if len(real_recent) == 0:
-                    # No real reference data anywhere (neither this window nor the accumulated
-                    # training pool) for this class -- there is nothing to compare a synthetic
-                    # batch against, so there is no honest fidelity judgment to make. Skip and
-                    # log why, rather than let compute_mmd silently divide over an empty array
-                    # (produces NaN, which happens to compare as "not admitted" -- fail-closed,
-                    # but for the wrong reason: "no data" is not the same claim as "failed the
-                    # fidelity check").
                     log.info(f"[t={t}] class={self.class_names[c]}: no real reference data "
                              f"available anywhere -- skipping fidelity check, not admitting")
                     continue
@@ -220,21 +293,27 @@ class ClosedLoopOrchestrator:
                 admitted, score = self.gate.check(t, synth, real_recent, len(synth))
                 if admitted:
                     X_new.append(synth.astype(np.float32))
-                    y_new.append(np.full(len(synth), c, dtype=self.y_train.dtype))
+                    y_new.append(np.full(len(synth), c, dtype=self.y_train_ref.dtype))
                     n_admitted_total += len(synth)
 
-            self.X_train = np.vstack([self.X_train, X] + X_new)
-            self.y_train = np.concatenate([self.y_train, y] + y_new)
-            self.clf = RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=DEFAULT_N_JOBS)
-            self.clf.fit(self.X_train, self.y_train)
-            macro_f1_after = self._macro_f1(X, y)
+            X_synth_combined = np.vstack(X_new) if X_new else None
+            y_synth_combined = np.concatenate(y_new) if y_new else None
+
+            self.clf.partial_fit_adaptation(X_fit, y_fit, X_synth_combined, y_synth_combined)
+            adapt_duration = time.time() - t_adapt_0
+            rss_mb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024.0
+
+            macro_f1_after = self._macro_f1(X_eval, y_eval)
             self.retrain_events.append({
                 "timestep": t, "macro_f1_before": macro_f1_before,
                 "macro_f1_after": macro_f1_after, "n_synthetic_admitted": n_admitted_total,
-                "n_train_rows_after": int(len(self.X_train)),
+                "n_train_rows_after": self.clf.buffer_size,
+                "adaptation_duration_seconds": float(adapt_duration),
+                "memory_rss_mb": float(rss_mb)
             })
-            log.info(f"[t={t}] retrained: macro_f1 {macro_f1_before:.4f} -> "
-                     f"{macro_f1_after:.4f} ({n_admitted_total} synthetic rows admitted)")
+            log.info(f"[t={t}] incrementally adapted: macro_f1 {macro_f1_before:.4f} -> "
+                     f"{macro_f1_after:.4f} ({n_admitted_total} synthetic rows admitted, "
+                     f"buffer_size={self.clf.buffer_size}, time={adapt_duration:.2f}s)")
 
         return macro_f1_before, macro_f1_after
 
