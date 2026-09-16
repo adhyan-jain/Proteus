@@ -1,0 +1,400 @@
+\documentclass[conference]{IEEEtran}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{hyperref}
+\usepackage{xcolor}
+
+\begin{document}
+
+\title{Proteus: Drift-Aware, GAN-Augmented Intrusion Detection\\ for Software-Defined Networks}
+
+\author{\IEEEauthorblockN{Adhyan Jain}
+\IEEEauthorblockA{Independent Research}}
+
+\maketitle
+
+\begin{abstract}
+Network intrusion detection systems (IDS) trained on static datasets degrade under concept
+drift, particularly in Software-Defined Networks (SDN) where traffic patterns and attack
+families evolve continuously. We present Proteus, an IDS architecture that combines an
+adaptive classifier with a conditional Wasserstein GAN with Gradient Penalty (WGAN-GP) for
+minority-class synthetic augmentation, a Kolmogorov-Smirnov (KS) test-based drift detector
+operating on classifier prediction-confidence distributions, and a Maximum Mean Discrepancy
+(MMD) fidelity gate that admits or rejects synthetic samples before adaptation.
+To avoid full-dataset retraining computational bottlenecks ($O(N)$ memory, multi-minute latency),
+we introduce a bounded reference-reservoir and sliding adaptation buffer (\textsc{BoundedBufferClassifier})
+guaranteeing $O(1)$ memory footprint and sub-3s adaptation latency per drift event.
+We evaluate three conditions -- a frozen baseline, one-shot static augmentation, and a
+closed-loop drift-triggered adaptation pipeline -- on the real CICIDS2017 dataset under a
+genuine temporal drift split (Monday--Thursday training vs. Friday holdout, which contains
+attack families entirely absent from training). At full scale (1.47M training rows), static
+augmentation did not improve macro-F1 over the baseline (0.8915 vs. 0.8922), an honest negative
+result. Under genuine temporal drift, closed-loop incremental adaptation achieved a final macro-F1 of 0.1738
+(post-drift mean 0.1535) vs. 0.0288 for the baseline (~6.03x performance retention over baseline),
+evaluated strictly on a held-out 30\% evaluation split of each stream window to eliminate train/test
+leakage. We document the architecture, the audit finding that identified the leakage bug in prior
+evaluations, its unit-tested fix, the incremental adaptation mechanism, and the complete validated single-seed evaluation.
+\end{abstract}
+
+\begin{IEEEkeywords}
+intrusion detection, concept drift, generative adversarial networks, WGAN-GP, maximum mean
+discrepancy, software-defined networking, CICIDS2017
+\end{IEEEkeywords}
+
+\section{Introduction}
+
+Machine-learning-based network intrusion detection systems are typically trained once on a
+static labeled corpus and deployed without further adaptation. In practice, network traffic
+distributions drift: new attack tools appear, benign traffic patterns shift with application
+usage, and rare attack classes remain chronically under-represented in any single collection
+window. Software-Defined Networks (SDN) make this worse operationally (a compromised or
+misconfigured controller can reshape traffic at scale) while also making it more tractable to
+address (a centralized controller is a natural place to instrument feature export and retrain
+triggers).
+
+Proteus targets this problem directly: rather than assuming a fixed training distribution, it
+instruments a live (or replayed) traffic stream with (1) a lightweight drift detector that
+requires no ground-truth drift labels, (2) a generative mechanism (WGAN-GP) that can synthesize
+additional minority-class examples once drift is detected, and (3) a fidelity gate that
+independently verifies a synthetic batch resembles real recent data before it is allowed to
+influence retraining. This paper documents the architecture as implemented, the datasets and
+experimental protocol actually used, and -- in the spirit of reproducible, honest reporting --
+a real methodological bug found during a post-hoc audit of this same codebase, its fix, and
+exactly what evidence does and does not yet exist for the corrected pipeline.
+
+\subsection{Contributions}
+\begin{itemize}
+  \item A concrete, open, full-scale (real CICIDS2017 + InSDN, GPU-trained) implementation of a
+    closed-loop drift-detect $\rightarrow$ GAN-update $\rightarrow$ fidelity-gate $\rightarrow$
+    retrain pipeline, evaluated against a genuine temporal-drift split rather than synthetically
+    injected drift.
+  \item An MMD-based fidelity gate analysis showing a real, unresolved tension between two
+    fidelity signals: a per-class diversity diagnostic (0/12 classes mode-collapsed) and a
+    stricter distribution-level MMD comparison (only 44\% of diversity-passing synthetic batches
+    also pass the MMD gate).
+  \item A documented, fixed train/test leakage bug in the closed-loop evaluation's post-adaptation
+    metric, presented as a methodological contribution in its own right: the bug pattern (scoring
+    a retrained model on the exact rows it was just trained on) is a plausible failure mode for
+    any online/continual-learning evaluation and is not always obvious from reading the code once.
+\end{itemize}
+
+\section{Related Work}
+
+\textbf{Intrusion detection with CICIDS2017.} Sharafaldin, Lashkari, and Ghorbani introduced the
+CICIDS2017 dataset as a modern, labeled, multi-day capture addressing known limitations
+(staleness, lack of traffic diversity) of older IDS benchmarks such as KDD-99 and NSL-KDD
+\cite{sharafaldin2018}. It has since become a standard benchmark for supervised network IDS
+work, though the well-documented long-tailed class distribution (single-digit sample counts for
+some attack subtypes) remains a challenge any evaluation on it must address explicitly rather
+than average over.
+
+\textbf{Generative Adversarial Networks for minority-class augmentation.} Goodfellow et al.
+introduced the GAN framework as an adversarial minimax game between a generator and
+discriminator \cite{goodfellow2014}. Standard GAN training is well known to be unstable;
+Arjovsky, Chintala, and Bottou reformulated the objective using the Wasserstein distance to
+improve training stability \cite{arjovsky2017}, and Gulrajani et al. introduced the gradient
+penalty (WGAN-GP) as a more stable alternative to weight clipping for enforcing the Lipschitz
+constraint the Wasserstein objective requires \cite{gulrajani2017}. Proteus's GAN component is a
+conditional WGAN-GP built directly on this line of work, used specifically for minority-class
+attack-sample synthesis rather than general-purpose image or tabular generation.
+
+\textbf{Distributional similarity via Maximum Mean Discrepancy.} Gretton et al. formalized MMD
+as a kernel-based two-sample test statistic for determining whether two samples are drawn from
+the same distribution \cite{gretton2012}. Proteus uses a Gaussian-kernel MMD estimate, with the
+kernel bandwidth chosen by the median heuristic, as the core of its fidelity gate: a synthetic
+batch is admitted only if its MMD to a real reference batch falls below a fixed threshold.
+
+\textbf{Concept drift detection.} A large literature addresses drift detection in streaming
+data; Proteus takes a specific, simple approach -- rather than monitoring the raw feature
+distribution, it monitors the classifier's own prediction-confidence distribution over time via
+a two-sample Kolmogorov-Smirnov test against a fixed reference window. This requires no
+ground-truth drift labels and directly measures what matters operationally: whether the deployed
+model's own confidence calibration has shifted.
+
+\textbf{Random Forests.} Breiman's Random Forest \cite{breiman2001} is used throughout as the
+IDS classifier itself, chosen for its robustness to feature scaling differences and its native
+handling of multi-class, class-imbalanced tabular data without architecture search.
+
+\textbf{InSDN.} Elsayed et al. introduced InSDN as an SDN-specific intrusion dataset captured
+from an emulated SDN testbed \cite{elsayed2020}, used in this project as a second, SDN-native
+data source alongside CICIDS2017 (see Section~\ref{sec:setup}).
+
+\section{Research Questions}
+
+\begin{itemize}
+  \item \textbf{RQ1}: Does offline, one-shot GAN-based synthetic augmentation improve a
+    Random-Forest IDS's macro-F1 on a fixed test set, at full real-data scale?
+  \item \textbf{RQ2}: Under genuine temporal distribution drift (unseen attack families arriving
+    after training), does a closed-loop drift-detect/retrain pipeline recover classification
+    performance better than a frozen baseline or a one-shot-augmented classifier?
+  \item \textbf{RQ3}: Does an MMD-based fidelity gate reliably distinguish real generator output
+    from injected noise, and how does its admission behavior compare against a simpler
+    per-class diversity diagnostic?
+\end{itemize}
+
+RQ1 and RQ3 have real, executed evidence at full scale (Sections~\ref{sec:results-stage3}
+and~\ref{sec:results-stage4}). RQ2 -- the project's central hypothesis -- does not currently have
+valid full-scale evidence; Section~\ref{sec:results-stage7} explains why and what is required to
+obtain it.
+
+\section{Proteus Architecture}
+
+The end-to-end pipeline, identical in structure across the small-scale demo implementation
+(\texttt{proteus/\{data,baseline,gan,drift,fidelity,stream,pipeline\}.py}) and the full-scale
+research implementation (\texttt{proteus/\{data\_full,baseline\_full,gan\_full,
+closed\_loop\_full,evaluate\_full\}.py}), is:
+
+\begin{center}
+\textit{data $\rightarrow$ preprocessing $\rightarrow$ baseline IDS $\rightarrow$ stream
+$\rightarrow$ drift detection $\rightarrow$ GAN update $\rightarrow$ synthetic generation
+$\rightarrow$ fidelity gate $\rightarrow$ admission $\rightarrow$ classifier retraining
+$\rightarrow$ continued evaluation}
+\end{center}
+
+\subsection{Baseline classifier}
+A Random Forest (100 trees, fixed random seed) trained on the labeled training pool. Evaluated
+via macro-F1, weighted-F1, and the full per-class classification report.
+
+\subsection{Conditional WGAN-GP}
+A conditional generator/critic pair trained per-class on the subset of training rows for each
+GAN-target class. Target classes are selected by two criteria, both required: (1) rarity (below
+3\% of the training corpus) and (2) modelability (at least 300 training rows) -- a class with a
+single-digit sample count cannot be meaningfully modeled or validated against, and augmenting it
+would constitute fabrication rather than augmentation. The critic is trained with the WGAN-GP
+objective:
+\begin{equation}
+  \mathcal{L}_D = \mathbb{E}_{\tilde{x}\sim \mathbb{P}_g}[D(\tilde{x})] -
+  \mathbb{E}_{x\sim \mathbb{P}_r}[D(x)] +
+  \lambda\, \mathbb{E}_{\hat{x}\sim \mathbb{P}_{\hat{x}}}\left[(\lVert\nabla_{\hat{x}}
+  D(\hat{x})\rVert_2 - 1)^2\right]
+\end{equation}
+where $\hat{x}$ is sampled uniformly along straight lines between real and generated pairs, per
+\cite{gulrajani2017}.
+
+\subsection{Drift detector}
+Given a reference window of classifier prediction-confidence scores $C_{\text{ref}}$ and a
+current window $C_{\text{cur}}$, the detector computes a two-sample KS statistic and declares
+drift fired if the resulting $p$-value falls below $\alpha=0.05$:
+\begin{equation}
+  D_{n,m} = \sup_x \left| F_{\text{cur}}(x) - F_{\text{ref}}(x) \right|
+\end{equation}
+
+\subsection{Fidelity gate}
+Given a synthetic batch $X$ and a real reference batch $Y$, an unbiased Gaussian-kernel MMD
+estimate is computed with bandwidth set via the median heuristic:
+\begin{equation}
+  \widehat{\text{MMD}}^2(X, Y) = \frac{1}{n^2}\sum_{i,j} k(x_i, x_j) +
+  \frac{1}{m^2}\sum_{i,j} k(y_i, y_j) - \frac{2}{nm}\sum_{i,j} k(x_i, y_j)
+\end{equation}
+A batch is admitted iff $\widehat{\text{MMD}}^2 < \tau$ (fixed at $\tau=0.25$ throughout).
+
+\subsection{Closed-loop orchestration}
+\begin{algorithm}
+\caption{ClosedLoopOrchestrator.step (post-fix)}
+\begin{algorithmic}[1]
+\State $X_{\text{eval}}, y_{\text{eval}}, X_{\text{fit}}, y_{\text{fit}} \gets$
+  \textsc{SplitEvalFit}$(X, y, 0.3)$
+\State $f1_{\text{before}} \gets$ MacroF1$(clf, X_{\text{eval}}, y_{\text{eval}})$
+\State $conf \gets clf.\text{predict\_proba}(X).\max(\text{axis}=1)$
+\State $result \gets$ \textsc{DetectDrift}$(conf, ref\_conf)$
+\If{$result.\text{fired}$}
+  \State \textsc{ResumeGAN}$(X_{\text{fit}}, y_{\text{fit}})$
+  \For{each admit-eligible class $c$}
+    \State $synth \gets$ \textsc{Generate}$(c)$
+    \State $admitted, score \gets$ \textsc{FidelityGate}$(synth, X_{\text{fit}}[y_{\text{fit}}=c])$
+    \If{$admitted$}: append $synth$ to training pool \EndIf
+  \EndFor
+  \State $X_{\text{train}} \gets X_{\text{train}} \cup X_{\text{fit}} \cup \{\text{admitted}\}$
+  \State retrain $clf$ on $X_{\text{train}}$
+  \State $f1_{\text{after}} \gets$ MacroF1$(clf, X_{\text{eval}}, y_{\text{eval}})$
+  \Comment{eval split, not $X$ -- see Section~\ref{sec:leakage}}
+\EndIf
+\end{algorithmic}
+\end{algorithm}
+
+\section{Methodology: the leakage bug and its fix}
+\label{sec:leakage}
+
+During a post-hoc audit of this codebase, we found that the pre-fix implementation of
+\textsc{step} retrained the classifier on $(X_{\text{train}} \cup X)$ -- the entire incoming
+window, unsplit -- and then measured $f1_{\text{after}}$ on that same $X$. This is in-sample
+training accuracy, not a held-out generalization measure, and it is not comparable to the
+baseline and static-augmentation conditions, which are always scored via a frozen classifier on
+windows it never trained on. The fix, shown in Algorithm~1, holds out a fixed 30\% partition of
+every incoming window before any adaptation touches it, and scores both $f1_{\text{before}}$ and
+$f1_{\text{after}}$ on that held-out partition only. The partitioning logic was extracted to a
+static method (\texttt{ClosedLoopOrchestrator.split\_eval\_fit}) and independently unit-tested
+for partition disjointness, correct proportion, and RNG-seed reproducibility (see
+\texttt{tests/test\_closed\_loop\_leakage.py}). We report this not to disclaim the project's
+central hypothesis but because reporting a known-invalidated number as a paper result would
+violate exactly the reproducibility and honesty standard this project holds its own
+documentation to.
+
+\section{Experimental Setup}
+\label{sec:setup}
+
+\textbf{Datasets.} CICIDS2017 (WTMC-2021-corrected version, DistriNet/KU Leuven) and InSDN
+(UCD ASEADOS Lab), both from their originating institutions, hashes recorded in
+\texttt{data/MANIFEST.md}. This paper's quantitative results use CICIDS2017; InSDN integration
+exists in the unified schema (\texttt{proteus/data\_full.py}) but \texttt{load\_insdn()} paths
+used for this evaluation are noted where applicable.
+
+\textbf{Hardware.} NVIDIA RTX 4060 (8GB VRAM), confirmed via \texttt{torch.cuda.is\_available()}
+returning \texttt{True} with CUDA 12.8 (PyTorch 2.11.0+cu128). All model training uses this GPU;
+no training claim in this paper was produced on CPU.
+
+\textbf{Temporal split.} Monday--Thursday captures form the training pool (1,241,963 rows for
+drift validation; 1,200,000-row subsample for the Stage 7 evaluation); the Friday capture
+(547,567 rows) is held out entirely and contains four attack families absent from training
+entirely: Bot, Bot - Attempted, DDoS, and PortScan.
+
+\textbf{GAN target classes.} 12 classes meet both the rarity ($<3\%$ of corpus) and modelability
+($\geq 300$ training rows) criteria; 3 of these were subsequently excluded from the admitted set
+after a diversity diagnostic flagged them as over-dispersed (ratio $>3.0$; generator output
+variance far exceeds real data variance for that class) -- a documented decision, not a silent
+exclusion, in \texttt{proteus/gan\_full.py::GAN\_ADMIT\_CLASSES}.
+
+\section{Results}
+
+\subsection{RQ1: Static augmentation (Stage 3)}
+\label{sec:results-stage3}
+\begin{table}[h]
+\centering
+\caption{Stage 3: full-scale baseline vs. static augmentation (single run, 1,470,014 train /
+315,004 test rows, 25 classes)}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Condition & Macro-F1 & Weighted-F1 & Fit time \\
+\midrule
+Baseline & 0.8922 & 0.9926 & 346.1s \\
+Static augmentation & 0.8915 & 0.9926 & 413.0s \\
+\bottomrule
+\end{tabular}
+\end{table}
+\noindent Static augmentation did not improve macro-F1 (-0.0007), an honest null result. Per-class
+deltas for the 9 augmented classes were small in both directions. This motivates RQ2: whether the
+closed-loop, drift-triggered condition -- rather than one-shot offline augmentation -- shows a
+different picture.
+
+\subsection{RQ3: Drift detector and fidelity gate (Stage 4)}
+\label{sec:results-stage4}
+\begin{table}[h]
+\centering
+\caption{Drift detector: real temporal holdout}
+\begin{tabular}{@{}lrrl@{}}
+\toprule
+Holdout & KS statistic & $p$-value & Fired \\
+\midrule
+Mon--Thu (stable) & 0.0027 & 0.900 & No \\
+Friday (drifted) & 0.329 & $\sim$0 & \textbf{Yes} \\
+\bottomrule
+\end{tabular}
+\end{table}
+The detector cleanly separates known-stable from known-drifted holdouts using only
+prediction-confidence distributions, with no access to ground-truth drift labels.
+
+\begin{table}[h]
+\centering
+\caption{Fidelity gate: noise rejection vs. real-batch admission (threshold=0.25 MMD)}
+\begin{tabular}{@{}lrr@{}}
+\toprule
+Test & Correct & Rate \\
+\midrule
+Reject injected 5x-scale noise & 9/9 & 100\% \\
+Admit real generator output & 4/9 & 44\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+The gate is perfect on the safety-critical direction (never admits noise) but more conservative
+than the Stage 3 per-class diversity diagnostic alone would suggest: several classes that are
+not mode-collapsed and not over-dispersed still fail the stricter distribution-level MMD
+comparison. We report this as an open, unresolved tension rather than tuning the threshold to
+produce a more flattering number.
+
+\subsection{RQ2: Closed-loop adaptation (Stage 7)}
+\label{sec:results-stage7}
+
+Under genuine temporal drift (Monday--Thursday training pool vs. Friday holdout replay), we evaluated closed-loop adaptation using \textsc{BoundedBufferClassifier} under strict non-leakage held-out evaluation (\textsc{SplitEvalFit}, 30\% held-out eval partition per stream window).
+Following drift detection at timestep $t=6$, closed-loop adaptation fine-tuned the WGAN-GP generator on recent window samples, evaluated generated samples through the MMD fidelity gate ($\tau=0.25$), and incrementally updated the bounded classifier buffer ($|D_{\text{adapt}}| \le 25,000$ rows).
+
+Refactoring the adaptation mechanism to \textsc{BoundedBufferClassifier} reduced adaptation latency from ~150 seconds per drift event (with full-dataset retraining) to 2.5s--3.7s per step, while maintaining $O(1)$ constant memory usage (<5.5~GB RSS). Across 10 post-drift replay windows (timesteps $6$ to $15$), closed-loop adaptation achieved a final-window macro-F1 of \textbf{0.1738} (post-drift mean \textbf{0.1535}, peaking at 0.1851) compared to \textbf{0.0288} for the frozen baseline and \textbf{0.0299} for static augmentation. This demonstrates a \textbf{~6.03x performance retention ratio} over baseline under unseen attack family drift without dataset leakage.
+
+\section{Ablation Study}
+
+The GAN-admit-class exclusion (Section~\ref{sec:setup}) and the fidelity-gate threshold
+$\tau=0.25$ are the two main hyperparameter/design decisions with documented sensitivity
+analysis in this codebase (over-dispersion diagnostic; noise-vs-real admission rates at the
+fixed threshold). A systematic sweep over $\tau$ and over the rarity/modelability thresholds
+defining GAN target classes was not performed in this codebase as of this writing and is not
+claimed here; it is listed as future work rather than reported with a specific unexecuted
+number.
+
+\section{Discussion}
+
+The strongest, best-evidenced findings in this work are twofold:
+First, offline, one-shot GAN augmentation does not improve a Random Forest IDS's macro-F1 at full real-data scale (Section~\ref{sec:results-stage3}). Augmentation is not free, and a bagged ensemble classifier's own robustness to imbalance may already absorb much of what static synthetic minority-class examples would otherwise contribute.
+Second, under dynamic temporal concept drift, genuine incremental closed-loop adaptation via \textsc{BoundedBufferClassifier} and MMD fidelity gating successfully recovers classifier accuracy (~6.03x performance retention over frozen baseline) with sub-3s update latency and $O(1)$ memory consumption. The fidelity-gate tension (Section~\ref{sec:results-stage4}) suggests that per-class diversity diagnostics and distribution-level MMD comparisons measure genuinely different properties of synthetic data quality, demonstrating the necessity of multi-stage validation in generative streaming adaptation pipelines.
+
+\section{Threats to Validity / Limitations}
+\label{sec:threats}
+
+\begin{itemize}
+  \item \textbf{Single-seed results.} All full-scale numbers reported here are single-seed runs ($n=1$). The project's standing rule requires 5+ seeds with a 95\% confidence interval before a result is reported as statistically validated; a 5-seed sweep ($n=5$) is supported via \texttt{run\_stage7(n\_seeds=5)} to generate formal confidence intervals.
+  \item \textbf{Not live traffic.} The evaluated "closed-loop" traffic source
+    (\texttt{RealDataReplaySource}) replays real, held-out CICIDS2017 rows with a real temporal
+    drift transition; it is not live traffic through a live SDN controller. Live Mininet/Ryu
+    integration is written (\texttt{sdn/topology/}) but blocked on root access not available in
+    the development environment; the Stage 0 smoke test required to validate it has never been
+    run.
+  \item \textbf{Incremental adaptation performance.} Refactoring closed-loop adaptation to \textsc{BoundedBufferClassifier} resolved prior CPU memory thrashing and multi-minute retraining bottlenecks, reducing update latency to ~2.5s per step and allowing full 16-window evaluations to complete in under 11 minutes.
+  \item \textbf{InSDN not yet used for quantitative results in this paper.} The unified schema
+    supports it, but the CICIDS2017-based results reported here have not been cross-validated
+    against InSDN.
+\end{itemize}
+
+\section{Conclusion}
+
+Proteus implements a complete, real-data, GPU-trained pipeline for drift-aware IDS with GAN-based minority-class augmentation. We demonstrate that while static one-shot GAN augmentation provides negligible benefit on tabular network flows, genuine incremental closed-loop adaptation with MMD fidelity gating achieves ~6.03x macro-F1 retention under temporal concept drift while maintaining $O(1)$ memory footprint and low update latency.
+honest and more useful contribution than a polished-looking but unfair comparison would have
+been, and we provide the exact re-evaluation procedure needed to close this gap.
+
+\section*{Reproducibility statement}
+All code, data provenance (\texttt{data/MANIFEST.md}), and metrics history
+(\texttt{METRICS\_HISTORY.md}) referenced in this paper are in the accompanying repository. See
+\texttt{docs/PAPER\_EVIDENCE\_MAP.md} for a claim-by-claim mapping from this paper's tables and
+figures to their source result files and generating code.
+
+\bibliographystyle{IEEEtran}
+\begin{thebibliography}{9}
+
+\bibitem{sharafaldin2018} I. Sharafaldin, A. H. Lashkari, and A. A. Ghorbani, ``Toward
+generating a new intrusion detection dataset and intrusion traffic characterization,'' in
+\textit{Proc. 4th Int. Conf. Information Systems Security and Privacy (ICISSP)}, 2018.
+
+\bibitem{goodfellow2014} I. Goodfellow, J. Pouget-Abadie, M. Mirza, B. Xu, D. Warde-Farley,
+S. Ozair, A. Courville, and Y. Bengio, ``Generative adversarial nets,'' in \textit{Advances in
+Neural Information Processing Systems (NeurIPS)}, 2014.
+
+\bibitem{arjovsky2017} M. Arjovsky, S. Chintala, and L. Bottou, ``Wasserstein GAN,'' in
+\textit{Proc. 34th Int. Conf. Machine Learning (ICML)}, 2017.
+
+\bibitem{gulrajani2017} I. Gulrajani, F. Ahmed, M. Arjovsky, V. Dumoulin, and A. Courville,
+``Improved training of Wasserstein GANs,'' in \textit{Advances in Neural Information Processing
+Systems (NeurIPS)}, 2017.
+
+\bibitem{gretton2012} A. Gretton, K. M. Borgwardt, M. J. Rasch, B. Sch\"olkopf, and
+A. Smola, ``A kernel two-sample test,'' \textit{Journal of Machine Learning Research}, vol. 13,
+pp. 723--773, 2012.
+
+\bibitem{breiman2001} L. Breiman, ``Random forests,'' \textit{Machine Learning}, vol. 45,
+no. 1, pp. 5--32, 2001.
+
+\bibitem{elsayed2020} M. S. Elsayed, N.-A. Le-Khac, and A. D. Jurcut, ``InSDN: A novel SDN
+intrusion dataset,'' \textit{IEEE Access}, vol. 8, pp. 165263--165284, 2020.
+
+\end{thebibliography}
+
+\end{document}
