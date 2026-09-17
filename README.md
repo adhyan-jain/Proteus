@@ -55,7 +55,7 @@
 1. **Closed-Loop Drift Adaptation**: Monitors deployed model confidence distribution shifts via a two-sample Kolmogorov-Smirnov test ($\alpha=0.05$) without requiring ground-truth drift labels.
 2. **Conditional WGAN-GP Minority Augmentation**: Resumes GPU training on minority attack classes upon drift detection to generate candidate synthetic attack samples.
 3. **MMD Fidelity Gate**: Applies an unbiased Gaussian-kernel Maximum Mean Discrepancy two-sample statistic ($\tau=0.25$) to reject low-quality or out-of-distribution synthetic samples before retraining.
-4. **Bounded-Memory Adaptive Retraining (`BoundedBufferClassifier`)**: Replaces full historical retraining with a bounded reference reservoir ($N_{\text{ref}}=20,000$) and sliding adaptation buffer ($N_{\text{recent}}=5,000$). Guarantees $O(1)$ constant memory footprint ($<5.5\text{ GB}$ RSS) and sub-3.5s update latency per drift event.
+4. **Bounded-Memory Adaptive Retraining (`BoundedBufferClassifier`)**: Replaces full historical retraining with a bounded reference reservoir ($N_{\text{ref}}=20,000$) and sliding adaptation buffer ($N_{\text{recent}}=5,000$). Guarantees $O(1)$ constant adaptation dataset buffer size ($|D_{\text{adapt}}| \le 25,000$ rows; total process RSS $\approx 5.4\text{ GB}$) and sub-3.5s update latency per drift event.
 5. **Strict Non-Leakage Evaluation Protocol**: Evaluates all post-adaptation metrics on a 30% held-out evaluation split per window (`split_eval_fit`) that is never used during classifier fitting or GAN training.
 
 ---

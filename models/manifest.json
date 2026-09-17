@@ -1,7 +1,7 @@
 {
   "release_version": "v002",
   "version": "1.0.0",
-  "created_at": "2026-09-17T18:45:36Z",
+  "created_at": "2026-09-17T18:53:53Z",
   "model_type": "RandomForestClassifier",
   "parameters": {
     "n_estimators": 100,
@@ -17,8 +17,8 @@
   "artifacts": {
     "model": {
       "file": "model.joblib",
-      "sha256": "18dc0017a77838189baf9dc0741afd09f51281ea0fec870549dc3640bc88ae9b",
-      "size_bytes": 224798
+      "sha256": "de3137ecaf2e3bae33058a71812e5466af634b907ff4d452f1acc63e4c366471",
+      "size_bytes": 270114
     },
     "schema": {
       "file": "feature_schema.json",

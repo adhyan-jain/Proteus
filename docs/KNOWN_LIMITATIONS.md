@@ -7,7 +7,7 @@ why." Only real, currently-true blockers belong here — not stale gaps already 
 ## 1. Incremental Adaptation Rerun Completed & 5-Seed Statistical Confidence Sweep
 
 The closed-loop evaluation mechanism has been refactored from full-dataset retraining to a genuine bounded-memory adaptive retraining mechanism (`BoundedBufferClassifier`) and executed under strict non-leakage invariants (`split_eval_fit` across identical 30% held-out splits for all conditions).
-- **Memory Complexity**: $O(1)$ constant memory footprint capped at $|D_{\text{adapt}}| \le 25,000$ rows ($N_{\text{ref}} = 20,000$ reference reservoir + $N_{\text{recent}} = 5,000$ sliding adaptation buffer).
+- **Memory Complexity**: $O(1)$ constant adaptation dataset buffer size capped at $|D_{\text{adapt}}| \le 25,000$ rows ($N_{\text{ref}} = 20,000$ reference reservoir + $N_{\text{recent}} = 5,000$ sliding adaptation buffer). Total process RSS is $\approx 5.4$ GB.
 - **Update Latency**: Reduced from ~150s per drift step to ~2.5s–3.7s per drift step.
 - **Single-Seed Evidence (n=1)**: Executed and verified (759.4s wall-clock time across all 3 conditions). Final window Macro-F1: **0.1738** vs Baseline **0.0294** (**5.91x retention**; post-drift mean 0.1495 vs 0.0294, 5.08x). Active-class Macro-F1: **86.90%** across the 5 active classes.
 - **Statistical CI Sweep (n=5)**: For a multi-seed paper claim (project rule: 5+ seeds with mean + 95% CI), run:

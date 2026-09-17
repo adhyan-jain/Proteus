@@ -272,7 +272,7 @@ This run re-evaluates all three conditions following the 2026-09-17 leakage fix 
 **Seed**: 0 (single seed, reported as single-run evidence without confidence interval).  
 **Wall-clock**: 654.0s (~10.9 minutes total across all 3 conditions).  
 **Adaptation Latency**: ~2.5s - 3.7s per drift timestep (down from ~150s / 2.5 minutes per step with full retraining).  
-**Memory Footprint**: Strictly $O(1)$ constant memory capped at $|D_{\text{adapt}}| \le 25,000$ rows ($N_{\text{ref}} = 20,000$ reference reservoir + $N_{\text{recent}} = 5,000$ sliding adaptation buffer).
+**Memory Footprint**: Strictly $O(1)$ constant adaptation dataset buffer size capped at $|D_{\text{adapt}}| \le 25,000$ rows ($N_{\text{ref}} = 20,000$ reference reservoir + $N_{\text{recent}} = 5,000$ sliding adaptation buffer; total process RSS is $\approx 5.4$ GB).
 
 This run evaluates the refactored incremental classifier adaptation mechanism (`BoundedBufferClassifier`) under strict non-leakage invariants (held-out 30% evaluation split per window never used in training).
 
