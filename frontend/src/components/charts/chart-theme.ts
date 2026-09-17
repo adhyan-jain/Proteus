@@ -20,7 +20,7 @@ export const tooltipStyle = {
     color: "#e7e9ec",
   },
   labelStyle: { color: "#9aa1ac", marginBottom: 4 },
-  itemStyle: { padding: 0 },
+  itemStyle: { padding: 0, color: "#e7e9ec" },
 };
 
 export const CLASS_COLOR_SEQUENCE = [
