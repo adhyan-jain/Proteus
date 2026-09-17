@@ -31,7 +31,7 @@ Last updated: 2026-09-17, by Antigravity session.
    - Downstream GAN Utility Study (`results/gan_downstream_utility.json`): Real only (0.8481), +Ungated GAN (0.8280, -2.01% degradation), +MMD-gated GAN (0.8481, protective filter).
 
 3. **Complete Passing Test Suite**:
-   - 28 unit tests in `tests/` + 7 unittest in `sdn/topology/` = **35/35 passing (100%)**.
+   - 31 unit tests in `tests/` + 7 unittest in `sdn/topology/` = **38/38 passing (100%)**.
    - Next.js frontend production build: 13/13 routes compiled cleanly.
    - LaTeX paper `paper/main.tex` compiled cleanly to `paper/main.pdf` (6 pages, 0 errors).
 
