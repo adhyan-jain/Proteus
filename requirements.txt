@@ -1,0 +1,10 @@
+# Proteus Production API Dependencies
+# Lightweight, production-only dependencies for FastAPI inference and metrics server
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+pydantic>=2.7.0
+numpy>=2.0.0
+scikit-learn>=1.5.0
+scipy>=1.13.0
+joblib>=1.4.0
+python-multipart>=0.0.9

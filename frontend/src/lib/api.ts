@@ -4,12 +4,18 @@
 // `{ available: false, reason }` — callers must render an explicit empty state for those,
 // never fabricate numbers to fill the shape.
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
+function getApiBase(): string {
+  if (typeof window === "undefined") {
+    return process.env.API_INTERNAL_URL ?? process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
+  }
+  return process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
+}
 
 export type NotAvailable = { available: false; reason: string };
 
 async function get<T>(path: string): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, { cache: "no-store" });
+  const base = getApiBase();
+  const res = await fetch(`${base}${path}`, { cache: "no-store" });
   if (!res.ok) {
     throw new Error(`API ${path} failed: ${res.status}`);
   }
