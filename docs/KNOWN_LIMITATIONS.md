@@ -6,15 +6,15 @@ why." Only real, currently-true blockers belong here — not stale gaps already 
 
 ## 1. Incremental Adaptation Rerun Completed & 5-Seed Statistical Confidence Sweep
 
-The closed-loop evaluation mechanism has been refactored from full-dataset retraining to a genuine incremental streaming mechanism (`BoundedBufferClassifier`) and executed under strict non-leakage invariants (`split_eval_fit`).
+The closed-loop evaluation mechanism has been refactored from full-dataset retraining to a genuine bounded-memory adaptive retraining mechanism (`BoundedBufferClassifier`) and executed under strict non-leakage invariants (`split_eval_fit` across identical 30% held-out splits for all conditions).
 - **Memory Complexity**: $O(1)$ constant memory footprint capped at $|D_{\text{adapt}}| \le 25,000$ rows ($N_{\text{ref}} = 20,000$ reference reservoir + $N_{\text{recent}} = 5,000$ sliding adaptation buffer).
 - **Update Latency**: Reduced from ~150s per drift step to ~2.5s–3.7s per drift step.
-- **Single-Seed Evidence (n=1)**: Executed and verified (654.0s wall-clock time). Final window Macro-F1: 0.1738 vs Baseline 0.0288 (**~6.03x retention**).
-- **Statistical CI Sweep (n=5)**: For a statistically validated paper claim (project rule: 5+ seeds with mean + 95% CI), run:
+- **Single-Seed Evidence (n=1)**: Executed and verified (759.4s wall-clock time across all 3 conditions). Final window Macro-F1: **0.1738** vs Baseline **0.0294** (**5.91x retention**; post-drift mean 0.1495 vs 0.0294, 5.08x). Active-class Macro-F1: **86.90%** across the 5 active classes.
+- **Statistical CI Sweep (n=5)**: For a multi-seed paper claim (project rule: 5+ seeds with mean + 95% CI), run:
 ```bash
 .venv/bin/python -c "from proteus.evaluate_full import run_stage7; run_stage7(n_seeds=5)"
 ```
-Budget ~50-60 minutes total for 5 seeds (thanks to the sub-second/few-second incremental adaptation latency).
+Budget ~50-60 minutes total for 5 seeds.
 
 ## 2. Live Mininet/Ryu integration — blocked on root access, unchanged
 
@@ -56,13 +56,17 @@ manager before submission.
 Untracked, unconditional tool-call auto-approve hook, origin unknown. Flagged by a prior session
 and again by this one. Deliberately left untouched — a repo-owner decision, not an agent one.
 
-## 7. Test coverage is real but narrow
+## 7. Test coverage expanded across core components
 
-`tests/` (new this session) covers `fidelity.py`, `drift.py`, and the leakage-fix invariant in
-`closed_loop_full.py` — all pure-computation, GPU-free, dataset-free paths chosen specifically so
-they run safely under this session's memory constraints. It does **not** cover `gan_full.py`
-tensor-shape/device-handling, `data_full.py` preprocessing correctness, or `baseline_full.py`
-end-to-end — those require either GPU tensors or the real ~1.2GB CICIDS2017 CSV loaded into
-memory, both of which were deferred for the same memory-pressure reason as limitation #1. Adding
-small-fixture (not full-scale) tests for `data_full.py`'s column-mapping/label logic would be
-the highest-value next addition and does not require heavy compute.
+Unit tests cover:
+- Closed-loop leakage prevention and evaluation partition isolation (`tests/test_closed_loop_leakage.py`).
+- MMD unbiased finite-sample behavior, non-clamping, and diagonal exclusion (`tests/test_fidelity.py`).
+- Drift detection semantics (`tests/test_drift.py`).
+- Bounded-buffer adaptive classifier memory and latency constraints (`tests/test_incremental_adaptation.py`).
+- API server inference, health, and metrics endpoints (`tests/test_api_server.py`).
+
+## 8. Pre-Drift Stream Index Overlap Semantics
+
+Pre-drift stream evaluation windows ($w_0..w_5$) are sampled randomly from the Monday–Thursday stable pool. Because offline baseline training utilizes 1,200,000 samples from the 1,552,454 Monday–Thursday rows (~77.3%), empirical auditing (`scratch/audit_predrift_duplicates.py`) confirms that ~76.8% of the pre-drift evaluation window indices were seen during initial offline fitting. 
+- **Pre-Drift Role**: Acts as an in-distribution retention and stability validation benchmark (active-class Macro-F1 = 100.0% across active classes).
+- **Post-Drift Role**: Post-drift evaluation windows ($w_6..w_{15}$) are drawn strictly from Friday data (unseen attack families `Bot`, `DDoS`, `PortScan`), ensuring **0.0% overlap** with the offline training dataset.

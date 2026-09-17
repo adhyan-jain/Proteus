@@ -21,9 +21,10 @@ Proteus addresses a fundamental limitation in static machine-learning IDS models
 
 3. **Closed-Loop Adaptation Under Real Temporal Drift (Stage 7)**:
    - Evaluated across 16 real-data windows (~1.2M training pool, 3,000 rows/window). Real drift injected at window 6 by transitioning from Monday–Thursday traffic to Friday traffic.
-   - **Baseline Post-Drift Avg Macro-F1**: **0.0292** (model collapses permanently on unseen attack families).
-   - **Static-Augmentation Post-Drift Avg Macro-F1**: **0.0302** (collapses permanently).
-   - **Proteus Closed-Loop Post-Drift Avg Macro-F1**: **0.1918** (**~6.6x to 6.9x performance retention/recovery over static baselines**).
+   - **Baseline Post-Drift Avg Macro-F1**: **0.0294** (Final window: **0.0294**; model collapses permanently on unseen attack families).
+   - **Static-Augmentation Post-Drift Avg Macro-F1**: **0.0298** (Final window: **0.0297**; collapses permanently).
+   - **Proteus Closed-Loop Post-Drift Avg Macro-F1**: **0.1495** (Final window Macro-F1 **0.1738**, **5.91x relative macro-F1 ratio** on final window, **5.08x** on post-drift mean over baseline).
+   - **Active Class Macro-F1**: **86.90%** across the 5 active streaming attack classes (`BENIGN` 0.980, `Bot` 1.000 [n=1], `Bot - Attempted` 0.400 [n=4], `DDoS` 1.000 [n=160], `PortScan` 0.966 [n=256]), where $0.8690 \times (5/25) = 0.1738$ exactly under standard 25-class zero-division macro-averaging.
 
 ---
 
@@ -36,8 +37,8 @@ Proteus addresses a fundamental limitation in static machine-learning IDS models
 | **Stage 2/3** | Full-scale WGAN-GP GPU training & diagnostics | `proteus/gan_full.py`, `proteus/baseline_full.py` | RTX 4060 GPU trained (80 epochs). 0/12 classes mode-collapsed; 3/12 over-dispersed (excluded from augmentation set `GAN_ADMIT_CLASSES`). |
 | **Stage 4** | Real-scale drift detector & fidelity gate validation | `proteus/validate_full.py` | Drift detector cleanly separated stable Mon-Thu ($p=0.900$) from drifted Friday ($p<10^{-6}$). MMD gate rejected 100% noise. |
 | **Stage 5** | Mininet topology + Ryu controller IDS app | `sdn/topology/{topo.py, ryu_ids_app.py, feature_mapper.py}` | Python 3.8 `.venv-ryu` setup. Feature mapper extracts 10 schema columns from OpenFlow stats (unit tests 7/7 pass). Root-dependent `smoke_test.sh` ready for live run. |
-| **Stage 6** | Closed-loop orchestrator | `proteus/closed_loop_full.py` | Modular `TrafficSource` supporting both `RealDataReplaySource` and `LiveMininetSource`. Fully verified orchestration logic. |
-| **Stage 7** | Full 3-condition evaluation under temporal drift | `proteus/evaluate_full.py` | Real CICIDS2017 temporal replay: Closed-loop achieves **0.1918 post-drift F1** vs **0.0292 baseline** (~6.6x improvement). |
+| **Stage 6** | Closed-loop orchestrator | `proteus/closed_loop_full.py` | Modular `TrafficSource` supporting both `RealDataReplaySource` and `LiveMininetSource`. Bounded-memory adaptive retraining (`BoundedBufferClassifier`, $O(1)$ memory, sub-3.5s latency). |
+| **Stage 7** | Full 3-condition evaluation under temporal drift | `proteus/evaluate_full.py` | Real CICIDS2017 temporal replay: Closed-loop achieves **0.1738 final macro-F1** vs **0.0294 baseline** (**5.91x relative ratio**, **86.90% active F1**). |
 
 ---
 

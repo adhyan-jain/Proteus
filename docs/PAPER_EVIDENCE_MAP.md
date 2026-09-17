@@ -14,6 +14,10 @@ produced this number. "Pending" = written into the paper as explicitly not-yet-a
 | Buffer Capacity Sensitivity Sweep (Small, Default, Large) | Table V (Section VI-D) | `scratch/test_buffer_sensitivity.py` -> `results/buffer_sensitivity.json` | Executed |
 | Active-Class Macro-F1 (86.90% active F1 vs 14.71% baseline, final window) | Section VI-D | `proteus/evaluate_full.py::_per_class_breakdown` -> `results/stage7_per_class_f1.json` (2026-09-17; real per-class `classification_report`, no hardcoded active-class count) | Executed. Supersedes an earlier 96.2% figure that cited a nonexistent `scratch/test_per_class_f1.py` and had no backing artifact. |
 | GAN/fidelity-gate attribution ablation | Discussion (Section VI-D / Ablation) | `scripts/run_gan_ablation.py` -> `results/gan_ablation.json` (2026-09-17, single-seed diagnostic) | Executed |
+| Downstream Augmentation Utility (Conditions A-E) | Discussion / Related Work | `scratch/test_gan_utility.py` -> `results/gan_downstream_utility.json` (2026-09-17, Full CICIDS2017) | Executed |
+| MMD Sanity Matrix (Cases A-G) | Appendix / Diagnostics | `scratch/test_mmd_cases.py` -> `results/mmd_sanity_matrix.json` | Executed |
+| Per-Class GAN Quality & Over-Dispersion | Section IV-B, Appendix | `scratch/test_gan_quality_by_class.py` -> `results/gan_quality_by_class.json` | Executed |
+| Streamlit Demo Sensitivity Matrix (5x4 Grid) | Appendix / Demo Validation | `scratch/test_demo_sensitivity.py` -> `results/demo_sensitivity_matrix.json` | Executed |
 | Leakage bug description + fix | Section V, Algorithm 1 | `proteus/closed_loop_full.py::ClosedLoopOrchestrator.split_eval_fit`; verified by `tests/test_closed_loop_leakage.py` | Executed |
 | GPU/CUDA claim (RTX 4060, CUDA 12.8, torch 2.11.0+cu128) | Section VI (Experimental Setup) | Direct `torch.cuda.is_available()` check (`STATUS.md`) | Executed |
 | Dataset provenance (CICIDS2017 WTMC-2021, InSDN) | Section VI | `data/MANIFEST.md` | Documented, source-hashed |

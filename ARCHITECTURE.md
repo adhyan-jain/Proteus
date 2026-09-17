@@ -72,7 +72,7 @@ work happens.
 - **`evaluate_full.py`** — Stage 7: runs baseline / static-augmentation / closed-loop over an
   identical real-data temporal-drift window schedule (`RealDataReplaySource`: Mon-Thu training
   pool vs. Friday holdout, which contains attack families absent from training). Single-seed
-  result as of this writing (0.1738 closed-loop vs. 0.0288 baseline final macro-F1, ~6.03x); the
+  result as of this writing (0.1738 closed-loop vs. 0.0294 baseline final macro-F1, 5.91x); the
   project's 5-seed/95%-CI statistical-rigor rule has not yet been met — see
   `METRICS_HISTORY.md` and `docs/KNOWN_LIMITATIONS.md`.
 
