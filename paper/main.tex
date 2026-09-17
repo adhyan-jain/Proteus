@@ -267,7 +267,7 @@ exclusion, in \texttt{proteus/gan\_full.py::GAN\_ADMIT\_CLASSES}.
 
 \subsection{RQ1: Static augmentation (Stage 3)}
 \label{sec:results-stage3}
-\begin{table}[h]
+\begin{table}[!t]
 \centering
 \caption{Stage 3: full-scale baseline vs. static augmentation (single run, 1,470,014 train /
 315,004 test rows, 25 classes)}
@@ -285,9 +285,16 @@ deltas for the 9 augmented classes were small in both directions. This motivates
 closed-loop, drift-triggered condition -- rather than one-shot offline augmentation -- shows a
 different picture.
 
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{figures/stage3_baseline_vs_static.png}
+\caption{Stage 3: frozen baseline vs. static one-shot augmentation, full-scale CICIDS2017.}
+\label{fig:stage3}
+\end{figure}
+
 \subsection{RQ3: Drift detector and fidelity gate (Stage 4)}
 \label{sec:results-stage4}
-\begin{table}[h]
+\begin{table}[!t]
 \centering
 \caption{Drift detector: real temporal holdout}
 \begin{tabular}{@{}lrrl@{}}
@@ -302,7 +309,7 @@ Friday (drifted) & 0.329 & $\sim$0 & \textbf{Yes} \\
 The detector cleanly separates known-stable from known-drifted holdouts using only
 prediction-confidence distributions, with no access to ground-truth drift labels.
 
-\begin{table}[h]
+\begin{table}[!t]
 \centering
 \caption{Fidelity gate: noise rejection vs. real-batch admission (threshold=0.25 MMD)}
 \begin{tabular}{@{}lrr@{}}
@@ -320,24 +327,33 @@ not mode-collapsed and not over-dispersed still fail the stricter distribution-l
 comparison. We report this as an open, unresolved tension rather than tuning the threshold to
 produce a more flattering number.
 
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{figures/stage4_fidelity_gate.png}
+\caption{Stage 4: MMD fidelity gate admission/rejection performance (noise rejection vs.
+real-batch admission at $\tau=0.25$).}
+\label{fig:stage4}
+\end{figure}
+
 \subsection{RQ2: Closed-loop adaptation (Stage 7)}
 \label{sec:results-stage7}
 
 Under genuine temporal drift (Monday--Thursday training pool vs. Friday holdout replay), we evaluated closed-loop adaptation using \textsc{BoundedBufferClassifier} under strict non-leakage held-out evaluation (\textsc{SplitEvalFit}, 30\% held-out eval partition per stream window). Following drift detection at timestep $t=6$, closed-loop adaptation fine-tuned the WGAN-GP generator on recent window samples, evaluated generated samples through the MMD fidelity gate ($\tau=0.25$), and incrementally updated the bounded classifier buffer ($|D_{\text{adapt}}| \le 25,000$ rows).
 
-\begin{table}[h]
+\begin{table}[!t]
 \centering
 \caption{\textsc{BoundedBufferClassifier} adaptation characteristics under closed-loop evaluation}
 \label{tab:comp_comparison}
+\resizebox{\columnwidth}{!}{%
 \begin{tabular}{@{}lr@{}}
 \toprule
-Metric / Characteristic & BoundedBufferClassifier \\
+Metric / Characteristic & Value \\
 \midrule
 Retraining Memory Bounds & $O(1)$ constant ($|D_{\text{adapt}}| \le 25\text{k}$) \\
 Peak Memory Footprint & 5.4~GB (flat, zero swap) \\
 Mean Drift Step Latency & 3.47~s \\
 Overall Stage 7 Runtime & 759.4~s ($12.7$~min) \\
-Evaluation Partitioning & 30\% held-out eval, identical rows across all 3 conditions \\
+Evaluation Partitioning & 30\% held-out, shared across conditions \\
 Baseline Final Macro-F1 & 0.0294 \\
 Static-Augmentation Final Macro-F1 & 0.0297 \\
 Closed-Loop Final Macro-F1 & \textbf{0.1738} \\
@@ -345,7 +361,8 @@ Post-Drift Mean Macro-F1 (Baseline) & 0.0294 \\
 Post-Drift Mean Macro-F1 (Closed-Loop) & \textbf{0.1495} \\
 Relative Macro-F1 Ratio (Final, vs. Baseline) & \textbf{5.91x} \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table}
 
 The prior full-dataset-retraining architecture (refit on all accumulated rows at every drift
@@ -368,6 +385,15 @@ compared to \textbf{0.0294} for the frozen baseline and \textbf{0.0297} for stat
 This is a \textbf{5.91x relative macro-F1 ratio} (+0.1444 absolute Macro-F1 improvement) on the
 final window, and a 5.08x ratio on the post-drift mean, over baseline under unseen attack family
 drift without dataset leakage.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{figures/stage7_macro_f1_series.png}
+\caption{Stage 7: per-window Macro-F1 across all 16 replay windows for the frozen baseline,
+static-augmentation, and closed-loop conditions, under the shared held-out evaluation split.
+Drift onset at $t=6$.}
+\label{fig:stage7}
+\end{figure}
 
 \textbf{Sparse Stream Macro-F1 Analysis.}
 While a macro-F1 score of 0.1738 may appear low in absolute terms, a per-class breakdown
@@ -393,10 +419,11 @@ a single ratio identity shows.
 \textbf{Buffer Capacity Sensitivity Analysis.}
 To evaluate the sensitivity of incremental adaptation to memory capacity, we evaluated three buffer capacity configurations ($N_{\text{ref}}$ reference reservoir and $N_{\text{recent}}$ recent adaptation buffer), as summarized in Table~\ref{tab:buffer_sensitivity}.
 
-\begin{table}[h]
+\begin{table}[!t]
 \centering
 \caption{Buffer Capacity Sensitivity Analysis (\textsc{BoundedBufferClassifier})}
 \label{tab:buffer_sensitivity}
+\resizebox{\columnwidth}{!}{%
 \begin{tabular}{@{}lrrrrrr@{}}
 \toprule
 Capacity Config & $N_{\text{ref}}$ & $N_{\text{recent}}$ & Max Buffer & Step Latency & Post-Drift Mean F1 & Final Macro-F1 \\
@@ -405,7 +432,8 @@ Small & 10,000 & 2,500 & 12,500 & 4.38s & 0.1447 & 0.1749 \\
 Default & 20,000 & 5,000 & 25,000 & 3.47s & 0.1537 & 0.1738 \\
 Large & 40,000 & 10,000 & 50,000 & 5.35s & 0.1626 & 0.1741 \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table}
 
 Across all three buffer scale regimes, final-window Macro-F1 remains highly stable ($0.1738$--$0.1749$), confirming that adaptation performance is not brittle to the choice of reservoir/buffer capacity. Post-drift mean Macro-F1 increases monotonically with buffer size (0.1447 $\rightarrow$ 0.1537 $\rightarrow$ 0.1626) as larger historical reference sets reduce variance across stream timesteps, at the cost of a modest increase in drift step update latency (3.47s $\rightarrow$ 5.35s).
@@ -426,19 +454,21 @@ each mechanism's contribution to the post-drift recovery reported in
 Section~\ref{sec:results-stage7}, on the identical window stream and eval/fit split as the main
 run (Table~\ref{tab:gan_ablation}).
 
-\begin{table}[h]
+\begin{table}[!t]
 \centering
 \caption{GAN/fidelity-gate attribution ablation (single-seed, seed=0)}
 \label{tab:gan_ablation}
+\resizebox{\columnwidth}{!}{%
 \begin{tabular}{@{}lrrr@{}}
 \toprule
 Condition & Final Macro-F1 & Post-Drift Mean & Synth. Admitted \\
 \midrule
-Incremental adaptation only (no GAN) & \textbf{0.1742} & \textbf{0.1575} & 0 \\
+Incremental only (no GAN) & \textbf{0.1742} & \textbf{0.1575} & 0 \\
 Incremental + GAN, ungated & 0.1738 & 0.1407 & 16,200 \\
-Incremental + GAN + fidelity gate (full pipeline) & 0.1738 & 0.1507 & 3,600 \\
+Incremental + GAN + gate (full) & 0.1738 & 0.1507 & 3,600 \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table}
 
 Incremental real-data adaptation alone matches or slightly exceeds the full gated pipeline on both
