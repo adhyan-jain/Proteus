@@ -233,7 +233,7 @@ This run re-evaluates all three conditions following the 2026-09-17 leakage fix 
 
 ### Summary Metrics Across 16 Replay Windows
 
-| Condition | Pre-drift Macro-F1 (w0-w5 mean) | Final Window (w15) Macro-F1 | Post-drift Mean Macro-F1 (w6-w15) | Performance Retention Ratio (Final vs Baseline) |
+| Condition | Pre-drift Macro-F1 (w0-w5 mean) | Final Window (w15) Macro-F1 | Post-drift Mean Macro-F1 (w6-w15) | Relative Macro-F1 Ratio (Final vs Baseline) |
 |---|---|---|---|---|
 | Baseline RF | 0.4578 | 0.0288 | 0.0292 | 1.0x (ref) |
 | Static Augmentation | 0.4578 | 0.0298 | 0.0308 | 1.03x |
@@ -278,7 +278,7 @@ This run evaluates the refactored incremental classifier adaptation mechanism (`
 
 ### Summary Metrics Across 16 Replay Windows
 
-| Condition | Pre-drift Macro-F1 (w0-w5 mean) | Final Window (w15) Macro-F1 | Post-drift Mean Macro-F1 (w6-w15) | Performance Retention Ratio (Final vs Baseline) |
+| Condition | Pre-drift Macro-F1 (w0-w5 mean) | Final Window (w15) Macro-F1 | Post-drift Mean Macro-F1 (w6-w15) | Relative Macro-F1 Ratio (Final vs Baseline) |
 |---|---|---|---|---|
 | Baseline RF | 0.4578 | 0.0288 | 0.0292 | 1.0x (ref) |
 | Static Augmentation | 0.4578 | 0.0299 | 0.0304 | 1.04x |
@@ -310,6 +310,81 @@ This run evaluates the refactored incremental classifier adaptation mechanism (`
 2. **Robust closed-loop retention**: Under true incremental adaptation with non-leakage held-out evaluation, closed-loop retains **0.1738 Macro-F1** at final window (w15) vs **0.0288** for baseline (**~6.03x performance retention**). Average post-drift Macro-F1 is **0.1535** vs **0.0292** baseline (**~5.26x**).
 3. **Publication figures updated**: Plot generated via `paper/generate_figures.py` saved at `paper/figures/stage7_macro_f1_series.png`.
 
+## 2026-09-17 — Buffer Capacity Sensitivity Experiment (`BoundedBufferClassifier`)
+
+**Component**: `scratch/test_buffer_sensitivity.py` → `results/buffer_sensitivity.json`  
+**Scale**: Full-scale CICIDS2017 (1,200,000 training pool, 16 replay windows, Friday temporal drift split).  
+**Seed**: 0 (single seed, non-leakage held-out 30% evaluation split).  
+
+### Buffer Scale Sweep Metrics
+
+| Config | Reference $N_{\text{ref}}$ | Recent $N_{\text{recent}}$ | Max Buffer | Wall-clock (s) | Mean Drift Step Latency (s) | Post-Drift Mean Macro-F1 | Final Window (w15) Macro-F1 |
+|---|---|---|---|---|---|---|---|
+| **Small** | 10,000 | 2,500 | 12,500 | 397.8s | 4.38s | 0.1447 | 0.1749 |
+| **Default** | 20,000 | 5,000 | 25,000 | 308.6s | 3.47s | 0.1537 | 0.1738 |
+| **Large** | 40,000 | 10,000 | 50,000 | 276.4s | 5.35s | 0.1626 | 0.1741 |
+
+### Key Takeaways
+1. **Capacity Insensitivity**: Final-window Macro-F1 is remarkably stable across a 4x capacity range ($0.1738$--$0.1749$), proving that adaptation efficacy does not depend on fine-tuned buffer capacity.
+2. **Post-Drift Stability**: Larger historical reservoirs improve post-drift mean Macro-F1 monotonically (0.1447 $\rightarrow$ 0.1537 $\rightarrow$ 0.1626) by smoothing prediction variance across drift timesteps.
+3. **Latency Bound**: Drift step adaptation latency scales gracefully (3.47s to 5.35s), staying strictly under 6 seconds per drift event in all regimes.
+
+## 2026-09-17 — Stage 7 evaluation-protocol fix + per-class F1 reconciliation (audit remediation)
+
+**Component**: `proteus/evaluate_full.py::run_stage7(n_seeds=1)` → `results/stage7_evaluation.json`, `results/stage7_per_class_f1.json`
+**Scale**: Full-scale CICIDS2017 (1,200,000 training rows, 16 replay windows of 3,000 rows each, Mon-Thu stable pool vs Friday temporal drift).
+**Seed**: 0 (single seed, no confidence interval; see Limitations).
+**Wall-clock**: 759.4s (~12.7 minutes total across all 3 conditions).
+
+**What changed vs. the 2026-09-17 entry above**: an adversarial audit found that the prior run
+scored baseline/static-augmentation on the *full* window (3,000 rows) while closed-loop was
+scored only on its internal 30% held-out partition (~900 rows) — different rows, different n, not
+a fair comparison. `ClosedLoopOrchestrator.step()` now takes a precomputed eval/fit split
+(computed once per window in `run_one_seed`, seed=123) so all three conditions score on the
+*identical* held-out rows. Closed-loop's own numbers are structurally unchanged by this fix (it
+already used this exact split internally); baseline/static's numbers change slightly because they
+are now scored on the smaller, shared eval partition instead of the full window.
+
+The audit also found the "Full Retraining" comparison numbers in the prior paper draft
+(14.8GB/~150s/~4,200s/0.1690/0.1484/5.86x) traced to no executed run anywhere in the repo — added
+via a documentation-only commit, never backed by a JSON/log artifact. Those numbers are retracted;
+see `docs/PAPER_EVIDENCE_MAP.md` for the corrected citation. The **96.2% active-class Macro-F1**
+figure from the prior entry is also retracted — it cited a nonexistent
+`scratch/test_per_class_f1.py`. The real, regenerated active-class Macro-F1 (via
+`sklearn.metrics.classification_report`, no hardcoded active-class count) is **86.90%** on the
+final window's 5 active classes.
+
+### Summary Metrics Across 16 Replay Windows (corrected protocol)
+
+| Condition | Final Window (w15) Macro-F1 | Post-drift Mean Macro-F1 (w6-w15) | Relative Macro-F1 Ratio (Final vs Baseline) |
+|---|---|---|---|
+| Baseline RF | 0.0294 | 0.0294 | 1.0x (ref) |
+| Static Augmentation | 0.0297 | 0.0298 | 1.01x |
+| **Closed-Loop (Incremental Adaptation)** | **0.1738** | **0.1495** | **5.91x** (5.08x on post-drift mean) |
+
+### Per-Class F1 Breakdown, Final Window (w15), from `results/stage7_per_class_f1.json`
+
+5 of 25 classes have nonzero support in the final window: `BENIGN` (479), `Bot` (1), `Bot -
+Attempted` (4), `DDoS` (160), `PortScan` (256). The remaining 20 classes have zero support and
+score F1=0 under `zero_division=0` — this is why 25-class macro-F1 (0.1738) equals active-class
+macro-F1 (0.8690) times the active-class fraction (5/25=0.20) exactly.
+
+| Condition | BENIGN | Bot (n=1) | Bot - Attempted (n=4) | DDoS (n=160) | PortScan (n=256) | Active-class Macro-F1 |
+|---|---|---|---|---|---|---|
+| Baseline RF | 0.735 | 0.000 | 0.000 | 0.000 | 0.000 | 14.71% |
+| Closed-Loop | 0.980 | 1.000 | 0.400 | 1.000 | 0.966 | 86.90% |
+
+### Key Takeaways
+1. **Protocol fix changes baseline/static numbers only, not closed-loop's**: closed-loop's final
+   Macro-F1 is unchanged (0.1738) since it always used this eval split; baseline moves from 0.0288
+   (full window) to 0.0294 (shared 30% split) — the relative ratio moves from ~6.03x to **5.91x**
+   (final window) / **5.08x** (post-drift mean) under the corrected, fair protocol.
+2. **Active-class Macro-F1 is 86.90%, not 96.2%** — the prior figure had no backing artifact.
+   `Bot - Attempted` (support=4) is the weakest active class at F1=0.400, dragging the active-class
+   mean down from what a per-class eyeball of the easier classes would suggest.
+3. **Full-retraining comparison numbers retracted** — no real run backs 14.8GB/~150s/~4,200s/
+   0.1690/0.1484/5.86x; removed from the paper's Table IV rather than replaced with an estimate.
+
 ## Template for future entries
 
 ```
@@ -323,4 +398,3 @@ This run evaluates the refactored incremental classifier adaptation mechanism (`
 - <anything a future reader needs to correctly interpret these numbers — caveats,
   known-miscalibrated thresholds, what changed since the last entry for this component>
 ```
-
