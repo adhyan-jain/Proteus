@@ -23,7 +23,7 @@ Last updated: 2026-09-17, by Antigravity session.
    - `docs/DEPLOYMENT.md`: Complete operations, rollback, and containerization manual.
    - `.github/workflows/ci.yml`: Automated CI/CD pipeline covering backend tests, SDN tests, and frontend build.
 
-2. **Protocol-Corrected Stage 7 Evaluation & Empirical Proofs**:
+2. **Protocol-Corrected Stage 7 Evaluation & Empirical Evidence**:
    - Authoritative Stage 7 metrics verified on full CICIDS2017: Baseline: 0.0294, Static: 0.0297, Closed-loop: **0.1738** (5.91x ratio; post-drift mean 0.1495, 5.08x).
    - Mathematical derivation confirmed: $0.1738 = 0.8690 \times \frac{5}{25}$ (Active Macro-F1: 86.90% across 5 active classes; 0.20 is fixed-25-class ceiling).
    - Pooled Post-Drift Evaluation ($t=6..15$, 9,000 held-out rows): Closed-loop achieves **0.1650 25-class Macro-F1**, 82.50% active Macro-F1, **97.77% Micro-F1 (accuracy)**, 0.9773 Weighted-F1 vs Baseline 0.0294 Macro-F1, 53.32% Micro-F1.
