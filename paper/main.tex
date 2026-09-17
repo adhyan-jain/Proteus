@@ -102,7 +102,7 @@ introduced the GAN framework as an adversarial minimax game between a generator 
 discriminator \cite{goodfellow2014}. Standard GAN training is well known to be unstable;
 Arjovsky, Chintala, and Bottou reformulated the objective using the Wasserstein distance to
 improve training stability \cite{arjovsky2017}, and Gulrajani et al. introduced the gradient
-penalty (WGAN-GP) as a more stable alternative to weight clipping for enforcing the Lipschitz
+penalty (WGAN-GP) as a more stable alternative to weight clipping for encouraging the critic toward the desired Lipschitz
 constraint the Wasserstein objective requires \cite{gulrajani2017}. Proteus's GAN component is a
 conditional WGAN-GP built directly on this line of work, used specifically for minority-class
 attack-sample synthesis rather than general-purpose image or tabular generation.
