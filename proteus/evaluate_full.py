@@ -26,7 +26,7 @@ import numpy as np
 
 from proteus.baseline_full import train_and_evaluate, build_static_augmented_set
 from proteus.closed_loop_full import ClosedLoopOrchestrator, RealDataReplaySource
-from sklearn.metrics import f1_score
+from sklearn.metrics import f1_score, classification_report
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 log = logging.getLogger("proteus.evaluate_full")
@@ -70,14 +70,38 @@ def _load_day_split_data():
     return X_stable, y_stable, X_drifted, y_drifted, class_names
 
 
-def _eval_frozen(clf, class_names, windows):
+def _eval_frozen(clf, class_names, eval_windows):
+    """Score a frozen classifier on the shared held-out eval partition of each window (NOT the
+    full window) -- same rows the closed-loop condition is scored on, for a fair comparison."""
     series = []
-    for t, X, y in windows:
-        y_pred = clf.predict(X)
-        mf1 = float(f1_score(y, y_pred, labels=list(range(len(class_names))),
+    for t, X_eval, y_eval in eval_windows:
+        y_pred = clf.predict(X_eval)
+        mf1 = float(f1_score(y_eval, y_pred, labels=list(range(len(class_names))),
                               average="macro", zero_division=0))
         series.append({"timestep": t, "macro_f1": mf1})
     return series
+
+
+def _per_class_breakdown(y_true, y_pred, class_names):
+    """Real per-class F1 + active-class count for one window, used to honestly reconcile the
+    25-class Macro-F1 against an active-class Macro-F1 (no hardcoded active-class count)."""
+    report = classification_report(y_true, y_pred, labels=list(range(len(class_names))),
+                                    target_names=class_names, output_dict=True, zero_division=0)
+    per_class_f1 = {c: float(report[c]["f1-score"]) for c in class_names}
+    support = {c: int(report[c]["support"]) for c in class_names}
+    active_classes = [c for c in class_names if support[c] > 0]
+    active_f1s = [per_class_f1[c] for c in active_classes]
+    active_class_macro_f1 = float(np.mean(active_f1s)) if active_f1s else 0.0
+    macro_f1_25class = float(report["macro avg"]["f1-score"])
+    return {
+        "n_active_classes": len(active_classes),
+        "active_classes": active_classes,
+        "per_class_f1": per_class_f1,
+        "support": support,
+        "active_class_macro_f1": active_class_macro_f1,
+        "macro_f1_25class": macro_f1_25class,
+        "theoretical_ceiling": len(active_classes) / len(class_names),
+    }
 
 
 def run_one_seed(seed, X_stable, y_stable, X_drifted, y_drifted, class_names):
@@ -96,26 +120,52 @@ def run_one_seed(seed, X_stable, y_stable, X_drifted, y_drifted, class_names):
     windows = [(t, X, y) for t, X, y, _ in source]
     drift_schedule_timesteps = list(range(DRIFT_AT_WINDOW, N_WINDOWS))
 
+    # Shared eval/fit split, computed ONCE per window and reused identically across all 3
+    # conditions -- fixes the prior asymmetry where baseline/static were scored on the full
+    # window while closed-loop was scored only on its internal 30% held-out partition. All three
+    # conditions now score on the exact same rows.
+    split_rng = np.random.default_rng(123)
+    split_windows = [
+        (t,) + ClosedLoopOrchestrator.split_eval_fit(X, y, 0.3, split_rng)
+        for t, X, y in windows
+    ]  # (t, X_eval, y_eval, X_fit, y_fit)
+    eval_windows = [(t, X_eval, y_eval) for t, X_eval, y_eval, _, _ in split_windows]
+
     log.info(f"[seed={seed}] Training baseline classifier ({len(X_train_full):,} rows)...")
     clf_baseline, _ = train_and_evaluate(None, X_train_full, y_train_full,
                                           X_train_full[:1000], y_train_full[:1000], class_names)
-    baseline_series = _eval_frozen(clf_baseline, class_names, windows)
+    baseline_series = _eval_frozen(clf_baseline, class_names, eval_windows)
 
     log.info(f"[seed={seed}] Building + training static-augmentation classifier...")
     X_aug, y_aug, _ = build_static_augmented_set(X_train_full, y_train_full, class_names)
     clf_static, _ = train_and_evaluate(None, X_aug, y_aug, X_aug[:1000], y_aug[:1000],
                                         class_names)
-    static_series = _eval_frozen(clf_static, class_names, windows)
+    static_series = _eval_frozen(clf_static, class_names, eval_windows)
 
     log.info(f"[seed={seed}] Running closed-loop orchestrator...")
     orch = ClosedLoopOrchestrator(X_train_full, y_train_full, class_names)
-    closed_series, drift_events, retrain_events = [], [], []
-    for t, X, y in windows:
-        mf1_before, mf1_after = orch.step(t, X, y)
+    closed_series = []
+    for t, X_eval, y_eval, X_fit, y_fit in split_windows:
+        mf1_before, mf1_after = orch.step(t, X_eval, y_eval, X_fit, y_fit)
         closed_series.append({"timestep": t, "macro_f1": mf1_after})
     drift_events = orch.drift_events
     retrain_events = orch.retrain_events
     gate_log = orch.gate.entries
+
+    # Real per-class F1 breakdown on the FINAL window's eval partition, for all 3 conditions,
+    # reconciling the 25-class Macro-F1 against an honestly-computed active-class Macro-F1
+    # (no hardcoded active-class count -- see results/stage7_per_class_f1.json).
+    t_final, X_eval_final, y_eval_final = eval_windows[-1]
+    per_class = {
+        "baseline": _per_class_breakdown(y_eval_final, clf_baseline.predict(X_eval_final),
+                                          class_names),
+        "static_augmentation": _per_class_breakdown(y_eval_final, clf_static.predict(X_eval_final),
+                                                      class_names),
+        "closed_loop": _per_class_breakdown(y_eval_final, orch.clf.predict(X_eval_final),
+                                             class_names),
+    }
+    for cond in per_class:
+        per_class[cond]["timestep"] = t_final
 
     del orch
     import torch
@@ -133,6 +183,7 @@ def run_one_seed(seed, X_stable, y_stable, X_drifted, y_drifted, class_names):
         "drift_events": drift_events,
         "retrain_events": retrain_events,
         "gate_log": gate_log,
+        "per_class_breakdown": per_class,
     }
 
 
@@ -184,6 +235,20 @@ def run_stage7(n_seeds=1, seeds=None):
     with open(RESULTS_DIR / "stage7_evaluation.json", "w") as f:
         json.dump(summary, f, indent=2)
     log.info(f"Wrote {RESULTS_DIR / 'stage7_evaluation.json'}")
+
+    per_class_out = {
+        "n_seeds": len(seeds), "seeds": seeds,
+        "note": "Per-class F1 breakdown on the final window's held-out eval partition, per seed "
+                "and condition. n_active_classes/active_class_macro_f1 are computed directly "
+                "from sklearn's classification_report support counts, not hardcoded.",
+        "per_seed_per_class": [
+            {"seed": r["seed"], **r["per_class_breakdown"]} for r in results
+        ],
+    }
+    with open(RESULTS_DIR / "stage7_per_class_f1.json", "w") as f:
+        json.dump(per_class_out, f, indent=2)
+    log.info(f"Wrote {RESULTS_DIR / 'stage7_per_class_f1.json'}")
+
     return summary
 
 

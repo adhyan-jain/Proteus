@@ -177,7 +177,8 @@ class ClosedLoopOrchestrator:
     """drift fires -> GAN resumes on recent window -> fidelity gate -> classifier incremental adaptation."""
 
     def __init__(self, X_train_init, y_train_init, class_names, gan_checkpoint_path=None,
-                 device=None, max_ref_samples=20000, max_recent_samples=5000):
+                 device=None, max_ref_samples=20000, max_recent_samples=5000,
+                 use_gan=True, use_fidelity_gate=True):
         if device is None:
             if not torch.cuda.is_available():
                 raise RuntimeError(
@@ -187,6 +188,8 @@ class ClosedLoopOrchestrator:
         self.device = device
         self.class_names = class_names
         self.name_to_idx = {c: i for i, c in enumerate(class_names)}
+        self.use_gan = use_gan
+        self.use_fidelity_gate = use_fidelity_gate
 
         self.clf = BoundedBufferClassifier(
             lambda: RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=DEFAULT_N_JOBS),
@@ -219,8 +222,6 @@ class ClosedLoopOrchestrator:
 
         self.gate = fidelity_mod.FidelityGateLog(threshold=MMD_THRESHOLD)
         self.drift_events, self.retrain_events = [], []
-        self.eval_rng = np.random.default_rng(123)
-        self.EVAL_HOLDOUT_FRACTION = 0.3
 
     def _macro_f1(self, X, y):
         y_pred = self.clf.predict(X)
@@ -263,10 +264,15 @@ class ClosedLoopOrchestrator:
         eval_idx, fit_idx = perm[:n_eval], perm[n_eval:]
         return X[eval_idx], y[eval_idx], X[fit_idx], y[fit_idx]
 
-    def step(self, t, X, y):
+    def step(self, t, X_eval, y_eval, X_fit, y_fit):
+        """Advance one timestep on a precomputed eval/fit split.
+
+        The eval/fit partition is computed once upstream (shared identically across baseline/
+        static/closed-loop conditions in evaluate_full.py::run_one_seed via
+        ClosedLoopOrchestrator.split_eval_fit) rather than internally per-condition, so all three
+        conditions are scored on the exact same held-out rows."""
         import time, resource
-        X_eval, y_eval, X_fit, y_fit = self.split_eval_fit(
-            X, y, self.EVAL_HOLDOUT_FRACTION, self.eval_rng)
+        X = np.vstack([X_eval, X_fit])
 
         macro_f1_before = self._macro_f1(X_eval, y_eval)
         conf = self.clf.predict_proba(X).max(axis=1)
@@ -278,23 +284,29 @@ class ClosedLoopOrchestrator:
             t_adapt_0 = time.time()
             log.info(f"[t={t}] drift fired (stat={result['statistic']:.4f} "
                      f"p={result['p_value']:.4g}) -- updating classifier incrementally")
-            self._resume_gan_on_recent_window(X_fit, y_fit)
 
             n_admitted_total = 0
             X_new, y_new = [], []
-            for c in self.admit_idx:
-                real_recent = X_fit[y_fit == c] if (y_fit == c).sum() >= 5 else \
-                    self.X_train_ref[self.y_train_ref == c]
-                if len(real_recent) == 0:
-                    log.info(f"[t={t}] class={self.class_names[c]}: no real reference data "
-                             f"available anywhere -- skipping fidelity check, not admitting")
-                    continue
-                synth = self.gan.generate_synthetic_batch(c, n_samples=200)
-                admitted, score = self.gate.check(t, synth, real_recent, len(synth))
-                if admitted:
-                    X_new.append(synth.astype(np.float32))
-                    y_new.append(np.full(len(synth), c, dtype=self.y_train_ref.dtype))
-                    n_admitted_total += len(synth)
+            if self.use_gan:
+                self._resume_gan_on_recent_window(X_fit, y_fit)
+                for c in self.admit_idx:
+                    real_recent = X_fit[y_fit == c] if (y_fit == c).sum() >= 5 else \
+                        self.X_train_ref[self.y_train_ref == c]
+                    if len(real_recent) == 0:
+                        log.info(f"[t={t}] class={self.class_names[c]}: no real reference data "
+                                 f"available anywhere -- skipping fidelity check, not admitting")
+                        continue
+                    synth = self.gan.generate_synthetic_batch(c, n_samples=200)
+                    if self.use_fidelity_gate:
+                        admitted, score = self.gate.check(t, synth, real_recent, len(synth))
+                    else:
+                        admitted, score = True, None
+                        self.gate.entries.append({"step": t, "mmd_score": score,
+                                                   "admitted": admitted, "n_samples": len(synth)})
+                    if admitted:
+                        X_new.append(synth.astype(np.float32))
+                        y_new.append(np.full(len(synth), c, dtype=self.y_train_ref.dtype))
+                        n_admitted_total += len(synth)
 
             X_synth_combined = np.vstack(X_new) if X_new else None
             y_synth_combined = np.concatenate(y_new) if y_new else None
@@ -317,12 +329,20 @@ class ClosedLoopOrchestrator:
 
         return macro_f1_before, macro_f1_after
 
-    def run(self, traffic_source: TrafficSource):
+    def run(self, traffic_source: TrafficSource, eval_holdout_fraction=0.3, eval_seed=123):
+        """Convenience wrapper for callers with a single TrafficSource and no need to share the
+        eval/fit split across other conditions -- computes its own split per window via
+        split_eval_fit. Callers comparing multiple conditions on identical eval rows (e.g.
+        evaluate_full.py::run_one_seed) should call step() directly with a precomputed split
+        instead of this method."""
         is_live = None
         macro_f1_series = []
+        eval_rng = np.random.default_rng(eval_seed)
         for t, X, y, is_real_live in traffic_source:
             is_live = is_real_live if is_live is None else (is_live and is_real_live)
-            mf1_before, mf1_after = self.step(t, X, y)
+            X_eval, y_eval, X_fit, y_fit = self.split_eval_fit(
+                X, y, eval_holdout_fraction, eval_rng)
+            mf1_before, mf1_after = self.step(t, X_eval, y_eval, X_fit, y_fit)
             macro_f1_series.append({"timestep": t, "macro_f1_before": mf1_before,
                                      "macro_f1_after": mf1_after})
         return {
