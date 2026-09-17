@@ -1,0 +1,22 @@
+{
+  "condition_a_real_only": {
+    "macro_f1": 0.8480506130174724,
+    "weighted_f1": 0.9324011103697916
+  },
+  "condition_b_real_plus_noise": {
+    "macro_f1": 0.8309976796729863,
+    "weighted_f1": 0.9184686619059107
+  },
+  "condition_c_real_plus_ungated_gan": {
+    "macro_f1": 0.8280195035167209,
+    "weighted_f1": 0.9220558038188388
+  },
+  "condition_d_real_plus_gated_gan": {
+    "macro_f1": 0.8480506130174724,
+    "weighted_f1": 0.9324011103697916
+  },
+  "condition_e_real_plus_shuffled": {
+    "macro_f1": 0.8307062002124691,
+    "weighted_f1": 0.9234990911237492
+  }
+}

@@ -252,6 +252,19 @@ class WGANGPFull:
             "feature_std": self.feature_std,
         }, path)
 
+    @classmethod
+    def load_from_checkpoint(cls, path, device=None):
+        ckpt = torch.load(path, map_location="cpu", weights_only=False)
+        class_labels = ckpt["class_labels"]
+        feature_mean = ckpt["feature_mean"]
+        feature_std = ckpt["feature_std"]
+        n_features = len(feature_mean)
+        gan = cls(n_features, class_labels, feature_mean, feature_std, device=device)
+        gan.G.load_state_dict(ckpt["generator"])
+        gan.D.load_state_dict(ckpt["critic"])
+        return gan
+
+
 
 def run_stage2(max_epochs=MAX_EPOCHS):
     t_start = time.time()

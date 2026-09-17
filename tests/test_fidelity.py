@@ -27,12 +27,26 @@ def test_mmd_large_for_clearly_different_distributions():
     assert diff_dist > same_dist
 
 
-def test_mmd_never_negative():
+def test_mmd_biased_v_statistic_never_negative():
     rng = np.random.default_rng(3)
     for _ in range(20):
         X = rng.normal(size=(50, 3))
         Y = rng.normal(loc=rng.uniform(-5, 5), size=(50, 3))
-        assert compute_mmd(X, Y) >= 0.0
+        assert compute_mmd(X, Y, unbiased=False) >= 0.0
+
+
+def test_mmd_unbiased_u_statistic_can_be_negative_finite_sample():
+    # An unbiased U-statistic excludes diagonals and has expectation 0 under H0 (P=Q).
+    # Across independent finite samples from identical distributions, some realizations
+    # must be slightly negative.
+    rng = np.random.default_rng(42)
+    scores = []
+    for _ in range(50):
+        X = rng.normal(size=(60, 4))
+        Y = rng.normal(size=(60, 4))
+        scores.append(compute_mmd(X, Y, unbiased=True))
+    assert any(s < 0.0 for s in scores), "Unbiased U-statistic should produce negative finite-sample estimates under P=Q"
+    assert np.abs(np.mean(scores)) < 0.01, "Expectation of unbiased U-statistic under P=Q must be near zero"
 
 
 def test_admit_direction():

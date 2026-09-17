@@ -1,0 +1,182 @@
+[
+  {
+    "drift_severity": 0.0,
+    "batch_size": 60,
+    "drift_fired_count": 0,
+    "synthetic_samples_admitted": 0,
+    "initial_macro_f1": 0.6,
+    "final_macro_f1": 0.8,
+    "mean_post_drift_f1": 0.6093333333333333
+  },
+  {
+    "drift_severity": 0.0,
+    "batch_size": 120,
+    "drift_fired_count": 0,
+    "synthetic_samples_admitted": 0,
+    "initial_macro_f1": 0.8,
+    "final_macro_f1": 0.8,
+    "mean_post_drift_f1": 0.7806492317750899
+  },
+  {
+    "drift_severity": 0.0,
+    "batch_size": 300,
+    "drift_fired_count": 1,
+    "synthetic_samples_admitted": 0,
+    "initial_macro_f1": 0.8,
+    "final_macro_f1": 1.0,
+    "mean_post_drift_f1": 0.8794321653189577
+  },
+  {
+    "drift_severity": 0.0,
+    "batch_size": 600,
+    "drift_fired_count": 0,
+    "synthetic_samples_admitted": 0,
+    "initial_macro_f1": 1.0,
+    "final_macro_f1": 0.9896980435585085,
+    "mean_post_drift_f1": 0.9521042210179258
+  },
+  {
+    "drift_severity": 0.15,
+    "batch_size": 60,
+    "drift_fired_count": 1,
+    "synthetic_samples_admitted": 0,
+    "initial_macro_f1": 0.6,
+    "final_macro_f1": 0.8,
+    "mean_post_drift_f1": 0.6093333333333333
+  },
+  {
+    "drift_severity": 0.15,
+    "batch_size": 120,
+    "drift_fired_count": 2,
+    "synthetic_samples_admitted": 0,
+    "initial_macro_f1": 0.8,
+    "final_macro_f1": 0.8,
+    "mean_post_drift_f1": 0.7696996336996336
+  },
+  {
+    "drift_severity": 0.15,
+    "batch_size": 300,
+    "drift_fired_count": 2,
+    "synthetic_samples_admitted": 0,
+    "initial_macro_f1": 0.8,
+    "final_macro_f1": 0.7904761904761906,
+    "mean_post_drift_f1": 0.7726184222281783
+  },
+  {
+    "drift_severity": 0.15,
+    "batch_size": 600,
+    "drift_fired_count": 2,
+    "synthetic_samples_admitted": 0,
+    "initial_macro_f1": 1.0,
+    "final_macro_f1": 1.0,
+    "mean_post_drift_f1": 0.9535152636337763
+  },
+  {
+    "drift_severity": 0.3,
+    "batch_size": 60,
+    "drift_fired_count": 3,
+    "synthetic_samples_admitted": 0,
+    "initial_macro_f1": 0.6,
+    "final_macro_f1": 0.8,
+    "mean_post_drift_f1": 0.6153548387096774
+  },
+  {
+    "drift_severity": 0.3,
+    "batch_size": 120,
+    "drift_fired_count": 3,
+    "synthetic_samples_admitted": 0,
+    "initial_macro_f1": 0.8,
+    "final_macro_f1": 0.8,
+    "mean_post_drift_f1": 0.755047619047619
+  },
+  {
+    "drift_severity": 0.3,
+    "batch_size": 300,
+    "drift_fired_count": 5,
+    "synthetic_samples_admitted": 0,
+    "initial_macro_f1": 0.8,
+    "final_macro_f1": 1.0,
+    "mean_post_drift_f1": 0.8208776428250113
+  },
+  {
+    "drift_severity": 0.3,
+    "batch_size": 600,
+    "drift_fired_count": 6,
+    "synthetic_samples_admitted": 0,
+    "initial_macro_f1": 1.0,
+    "final_macro_f1": 1.0,
+    "mean_post_drift_f1": 0.9466554804442605
+  },
+  {
+    "drift_severity": 0.45,
+    "batch_size": 60,
+    "drift_fired_count": 5,
+    "synthetic_samples_admitted": 0,
+    "initial_macro_f1": 0.6,
+    "final_macro_f1": 0.8,
+    "mean_post_drift_f1": 0.5935366568914956
+  },
+  {
+    "drift_severity": 0.45,
+    "batch_size": 120,
+    "drift_fired_count": 3,
+    "synthetic_samples_admitted": 0,
+    "initial_macro_f1": 0.8,
+    "final_macro_f1": 0.8,
+    "mean_post_drift_f1": 0.6916052770956713
+  },
+  {
+    "drift_severity": 0.45,
+    "batch_size": 300,
+    "drift_fired_count": 7,
+    "synthetic_samples_admitted": 0,
+    "initial_macro_f1": 0.8,
+    "final_macro_f1": 1.0,
+    "mean_post_drift_f1": 0.7812538460223578
+  },
+  {
+    "drift_severity": 0.45,
+    "batch_size": 600,
+    "drift_fired_count": 10,
+    "synthetic_samples_admitted": 0,
+    "initial_macro_f1": 1.0,
+    "final_macro_f1": 0.9967581699346406,
+    "mean_post_drift_f1": 0.915148908129007
+  },
+  {
+    "drift_severity": 0.65,
+    "batch_size": 60,
+    "drift_fired_count": 7,
+    "synthetic_samples_admitted": 0,
+    "initial_macro_f1": 0.6,
+    "final_macro_f1": 0.5714285714285714,
+    "mean_post_drift_f1": 0.5946795140343527
+  },
+  {
+    "drift_severity": 0.65,
+    "batch_size": 120,
+    "drift_fired_count": 6,
+    "synthetic_samples_admitted": 0,
+    "initial_macro_f1": 0.8,
+    "final_macro_f1": 0.8,
+    "mean_post_drift_f1": 0.6989155335150758
+  },
+  {
+    "drift_severity": 0.65,
+    "batch_size": 300,
+    "drift_fired_count": 10,
+    "synthetic_samples_admitted": 0,
+    "initial_macro_f1": 0.8,
+    "final_macro_f1": 1.0,
+    "mean_post_drift_f1": 0.7922101279206026
+  },
+  {
+    "drift_severity": 0.65,
+    "batch_size": 600,
+    "drift_fired_count": 10,
+    "synthetic_samples_admitted": 80,
+    "initial_macro_f1": 1.0,
+    "final_macro_f1": 0.9967581699346406,
+    "mean_post_drift_f1": 0.911964698876891
+  }
+]

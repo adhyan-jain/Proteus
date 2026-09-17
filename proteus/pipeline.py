@@ -152,21 +152,29 @@ def run_pipeline(progress_cb=None):
         t = b["timestep"]
         X_b, y_b = b["X"], b["y"]
 
-        for name, cond in conditions.items():
-            mf1, pcf1 = _per_timestep_metrics(cond["clf"], X_b, y_b, n_classes)
-            cond["macro_f1"].append(mf1)
-            cond["per_class_f1"].append(pcf1)
+        # Shared eval/fit split per stream batch, fixed before any adaptation touches it
+        X_eval, y_eval, X_fit, y_fit = _split_eval_fit(
+            X_b, y_b, EVAL_HOLDOUT_FRACTION, eval_split_rng)
 
-        # drift detection driven off the closed-loop classifier's confidence
+        # Evaluate baseline and static augmentation on the held-out eval partition
+        mf1_base, pcf1_base = _per_timestep_metrics(clf_baseline, X_eval, y_eval, n_classes)
+        conditions["baseline"]["macro_f1"].append(mf1_base)
+        conditions["baseline"]["per_class_f1"].append(pcf1_base)
+
+        mf1_static, pcf1_static = _per_timestep_metrics(clf_static, X_eval, y_eval, n_classes)
+        conditions["static_augmentation"]["macro_f1"].append(mf1_static)
+        conditions["static_augmentation"]["per_class_f1"].append(pcf1_static)
+
+        # Pre-adaptation evaluation for closed-loop on held-out eval partition
+        mf1_before, pcf1_before = _per_timestep_metrics(closed_loop_clf, X_eval, y_eval, n_classes)
+
+        # Drift detection driven off the closed-loop classifier's confidence
         current_conf = baseline.confidence_distribution(conditions["closed_loop"]["clf"], X_b)
         dr = drift_mod.detect_drift(current_conf, ref_confidences)
         drift_events.append({"timestep": t, **dr})
 
+        mf1_after, pcf1_after = mf1_before, pcf1_before
         if dr["fired"]:
-            f1_before = conditions["closed_loop"]["macro_f1"][-1]
-            X_eval, y_eval, X_fit, y_fit = _split_eval_fit(
-                X_b, y_b, EVAL_HOLDOUT_FRACTION, eval_split_rng)
-
             try:
                 recent_rare = [c for c in rare_classes if np.sum(y_fit == c) >= 2]
                 if recent_rare:
@@ -179,7 +187,7 @@ def run_pipeline(progress_cb=None):
                 X_synth_list, y_synth_list = [], []
                 for rc in rare_classes:
                     synth = closed_loop_gan.generate_synthetic_batch(rc, n_samples=80)
-                    real_recent = X_fit if np.sum(y_fit == rc) >= 5 else X_train[y_train == rc]
+                    real_recent = X_fit[y_fit == rc] if np.sum(y_fit == rc) >= 5 else X_train[y_train == rc]
                     admitted, score = closed_loop_gate.check(
                         step=t, synthetic_batch=synth, real_batch=real_recent,
                         n_samples=len(synth))
@@ -192,12 +200,15 @@ def run_pipeline(progress_cb=None):
                 y_synth_combined = np.concatenate(y_synth_list) if y_synth_list else None
 
                 closed_loop_clf.partial_fit_adaptation(X_fit, y_fit, X_synth_combined, y_synth_combined)
-                mf1_after, _ = _per_timestep_metrics(
+                mf1_after, pcf1_after = _per_timestep_metrics(
                     closed_loop_clf, X_eval, y_eval, n_classes)
-                retrain_events.append({"timestep": t, "f1_before": f1_before,
+                retrain_events.append({"timestep": t, "f1_before": mf1_before,
                                         "f1_after": mf1_after, "n_admitted": n_admitted})
             except Exception as e:
                 retrain_events.append({"timestep": t, "error": str(e)})
+
+        conditions["closed_loop"]["macro_f1"].append(mf1_after)
+        conditions["closed_loop"]["per_class_f1"].append(pcf1_after)
 
     results["conditions"] = {
         name: {"macro_f1": c["macro_f1"], "per_class_f1": c["per_class_f1"]}
