@@ -1,60 +1,69 @@
 # Proteus: Production Deployment & Operations Guide
 
-This guide details the deployment architecture, containerization workflows, artifact management, and monitoring infrastructure for the **Proteus Drift-Aware, GAN-Augmented Intrusion Detection System**.
+This guide details the deployment architecture, containerization workflows, versioned artifact management, controlled redeployment procedures, and observability infrastructure for **Proteus (Drift-Aware, GAN-Augmented Intrusion Detection for Software-Defined Networks)**.
 
 ---
 
 ## 1. System Architecture
 
-Proteus separates **offline research & retraining** from **online real-time inference & telemetry**:
+Proteus cleanly separates **offline research, training, and benchmarking** from **online real-time inference and telemetry**:
 
 ```
-+-----------------------------------------------------------------------------+
-|                          PROTEUS ARCHITECTURE                               |
-+-----------------------------------------------------------------------------+
++---------------------------------------------------------------------------------------------+
+|                                    PROTEUS ARCHITECTURE                                     |
++---------------------------------------------------------------------------------------------+
 
-      [ Emulated / Live Network ]
-                   |
-                   v (OpenFlow 1.3 Flow Stats / DPI)
-      +----------------------------+
-      |  Ryu SDN Controller (s1)   | <---- OpenFlow Telemetry Layer
-      +----------------------------+
-                   |
-                   v (Feature Extraction)
-      +----------------------------+
-      |   FastAPI Inference API    | <==== Container: proteus-api (:8000)
-      |  - /predict                |       - Real-time scoring
-      |  - /health, /version       |       - Schema validation
-      |  - /metrics (Prometheus)   |       - Bounded-buffer adaptation
-      +----------------------------+
-                   ^
-                   | (REST / JSON API)
-      +----------------------------+
-      | Next.js Operations Console | <==== Container: proteus-frontend (:3000)
-      | - Drift & Fidelity Stream  |       - Multi-screen dashboard
-      | - Model & Experiment View  |       - Topology & telemetry charts
-      +----------------------------+
+      [ Ingress Network Traffic / Testbed ]
+                        |
+                        v (OpenFlow 1.3 Flow Stats / DPI)
+      +-----------------------------------+
+      |      Ryu SDN Controller (s1)      | <---- OpenFlow Telemetry Layer
+      +-----------------------------------+
+                        |
+                        v (Feature Extraction / Mapping)
+      +-----------------------------------+
+      |       FastAPI Inference API       | <==== Container: proteus-api (:8000)
+      |   - /predict (single & batch)     |       - Real-time scoring & validation
+      |   - /health, /version, /model     |       - Versioned release management
+      |   - /metrics (Prometheus / JSON)  |       - Bounded-buffer adaptive retraining
+      +-----------------------------------+
+                        ^
+                        | (REST / JSON API)
+      +-----------------------------------+
+      |    Next.js Operations Console     | <==== Container: proteus-frontend (:3000)
+      |   - Live telemetry & drift alerts |       - Standalone Turbopack build
+      |   - Model manifest & releases     |       - Historical evaluation traces
+      +-----------------------------------+
 ```
 
 ---
 
-## 2. Model Artifact Management & Schema
+## 2. Model Artifact Management & Release Versioning
 
-Model artifacts are managed under `models/` with cryptographically verified checksums and strict schema validation:
+Model artifacts are managed under `models/releases/` as immutable, versioned bundles with cryptographic SHA256 checksums, with `models/active_release.json` maintaining the active production pointer:
 
 ```
 models/
-├── baseline_rf.joblib      # Serialized scikit-learn RandomForestClassifier
-├── feature_schema.json     # Ordered list of expected input features and data types
-├── label_encoder.json      # Mapping between class indices and human-readable names
-└── manifest.json           # Model metadata, training parameters, SHA256 checksums
+├── releases/
+│   ├── v001/
+│   │   ├── model.joblib            # Serialized RandomForestClassifier
+│   │   ├── feature_schema.json     # Ordered input feature names and data types
+│   │   ├── label_encoder.json      # Class index to class name mapping
+│   │   └── manifest.json           # Model metadata, training parameters, SHA256 hash
+│   └── v002/
+│       ├── model.joblib
+│       ├── feature_schema.json
+│       ├── label_encoder.json
+│       └── manifest.json
+└── active_release.json             # Pointer to currently active release (e.g. v001)
 ```
 
-### Manifest Structure (`models/manifest.json`)
+### Manifest Schema (`models/releases/v001/manifest.json`)
 ```json
 {
+  "release_version": "v001",
   "version": "1.0.0",
-  "created_at": "2026-09-17T17:50:11Z",
+  "created_at": "2026-09-17T18:42:29Z",
   "model_type": "RandomForestClassifier",
   "parameters": {
     "n_estimators": 100,
@@ -69,153 +78,165 @@ models/
   },
   "artifacts": {
     "model": {
-      "file": "baseline_rf.joblib",
-      "sha256": "7ebc8088ae54d10768914353263761814335502b04314efd3be7bcc3480d781a"
+      "file": "model.joblib",
+      "sha256": "7ebc8088ae54d10768914353263761814335502b04314efd3be7bcc3480d781a",
+      "size_bytes": 1054321
+    },
+    "schema": {
+      "file": "feature_schema.json",
+      "sha256": "3a7b...9e10"
     }
   }
 }
 ```
 
-### Exporting New Model Artifacts
-To train or export a model artifact into production format:
+### Exporting & Promoting a New Model Release
 ```bash
-PYTHONPATH=. .venv/bin/python scripts/export_deployment_artifact.py
+# Export release v002 and promote to active
+PYTHONPATH=. .venv/bin/python scripts/export_deployment_artifact.py --version v002
 ```
 
 ---
 
-## 3. Containerized Deployment (Docker Compose)
+## 3. Deployment Options
 
-### Prerequisites
-- Docker Engine $\ge 24.0$
-- Docker Compose $\ge 2.20$
-
-### Quick Start
+### Option A: Docker Compose Deployment (Recommended)
+Suitable for containerized deployment on a Linux machine or server:
 ```bash
-# Build and launch both API and Frontend in background
+# 1. Build and start services in background
 docker compose up --build -d
 
-# Check service status
+# 2. Check service status
 docker compose ps
 
-# View real-time logs
-docker compose logs -f
+# 3. View operational logs
+docker compose logs --tail=100 -f api
+docker compose logs --tail=100 -f frontend
 ```
 
-The services will be available at:
-- **Web Dashboard**: `http://localhost:3000`
-- **Inference & Health API**: `http://localhost:8000`
-- **Interactive OpenAPI Docs**: `http://localhost:8000/docs`
-- **Prometheus Metrics**: `http://localhost:8000/metrics?format=prometheus`
-
----
-
-## 4. Local Bare-Metal Setup
-
-### 1. Backend Service (FastAPI)
+### Option B: Local Bare-Metal Development
 ```bash
-# Activate virtual environment
+# 1. Start Backend API
 source .venv/bin/activate
-
-# Ensure model artifacts exist
-python scripts/export_deployment_artifact.py
-
-# Start API server
 uvicorn api.server:app --host 0.0.0.0 --port 8000 --reload
-```
 
-### 2. Frontend Dashboard (Next.js)
-```bash
+# 2. Start Next.js Frontend (in a separate terminal)
 cd frontend
-npm install
-npm run build
-npm start -- -p 3000
+npm run dev -- -p 3000
 ```
 
 ---
 
-## 5. API Reference & Endpoints
+## 4. API Reference & Verification
 
 | Method | Path | Description | Output Format |
 |---|---|---|---|
-| `GET` | `/health` / `/api/health` | Service liveness & component status | JSON |
-| `GET` | `/version` / `/api/version` | API and model version metadata | JSON |
-| `GET` | `/model` / `/api/model` | Loaded model manifest & schema | JSON |
-| `GET` | `/metrics` / `/api/metrics` | Request, error, latency & class metrics | JSON or Prometheus (`?format=prometheus`) |
-| `POST` | `/predict` / `/api/predict` | Real-time flow classification | JSON (`SinglePredictionResult` / Batch) |
-| `GET` | `/api/experiments/*` | Historical research evaluation traces | JSON |
+| `GET` | `/health` / `/api/health` | Liveness, uptime, model load state, active release | JSON |
+| `GET` | `/version` / `/api/version` | API version, model release version, runtime info | JSON |
+| `GET` | `/model` / `/api/model` | Active model manifest, feature schema, and label encoder | JSON |
+| `GET` | `/metrics` / `/api/metrics` | Request count, latency, error count, class distribution | JSON or Prometheus (`?format=prometheus`) |
+| `POST` | `/predict` / `/api/predict` | Real-time flow prediction (single vector or batch) | JSON |
 
 ### Sample Prediction Request
 ```bash
 curl -X POST http://localhost:8000/predict \
   -H "Content-Type: application/json" \
   -d '{
-    "features": [0.0, 1.0, 0.0, 0.5, 120.0, ... 52 features total ...]
+    "features": [0.0, 1.0, 0.0, 0.5, 120.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
   }'
 ```
 
-Response:
-```json
-{
-  "status": "success",
-  "count": 1,
-  "predictions": [
-    {
-      "predicted_label": "benign",
-      "predicted_index": 0,
-      "probabilities": {
-        "benign": 0.98,
-        "dos": 0.01,
-        "probe": 0.005,
-        "r2l": 0.003,
-        "u2r": 0.002
-      },
-      "inference_time_ms": 1.42
-    }
-  ],
-  "total_time_ms": 1.55
-}
-```
-
 ---
 
-## 6. Redeployment & Rollback Procedures
+## 5. Operations & Redeployment Workflows
 
-### Rolling Redeployment
-When updating model artifacts or application code:
+> [!IMPORTANT]
+> **Terminology Notice**: Container rebuild and restart workflows using Docker Compose are **Controlled Redeployments / Safe Rebuilds**, NOT zero-downtime blue-green deployments. A brief restart gap of 1–2 seconds occurs when restarting the container.
+
+### A. First Deployment
 ```bash
-# 1. Export or verify new model artifacts
-PYTHONPATH=. .venv/bin/python scripts/export_deployment_artifact.py
+# 1. Export baseline release v001
+PYTHONPATH=. .venv/bin/python scripts/export_deployment_artifact.py --version v001
 
-# 2. Rebuild and restart containers without downtime
-docker compose up --build -d --no-deps api
-docker compose up --build -d --no-deps frontend
+# 2. Build and launch services
+docker compose up --build -d
+
+# 3. Verify health & endpoints
+curl -s http://localhost:8000/health | jq .
+curl -s http://localhost:8000/version | jq .
+curl -s http://localhost:8000/model | jq .
+curl -s http://localhost:8000/metrics?format=prometheus
 ```
 
-### Rollback Procedure
-1. Revert `models/baseline_rf.joblib` and `models/manifest.json` from backup or git history:
-   ```bash
-   git checkout HEAD~1 -- models/
-   ```
-2. Restart the API container:
-   ```bash
-   docker compose restart api
-   ```
-3. Verify health and loaded model version:
-   ```bash
-   curl -s http://localhost:8000/health | jq .
-   curl -s http://localhost:8000/version | jq .
-   ```
+### B. Controlled Redeployment After Code Changes
+```bash
+# 1. Pull latest changes
+git pull origin master
+
+# 2. Run test suites locally before deployment
+PYTHONPATH=. .venv/bin/pytest tests/ -v
+
+# 3. Rebuild and restart containers
+docker compose build api frontend
+docker compose up -d api frontend
+
+# 4. Verify post-deploy health and run smoke test
+curl -s http://localhost:8000/health | jq .
+PYTHONPATH=. .venv/bin/python -c "
+from api.server import predict, PredictionRequest
+res = predict(PredictionRequest(features=[0.5]*52))
+print('Smoke test status:', res.status)
+"
+```
+
+### C. Model Update & Release Promotion
+```bash
+# 1. Train and evaluate new model (offline pipeline)
+# 2. Export and register new version (e.g. v002)
+PYTHONPATH=. .venv/bin/python scripts/export_deployment_artifact.py --version v002
+
+# 3. Restart API service to reload active model
+docker compose restart api
+
+# 4. Verify updated model release loaded
+curl -s http://localhost:8000/version | jq .release_version
+```
+
+### D. Model Rollback Procedure
+```bash
+# 1. List available model releases
+PYTHONPATH=. .venv/bin/python scripts/rollback_model.py --list
+
+# 2. Rollback active pointer to previous version
+PYTHONPATH=. .venv/bin/python scripts/rollback_model.py --rollback-previous
+
+# (Or switch to an explicit release version)
+# PYTHONPATH=. .venv/bin/python scripts/rollback_model.py --version v001
+
+# 3. Restart API service
+docker compose restart api
+
+# 4. Confirm active release
+curl -s http://localhost:8000/model | jq .manifest.release_version
+```
 
 ---
 
-## 7. SDN Deployment Boundary & Known Limitations
+## 6. SDN Controller Integration & Architectural Boundaries
 
 1. **Feature Separation**:
-   - OpenFlow 1.3 `OFPFlowStatsReply` provides 10 aggregated packet/byte counters and duration stats.
-   - CICIDS2017 / InSDN 80-feature datasets require Deep Packet Inspection (DPI) flow meters (e.g. CICFlowMeter).
-   - In live SDN mode, `sdn/topology/feature_mapper.py` standardizes available OpenFlow telemetry into the model input vector.
+   - OpenFlow 1.3 `OFPFlowStatsReply` provides **10 aggregate flow statistics** (packet counters, byte counters, duration, packet rate, byte rate).
+   - Datasets like CICIDS2017 require **80 deep packet inspection (DPI) features** extracted via flow meters.
+   - In live SDN mode, `sdn/topology/feature_mapper.py` standardizes available OpenFlow counters into the model input vector.
 
 2. **Privilege Requirements**:
-   - Mininet virtual network emulation requires Linux `root` / `sudo` privileges to configure network namespaces and Open vSwitch kernels.
-   - In non-root or containerized environments without `--privileged` flags, Proteus operates in **Real Data Replay Mode** (`RealDataReplaySource`).
+   - Mininet virtual network emulation requires Linux `root` / `sudo` privileges to initialize Open vSwitch datapaths and network namespaces (`sdn/topology/smoke_test.sh`).
+   - In unprivileged environments, Proteus operates in **Real Data Replay Mode** (`RealDataReplaySource`).
+
+---
+
+## 7. Security & Environment Hardening
+
+1. **Non-Root Containers**: Both `Dockerfile.api` (user `proteus`, UID 1001) and `Dockerfile.frontend` (user `nextjs`, UID 1001) run with non-root security contexts.
+2. **Secrets & Credentials**: No cloud credentials, API tokens, or dataset keys are baked into images or committed to git.
+3. **Network Isolation**: API and frontend communicate over a private bridge network (`proteus-net`).

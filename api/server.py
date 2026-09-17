@@ -70,24 +70,55 @@ _metrics = {
 }
 
 
-def _load_model_artifacts():
-    if _model_cache["loaded"]:
+ACTIVE_RELEASE_PATH = MODELS_DIR / "active_release.json"
+
+def _load_model_artifacts(force_reload: bool = False):
+    if _model_cache["loaded"] and not force_reload:
         return _model_cache
-    if MODEL_PATH.exists() and SCHEMA_PATH.exists() and MANIFEST_PATH.exists():
+    
+    # Determine target directory
+    target_model_file = MODEL_PATH
+    target_schema_file = SCHEMA_PATH
+    target_encoder_file = ENCODER_PATH
+    target_manifest_file = MANIFEST_PATH
+    release_version = "v001"
+
+    if ACTIVE_RELEASE_PATH.exists():
         try:
-            log.info(f"Loading model artifact from {MODEL_PATH}...")
-            _model_cache["clf"] = joblib.load(MODEL_PATH)
-            with open(SCHEMA_PATH, "r") as f:
+            with open(ACTIVE_RELEASE_PATH, "r") as f:
+                active_meta = json.load(f)
+            rel_path = ROOT / active_meta.get("release_path", "models")
+            if rel_path.exists():
+                candidate_model = rel_path / "model.joblib"
+                if candidate_model.exists():
+                    target_model_file = candidate_model
+                    target_schema_file = rel_path / "feature_schema.json"
+                    target_encoder_file = rel_path / "label_encoder.json"
+                    target_manifest_file = rel_path / "manifest.json"
+                    release_version = active_meta.get("active_version", release_version)
+        except Exception as e:
+            log.warning(f"Could not parse active_release.json, falling back to default model: {e}")
+
+    if target_model_file.exists() and target_schema_file.exists():
+        try:
+            log.info(f"Loading model artifact from {target_model_file} (release: {release_version})...")
+            _model_cache["clf"] = joblib.load(target_model_file)
+            with open(target_schema_file, "r") as f:
                 _model_cache["schema"] = json.load(f)
-            with open(MANIFEST_PATH, "r") as f:
-                _model_cache["manifest"] = json.load(f)
-            if ENCODER_PATH.exists():
-                with open(ENCODER_PATH, "r") as f:
+            if target_manifest_file.exists():
+                with open(target_manifest_file, "r") as f:
+                    _model_cache["manifest"] = json.load(f)
+            else:
+                _model_cache["manifest"] = {"version": release_version, "model_type": type(_model_cache["clf"]).__name__}
+            if target_encoder_file.exists():
+                with open(target_encoder_file, "r") as f:
                     _model_cache["encoder"] = json.load(f)
+            _model_cache["release_version"] = release_version
             _model_cache["loaded"] = True
-            log.info("Model artifacts loaded successfully.")
+            log.info(f"Model release {release_version} loaded successfully.")
         except Exception as e:
             log.error(f"Failed to load model artifacts: {e}")
+            _model_cache["loaded"] = False
     return _model_cache
 
 
@@ -152,6 +183,7 @@ def health():
         "status": "ok",
         "service": "proteus-api",
         "version": VERSION,
+        "release_version": mc.get("release_version", "v001"),
         "uptime_seconds": round(time.time() - APP_START_TIME, 2),
         "model_loaded": mc["loaded"],
         "results_available": d is not None,
@@ -168,7 +200,8 @@ def version():
     manifest = mc.get("manifest") or {}
     return {
         "api_version": VERSION,
-        "model_version": manifest.get("version", "unknown"),
+        "release_version": mc.get("release_version", "v001"),
+        "model_version": manifest.get("version", "1.0.0"),
         "model_type": manifest.get("model_type", "None"),
         "features_count": mc["schema"]["n_features"] if mc["loaded"] else None,
         "classes_count": mc["schema"]["n_classes"] if mc["loaded"] else None,
