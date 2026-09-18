@@ -453,9 +453,9 @@
 
 ### Slide 1 Notes: Title & Motivation
 - **Spoken Explanation (30–60s)**:  
-  "Good morning, committee members. Today I am presenting Proteus, an adaptive, closed-loop intrusion detection system designed specifically for Software-Defined Networks. Traditional machine learning IDS models rely on a fundamental assumption: that training traffic and production traffic follow the exact same distribution. In operational networks, this assumption fails catastrophically. When attackers evolve their tooling or new protocols emerge, static models collapse. Proteus solves this by creating an autonomous closed loop: detecting drift through classifier confidence, generating candidate samples, filtering them defensively via Maximum Mean Discrepancy, and performing bounded-memory retraining in under 3.5 seconds."
+  "Good morning, committee members. Today I am presenting Proteus, an adaptive, closed-loop intrusion detection system designed specifically for Software-Defined Networks. Traditional machine learning IDS models rely on a fundamental assumption: that training traffic and production traffic follow the exact same distribution. In operational networks, this assumption fails catastrophically. When attackers evolve their tooling or new protocols emerge, static models collapse. Proteus addresses this by creating an autonomous closed loop: detecting drift through classifier confidence, generating candidate samples, filtering them defensively via Maximum Mean Discrepancy, and performing bounded-memory retraining in under 3.5 seconds."
 - **Transition**:  
-  "To understand why this closed loop is necessary, let us look at what happens when a state-of-the-art static classifier encounters real-world temporal shift."
+  "To understand why this closed loop is necessary, let us look at what happens when a strong static supervised baseline encounters real-world temporal shift."
 - **Likely Interruption**:  
   *"Why not just train a larger, more complex deep learning model offline?"*
 - **Concise Answer**:  
@@ -465,7 +465,7 @@
 
 ### Slide 2 Notes: The Problem: Catastrophic Collapse Under Temporal Drift
 - **Spoken Explanation (30–60s)**:  
-  "Here is the core empirical problem. We trained a 25-class Random Forest on 1.2 million flows from the Monday-through-Thursday captures of CICIDS2017. Evaluated statically, it performs exceptionally well, achieving an 0.8922 Macro-F1 and over 99% accuracy. However, when we deploy this exact same model onto the temporal Friday capture—which introduces four new attack families including PortScan and Botnets—its Macro-F1 collapses to 0.0294. It achieves zero percent recall on every single new attack, misclassifying every malicious flow as benign. Static defense in non-stationary networks is fundamentally broken."
+  "Here is the core empirical problem. We trained a 25-class Random Forest on 1.2 million flows from the Monday-through-Thursday captures of CICIDS2017. Evaluated statically, it performs exceptionally well, achieving an 0.8922 Macro-F1 and over 99% accuracy. However, when we deploy this exact same model onto the temporal Friday capture—which introduces four new attack families including PortScan and Botnets—its Macro-F1 collapses to 0.0294. It achieves zero percent recall on every single new attack, misclassifying every malicious flow as benign. The static baseline collapses under the evaluated temporal distribution shift."
 - **Transition**:  
   "To address this vulnerability, we designed the Proteus closed-loop architecture."
 - **Likely Interruption**:  
