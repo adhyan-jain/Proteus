@@ -137,8 +137,14 @@ npm run dev -- -p 3000
 | `GET` | `/health` / `/api/health` | Liveness, uptime, model load state, active release | JSON |
 | `GET` | `/version` / `/api/version` | API version, model release version, runtime info | JSON |
 | `GET` | `/model` / `/api/model` | Active model manifest, feature schema, and label encoder | JSON |
-| `GET` | `/metrics` / `/api/metrics` | Request count, latency, error count, class distribution | JSON or Prometheus (`?format=prometheus`) |
-| `POST` | `/predict` / `/api/predict` | Real-time flow prediction (single vector or batch) | JSON |
+| `GET` | `/metrics` / `/api/metrics` | Request count, latency, error count, class distribution, drift/rollback counters | JSON or Prometheus (`?format=prometheus`) |
+| `POST` | `/predict` / `/api/predict` | Real-time flow prediction (buffered for drift detection) | JSON |
+| `GET` | `/api/drift/status` | Current sample buffer depth, drift state, cooldown, and canary health | JSON |
+| `POST` | `/api/drift/trigger-check` | Manually trigger drift evaluation on buffered samples | JSON |
+| `GET` | `/api/lifecycle/history` | Chronological audit log of drift detections, adaptations, promotions, and rollbacks | JSON |
+| `GET` | `/api/canary/status` | Active post-deployment canary monitor status, sample count, and error rate | JSON |
+| `POST` | `/api/model/hot-swap/{version}` | Zero-downtime double-buffered in-memory hot-swap to target release | JSON |
+| `POST` | `/api/model/rollback` | Zero-downtime rollback to previous active release | JSON |
 
 ### Sample Prediction Request
 ```bash
@@ -151,7 +157,47 @@ curl -X POST http://localhost:8000/predict \
 
 ---
 
-## 5. Operations & Redeployment Workflows
+## 5. Autonomous Closed-Loop Drift Daemon & Hot-Swapping
+
+Proteus integrates an in-process, non-blocking autonomous closed-loop lifecycle (`proteus/drift_daemon.py`, `proteus/model_manager.py`, `proteus/release_manager.py`):
+
+```
++-----------------------------------------------------------------------------------------+
+|                         AUTONOMOUS CLOSED-LOOP LIFECYCLE                                |
++-----------------------------------------------------------------------------------------+
+
+  1. Live Ingress Inferences ---> [ LiveSampleBuffer (Bounded Ring Deque) ]
+                                              |
+                                              v
+  2. AutonomousDriftWorker -----> [ Sliding KS-Test Drift Evaluation (p < alpha) ]
+                                              |
+                                              +---> (If Drift Detected & Cooldown Elapsed)
+                                              v
+  3. Off-Path Retraining Executor -> [ BoundedBuffer + CWGAN-GP + MMD Gate ]
+                                              |
+                                              v
+  4. Candidate Validation Gate ---> [ Sanity Prediction, Prob Distribution, Reference Floor ]
+                                              |
+                                              +---> (Passed)
+                                              v
+  5. Cryptographic Packaging -----> [ Staging Dir -> models/releases/vXXX + SHA256 Manifest ]
+                                              |
+                                              v
+  6. Double-Buffered Hot-Swap ----> [ In-Memory Atomic Pointer Swap under Python GIL ]
+                                              |
+                                              v
+  7. Post-Deploy Canary Monitor --> [ Tracks Next N Inferences; Rollback if Error Rate > 5% ]
+```
+
+### Key Architectural Invariants:
+1. **Zero Downtime**: In-memory double buffering (`ModelManager`) swaps active model references atomically under the Python GIL with zero inference lock contention (<5ms latency). In-flight requests complete on their existing reference safely.
+2. **Off-Path Adaptation**: Heavy retraining tasks run asynchronously in a dedicated `ThreadPoolExecutor`, preventing inference blocking on the main FastAPI event loop.
+3. **Automated Rollback**: If a newly promoted model exceeds error thresholds during canary observation, `AutonomousDriftWorker` automatically restores the previous active release and logs the incident to `/api/lifecycle/history`.
+4. **Fail-Open SDN Telemetry**: Ryu controller dispatches inference requests asynchronously (`hub.spawn()`) with a 100ms timeout circuit breaker, guaranteeing OpenFlow L2 switch forwarding never stalls.
+
+---
+
+## 6. Operations & Redeployment Workflows
 
 > [!IMPORTANT]
 > **Terminology Notice**: Container rebuild and restart workflows using Docker Compose are **Controlled Redeployments / Safe Rebuilds**, NOT zero-downtime blue-green deployments. A brief restart gap of 1–2 seconds occurs when restarting the container.
@@ -225,7 +271,7 @@ curl -s http://localhost:8000/model | jq .manifest.release_version
 
 ---
 
-## 6. SDN Controller Integration & Architectural Boundaries
+## 7. SDN Controller Integration & Architectural Boundaries
 
 1. **Feature Separation**:
    - OpenFlow 1.3 `OFPFlowStatsReply` provides **10 aggregate flow statistics** (packet counters, byte counters, duration, packet rate, byte rate).
@@ -238,8 +284,9 @@ curl -s http://localhost:8000/model | jq .manifest.release_version
 
 ---
 
-## 7. Security & Environment Hardening
+## 8. Security & Environment Hardening
 
 1. **Non-Root Containers**: Both `Dockerfile.api` (user `proteus`, UID 1001) and `Dockerfile.frontend` (user `nextjs`, UID 1001) run with non-root security contexts.
 2. **Secrets & Credentials**: No cloud credentials, API tokens, or dataset keys are baked into images or committed to git.
 3. **Network Isolation**: API and frontend communicate over a private bridge network (`proteus-net`).
+

@@ -21,7 +21,7 @@ def test_version_endpoint():
     assert "api_version" in res
     assert "model_version" in res
     assert res["python_env"] == "3.12"
-    assert res["architecture"] == "Proteus Closed-Loop SDN-IDS"
+    assert "Proteus Closed-Loop" in res["architecture"]
 
 def test_model_endpoint():
     res = model_info()

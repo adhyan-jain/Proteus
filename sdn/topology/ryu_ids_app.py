@@ -115,9 +115,40 @@ class ProteusIDSApp(simple_switch_13.SimpleSwitch13):
             self.on_schema_row(dpid, flow_key, schema_row)
 
     def on_schema_row(self, dpid, flow_key, schema_row):
-        """Extension point -- see module docstring. Stage 6 (live classifier inference) replaces
-        this method's body; Stage 5's job is just getting a correctly-mapped row here reliably."""
-        self.logger.info("[schema-row] dpid=%016x flow=%s -> %s", dpid, flow_key, schema_row)
+        """Asynchronous non-blocking inference dispatch to Proteus API."""
+        hub.spawn(self._async_predict, dpid, flow_key, schema_row)
+
+    def _async_predict(self, dpid, flow_key, schema_row):
+        """Send flow telemetry to Proteus API /predict asynchronously with fail-open circuit breaker."""
+        import json
+        import urllib.request
+        import urllib.error
+
+        api_url = "http://localhost:8000/predict"
+        payload = json.dumps({"features": schema_row}).encode("utf-8")
+        req = urllib.request.Request(
+            api_url,
+            data=payload,
+            headers={"Content-Type": "application/json", "User-Agent": "Proteus-Ryu-SDN/1.0"},
+        )
+
+        try:
+            with urllib.request.urlopen(req, timeout=0.10) as response:
+                if response.status == 200:
+                    resp_data = json.loads(response.read().decode("utf-8"))
+                    preds = resp_data.get("predictions", [])
+                    if preds:
+                        top = preds[0]
+                        label = top.get("predicted_label")
+                        if label and label.lower() not in ["normal", "benign"]:
+                            self.logger.warning(
+                                f"[PROTEUS IDS ALERT] dpid={dpid:016x} flow={flow_key} ATTACK DETECTED: {label} (confidence: {max(top.get('probabilities', {}).values()):.2f})"
+                            )
+        except urllib.error.URLError as e:
+            # Non-blocking fail-open: never stall SDN forwarding when API is offline
+            self.logger.debug(f"[Proteus IDS] Inference API unreachable ({e.reason}) - fail-open active.")
+        except Exception as e:
+            self.logger.debug(f"[Proteus IDS] Async inference telemetry error: {e}")
 
     # -- forwarding: install richer (L3/L4-aware) match fields on top of the inherited L2 miss
     #    handling, so flow-stats entries carry protocol/port info feature_mapper can use ---------

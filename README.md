@@ -57,6 +57,7 @@
 3. **MMD Fidelity Gate**: Applies an unbiased Gaussian-kernel Maximum Mean Discrepancy two-sample statistic ($\tau=0.25$) to reject low-quality or out-of-distribution synthetic samples before retraining.
 4. **Bounded-Memory Adaptive Retraining (`BoundedBufferClassifier`)**: Replaces full historical retraining with a bounded reference reservoir ($N_{\text{ref}}=20,000$) and sliding adaptation buffer ($N_{\text{recent}}=5,000$). Guarantees $O(1)$ constant adaptation dataset buffer size ($|D_{\text{adapt}}| \le 25,000$ rows; total process RSS $\approx 5.4\text{ GB}$) and sub-3.5s update latency per drift event.
 5. **Strict Non-Leakage Evaluation Protocol**: Evaluates all post-adaptation metrics on a 30% held-out evaluation split per window (`split_eval_fit`) that is never used during classifier fitting or GAN training.
+6. **Autonomous SDN Operations & Zero-Downtime Hot-Swapping**: Provides an end-to-end autonomous daemon (`AutonomousDriftWorker`) that buffers live telemetry, detects drift, executes off-path retraining, validates candidate models via safety gating, packages cryptographic releases, performs GIL-atomic double-buffered hot-swaps (<5ms latency), and auto-rolls back on canary degradation.
 
 ---
 

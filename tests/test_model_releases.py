@@ -9,23 +9,28 @@ from api.server import _load_model_artifacts, version
 def test_release_export_and_metadata():
     # Export a test release
     test_ver = "v999"
-    export_artifacts(version=test_ver, n_samples=1000, promote=True)
-    
-    # Verify active release
-    active = get_active_release()
-    assert active["active_version"] == test_ver
-    
-    # Verify files in release dir
-    release_dir = Path("models/releases") / test_ver
-    assert (release_dir / "model.joblib").exists()
-    assert (release_dir / "feature_schema.json").exists()
-    assert (release_dir / "label_encoder.json").exists()
-    assert (release_dir / "manifest.json").exists()
-    
-    with open(release_dir / "manifest.json", "r") as f:
-        manifest = json.load(f)
-    assert manifest["release_version"] == test_ver
-    assert "sha256" in manifest["artifacts"]["model"]
+    try:
+        export_artifacts(version=test_ver, n_samples=1000, promote=True)
+        
+        # Verify active release
+        active = get_active_release()
+        assert active["active_version"] == test_ver
+        
+        # Verify files in release dir
+        release_dir = Path("models/releases") / test_ver
+        assert (release_dir / "model.joblib").exists()
+        assert (release_dir / "feature_schema.json").exists()
+        assert (release_dir / "label_encoder.json").exists()
+        assert (release_dir / "manifest.json").exists()
+        
+        with open(release_dir / "manifest.json", "r") as f:
+            manifest = json.load(f)
+        assert manifest["release_version"] == test_ver
+        assert "sha256" in manifest["artifacts"]["model"]
+    finally:
+        import shutil
+        shutil.rmtree(Path("models/releases") / test_ver, ignore_errors=True)
+
 
 def test_rollback_and_release_switching():
     # Ensure v001 exists

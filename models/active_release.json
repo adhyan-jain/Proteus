@@ -1,28 +1,49 @@
 {
   "active_version": "v001",
   "release_path": "models/releases/v001",
-  "activated_at": "2026-09-17T19:34:13Z",
+  "activated_at": "2026-09-18T07:11:43Z",
   "manifest": {
     "release_version": "v001",
     "version": "1.0.0",
-    "created_at": "2026-09-17T19:34:13Z",
+    "created_at": "2026-09-18T07:11:42Z",
     "model_type": "RandomForestClassifier",
     "parameters": {
-      "n_estimators": 100,
+      "bootstrap": true,
+      "ccp_alpha": 0.0,
+      "class_weight": null,
+      "criterion": "gini",
       "max_depth": 15,
-      "random_state": 42
+      "max_features": "sqrt",
+      "max_leaf_nodes": null,
+      "max_samples": null,
+      "min_impurity_decrease": 0.0,
+      "min_samples_leaf": 1,
+      "min_samples_split": 2,
+      "min_weight_fraction_leaf": 0.0,
+      "monotonic_cst": null,
+      "n_estimators": 100,
+      "n_jobs": -1,
+      "oob_score": false,
+      "random_state": 42,
+      "verbose": 0,
+      "warm_start": false
     },
     "training_metadata": {
       "dataset": "NSL-KDD-Schema-Reference",
-      "n_samples": 5000,
+      "n_samples": 1000,
       "n_features": 52,
-      "n_classes": 5
+      "n_classes": 5,
+      "parameters": {
+        "n_estimators": 100,
+        "max_depth": 15,
+        "random_state": 42
+      }
     },
     "artifacts": {
       "model": {
         "file": "model.joblib",
-        "sha256": "7ebc8088ae54d10768914353263761814335502b04314efd3be7bcc3480d781a",
-        "size_bytes": 985332
+        "sha256": "f6475585fcd5dc9a14940ab3905610476dfef8afa675bd271275ce53f3eaa9b1",
+        "size_bytes": 271747
       },
       "schema": {
         "file": "feature_schema.json",
@@ -30,7 +51,7 @@
       },
       "label_encoder": {
         "file": "label_encoder.json",
-        "sha256": "5ba45f282a0071bbca70dc17c7ef50a9f51f08ad15f4cd1cf4892bfbf219fcd0"
+        "sha256": "0576033099e274079e643d778b3403092457a9d383537b260694268a83b21d65"
       }
     }
   }

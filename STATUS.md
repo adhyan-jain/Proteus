@@ -10,30 +10,26 @@ here, and `METRICS_HISTORY.md` for every real number any run has produced.
 **Standing rule**: update this file at the end of every real work session — not after every
 commit, but whenever you stop, hand off, or finish a stage. A stale STATUS.md defeats the point.
 
-Last updated: 2026-09-17, by Antigravity session.
+Last updated: 2026-09-18, by Antigravity session.
 
-## Handoff note — Final Research + Deployment Audit Complete (2026-09-17)
+## Handoff note — End-to-End Autonomous SDN Integration Complete (2026-09-18)
 
-1. **Production Deployment & Containerization Architecture**:
-   - `Dockerfile.api`: Python 3.12 slim, non-root user `proteus`, `/health` healthcheck, uvicorn runtime.
-   - `Dockerfile.frontend`: Multi-stage Node 20 alpine, Next.js standalone runner, non-root user `nextjs`.
-   - `docker-compose.yml`: Fully orchestrated stack with network isolation (`proteus-net`), volume mounts, dependency health checks.
-   - `api/server.py`: Enhanced with `/health`, `/version`, `/model`, `/metrics` (JSON + Prometheus), `/predict` (single/batch inference with schema validation).
-   - `models/`: Production model artifact management with `models/manifest.json`, `models/baseline_rf.joblib`, `models/feature_schema.json`, `models/label_encoder.json` with SHA256 verification.
-   - `docs/DEPLOYMENT.md`: Complete operations, rollback, and containerization manual.
-   - `.github/workflows/ci.yml`: Automated CI/CD pipeline covering backend tests, SDN tests, and frontend build.
+1. **Autonomous Live SDN Closed-Loop Lifecycle**:
+   - `proteus/release_manager.py`: Cryptographic SHA256 release packaging, atomic `.staging_` rename, schema/label-encoder verification, atomic `.tmp` pointer updates, and release rollback.
+   - `proteus/model_manager.py`: In-memory double-buffering model manager providing zero-downtime hot-swapping under GIL atomic pointer assignment with zero prediction error during concurrent request load (`tests/test_model_manager_concurrency.py`).
+   - `proteus/drift_daemon.py`: Autonomous background daemon with thread-safe ring buffer (`LiveSampleBuffer`), sliding-window two-sample Kolmogorov-Smirnov drift monitoring, off-path `ThreadPoolExecutor` adaptation (CWGAN-GP + MMD + `BoundedBufferClassifier`), candidate validation gate (`CandidateValidationGate`), automatic release promotion, and post-deployment canary monitor with automated failure rollback.
+   - `api/server.py`: Integrated with FastAPI lifespan, auto-starting `AutonomousDriftWorker`, streaming live predictions into sample ring buffer, recording canary outcomes, and exposing observability endpoints (`/api/drift/status`, `/api/lifecycle/history`, `/api/canary/status`, `/api/model/hot-swap/{version}`, `/api/model/rollback`).
+   - `sdn/topology/ryu_ids_app.py`: Async non-blocking inference bridge dispatching OpenFlow flow telemetry via `hub.spawn()` with a 100ms fail-open circuit breaker preventing SDN forwarding stalls.
 
-2. **Protocol-Corrected Stage 7 Evaluation & Empirical Evidence**:
+2. **Complete Passing Test Suite**:
+   - 41 unit tests in `tests/` + 7 unittest in `sdn/topology/` = **48/48 passing (100%)** (1 skipped environment-conditional).
+   - Next.js frontend production build: 13/13 routes compiled cleanly.
+   - Verified zero-downtime hot-swap under concurrent load (0 errors on 100+ requests).
+
+3. **Protocol-Corrected Stage 7 Evaluation & Empirical Evidence**:
    - Authoritative Stage 7 metrics verified on full CICIDS2017: Baseline: 0.0294, Static: 0.0297, Closed-loop: **0.1738** (5.91x ratio; post-drift mean 0.1495, 5.08x).
    - Mathematical derivation confirmed: $0.1738 = 0.8690 \times \frac{5}{25}$ (Active Macro-F1: 86.90% across 5 active classes; 0.20 is fixed-25-class ceiling).
    - Pooled Post-Drift Evaluation ($t=6..15$, 9,000 held-out rows): Closed-loop achieves **0.1650 25-class Macro-F1**, 82.50% active Macro-F1, **97.77% Micro-F1 (accuracy)**, 0.9773 Weighted-F1 vs Baseline 0.0294 Macro-F1, 53.32% Micro-F1.
-   - Pre-Drift Train/Eval Overlap Audited (`scratch/audit_predrift_duplicates.py`): Pre-drift stream windows ($w_0..w_5$) have ~76.8% train index overlap, reflecting in-distribution stability (100% active F1), while post-drift Friday windows have **0.0% overlap** (pure out-of-distribution evaluation).
-   - Downstream GAN Utility Study (`results/gan_downstream_utility.json`): Real only (0.8481), +Ungated GAN (0.8280, -2.01% degradation), +MMD-gated GAN (0.8481, protective filter).
-
-3. **Complete Passing Test Suite**:
-   - 31 unit tests in `tests/` + 7 unittest in `sdn/topology/` = **38/38 passing (100%)**.
-   - Next.js frontend production build: 13/13 routes compiled cleanly.
-   - LaTeX paper `paper/main.tex` compiled cleanly to `paper/main.pdf` (6 pages, 0 errors).
 
 ## ⚠️ Unexplained file found — check this first
 
