@@ -186,3 +186,71 @@ def map_flow_stat_to_schema(raw: RawFlowStat) -> dict:
         out["packet_length_mean"] = mean_len
 
     return out
+
+
+# Mapping rules from raw/mapped OpenFlow fields to standard model schemas (NSL-KDD 52-dim / CICIDS 78-dim)
+_FEATURE_SYNONYM_MAP = {
+    "duration": lambda s: (s.get("flow_duration", 0.0) or 0.0) / 1e6,  # microsec -> sec
+    "src_bytes": lambda s: float(s.get("total_length_of_fwd_packet", 0.0) or 0.0),
+    "dst_bytes": lambda s: float(s.get("dst_bytes", 0.0) or 0.0),
+    "count": lambda s: float(s.get("total_fwd_packet", 0.0) or 0.0),
+    "srv_count": lambda s: float(s.get("total_fwd_packet", 0.0) or 0.0),
+    "protocol_type_tcp": lambda s: 1.0 if s.get("protocol") == 6 else 0.0,
+    "protocol_type_udp": lambda s: 1.0 if s.get("protocol") == 17 else 0.0,
+    "protocol_type_icmp": lambda s: 1.0 if s.get("protocol") == 1 else 0.0,
+    "service_http": lambda s: 1.0 if s.get("dst_port") in (80, 8080, 443) else 0.0,
+    "service_domain_u": lambda s: 1.0 if s.get("dst_port") == 53 else 0.0,
+    "service_smtp": lambda s: 1.0 if s.get("dst_port") == 25 else 0.0,
+    "service_ftp": lambda s: 1.0 if s.get("dst_port") in (20, 21) else 0.0,
+    "service_telnet": lambda s: 1.0 if s.get("dst_port") == 23 else 0.0,
+}
+
+
+def map_schema_to_feature_vector(
+    schema_row: dict,
+    target_feature_names: list[str],
+    default_val: float = 0.0,
+) -> list[float]:
+    """Projects live OpenFlow schema dictionary into a deterministic fixed-width feature vector
+    aligned with the target deployment model schema.
+
+    Missing or unavailable features default safely to `default_val` (0.0) without silent hallucination.
+    """
+    vector: list[float] = []
+    for fn in target_feature_names:
+        if fn in schema_row and schema_row[fn] is not None:
+            vector.append(float(schema_row[fn]))
+        elif fn in _FEATURE_SYNONYM_MAP:
+            vector.append(float(_FEATURE_SYNONYM_MAP[fn](schema_row)))
+        else:
+            vector.append(float(default_val))
+    return vector
+
+
+def generate_feature_coverage_report(target_feature_names: list[str]) -> list[dict]:
+    """Generates an explicit, machine-readable feature coverage report auditing every feature in the target schema."""
+    report = []
+    for fn in target_feature_names:
+        is_direct = fn in POPULATED_COLUMNS
+        is_synonym = fn in _FEATURE_SYNONYM_MAP
+        is_populated = is_direct or is_synonym
+
+        if is_direct:
+            source = f"OpenFlow counter ({fn})"
+            reason = "Directly derived from OFPFlowStatsReply counter"
+        elif is_synonym:
+            source = "OpenFlow match/counter translation rule"
+            reason = "Projected from protocol/port/counter match"
+        else:
+            source = "None"
+            reason = "Not exposed by aggregate OpenFlow 1.3 counters (requires DPI / packet-in payload parsing)"
+
+        report.append({
+            "feature": fn,
+            "source": source,
+            "live_populated": is_populated,
+            "default_value": 0.0 if not is_populated else None,
+            "reason_unavailable": reason if not is_populated else "N/A (Populated)",
+        })
+    return report
+

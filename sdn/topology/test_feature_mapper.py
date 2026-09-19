@@ -84,5 +84,54 @@ class TestMapFlowStatToSchema(unittest.TestCase):
         self.assertIsNone(out["dst_port"])
 
 
+class TestMapSchemaToFeatureVector(unittest.TestCase):
+    def test_vector_projection_and_alignment(self):
+        from feature_mapper import map_schema_to_feature_vector
+
+        target_schema = [
+            "duration",
+            "src_bytes",
+            "protocol_type_tcp",
+            "service_http",
+            "count",
+            "non_existent_feature_1",
+            "non_existent_feature_2",
+        ]
+        schema_row = {
+            "flow_duration": 5.0e6,  # 5 seconds
+            "total_length_of_fwd_packet": 2048,
+            "protocol": 6,  # TCP
+            "dst_port": 80,  # HTTP
+            "total_fwd_packet": 25,
+        }
+
+        vec = map_schema_to_feature_vector(schema_row, target_schema, default_val=0.0)
+        self.assertEqual(len(vec), 7)
+        self.assertAlmostEqual(vec[0], 5.0)  # duration
+        self.assertEqual(vec[1], 2048.0)    # src_bytes
+        self.assertEqual(vec[2], 1.0)       # protocol_type_tcp
+        self.assertEqual(vec[3], 1.0)       # service_http
+        self.assertEqual(vec[4], 25.0)      # count
+        self.assertEqual(vec[5], 0.0)       # non_existent_1
+        self.assertEqual(vec[6], 0.0)       # non_existent_2
+
+
+class TestFeatureCoverageReport(unittest.TestCase):
+    def test_coverage_report_structure(self):
+        from feature_mapper import generate_feature_coverage_report
+
+        target_schema = ["duration", "protocol_type_tcp", "unknown_dpi_flag"]
+        report = generate_feature_coverage_report(target_schema)
+
+        self.assertEqual(len(report), 3)
+        self.assertEqual(report[0]["feature"], "duration")
+        self.assertTrue(report[0]["live_populated"])
+
+        self.assertEqual(report[2]["feature"], "unknown_dpi_flag")
+        self.assertFalse(report[2]["live_populated"])
+        self.assertEqual(report[2]["default_value"], 0.0)
+
+
 if __name__ == "__main__":
     unittest.main()
+

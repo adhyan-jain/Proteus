@@ -309,21 +309,14 @@ def predict(req: PredictionRequest):
     # Parse and validate input
     raw_input = req.features
     if isinstance(raw_input, dict):
-        # Construct feature vector based on ordered feature names
-        missing = [fn for fn in feature_names if fn not in raw_input]
-        if missing:
-            # Check if positional array is provided under 'values'
-            if "values" in raw_input and len(raw_input["values"]) == n_expected:
-                X = np.array([raw_input["values"]], dtype=np.float32)
-            else:
-                _metrics["prediction_errors"] += 1
-                drift_worker.record_inference_outcome(is_error=True)
-                raise HTTPException(
-                    status_code=422,
-                    detail=f"Missing required features in dict input: {missing[:5]} (expected {n_expected} features)",
-                )
+        # Check if positional array is provided under 'values'
+        if "values" in raw_input and len(raw_input["values"]) == n_expected:
+            X = np.array([raw_input["values"]], dtype=np.float32)
         else:
-            X = np.array([[raw_input[fn] for fn in feature_names]], dtype=np.float32)
+            from sdn.topology.feature_mapper import map_schema_to_feature_vector
+            vec = map_schema_to_feature_vector(raw_input, feature_names)
+            X = np.array([vec], dtype=np.float32)
+
     elif isinstance(raw_input, list):
         if not raw_input:
             _metrics["prediction_errors"] += 1

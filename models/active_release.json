@@ -1,11 +1,11 @@
 {
   "active_version": "v001",
   "release_path": "models/releases/v001",
-  "activated_at": "2026-09-18T07:11:43Z",
+  "activated_at": "2026-09-19T13:45:47Z",
   "manifest": {
     "release_version": "v001",
     "version": "1.0.0",
-    "created_at": "2026-09-18T07:11:42Z",
+    "created_at": "2026-09-19T13:45:26Z",
     "model_type": "RandomForestClassifier",
     "parameters": {
       "bootstrap": true,
@@ -42,8 +42,8 @@
     "artifacts": {
       "model": {
         "file": "model.joblib",
-        "sha256": "f6475585fcd5dc9a14940ab3905610476dfef8afa675bd271275ce53f3eaa9b1",
-        "size_bytes": 271747
+        "sha256": "fdebbda9e710d5ed7f84102a9b75fac8f47ae312a0ad1a0c5f5dc2ebeb7c5940",
+        "size_bytes": 219432
       },
       "schema": {
         "file": "feature_schema.json",

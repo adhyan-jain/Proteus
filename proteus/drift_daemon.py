@@ -64,9 +64,10 @@ class LiveSampleBuffer:
             self._total_samples_ingested += 1
 
             # Auto-calibrate initial reference window if not yet set
-            if self._ref_confidence is None and len(self._confidences) >= self.reference_size:
-                self._ref_confidence = np.array(list(self._confidences)[:self.reference_size], dtype=np.float32)
+            if self._ref_confidence is None and len(self._confidences) >= min(self.reference_size, 30):
+                self._ref_confidence = np.array(list(self._confidences), dtype=np.float32)
                 log.info(f"LiveSampleBuffer: Calibrated initial reference confidence distribution (N={len(self._ref_confidence)}).")
+
 
     def set_reference_confidence(self, ref_conf: np.ndarray):
         """Explicitly set the reference baseline confidence distribution."""
@@ -328,9 +329,12 @@ class AutonomousDriftWorker:
             )
 
             # Use active model training features or synthetic base pool if available
-            dummy_init_X = np.vstack([X_recent, np.zeros((min(500, len(X_recent)), n_features), dtype=np.float32)])
-            dummy_init_y = np.concatenate([y_recent, np.zeros(min(500, len(X_recent)), dtype=np.int64)])
+            all_classes = np.arange(len(class_names), dtype=np.int64)
+            class_repr_X = np.zeros((len(class_names), n_features), dtype=np.float32)
+            dummy_init_X = np.vstack([X_recent, class_repr_X])
+            dummy_init_y = np.concatenate([y_recent, all_classes])
             bounded_clf.fit_initial(dummy_init_X, dummy_init_y)
+
 
             # Perform bounded buffer adaptation
             bounded_clf.partial_fit_adaptation(X_recent, y_recent)
@@ -468,8 +472,18 @@ class AutonomousDriftWorker:
         
         ks_result = drift_mod.detect_drift(recent_conf, ref_conf, alpha=self.ks_alpha)
         if ks_result["fired"]:
+            with self._lock:
+                self.total_drift_triggers += 1
+                self.last_drift_event = {
+                    "timestamp": time.time(),
+                    "statistic": float(ks_result["statistic"]),
+                    "p_value": float(ks_result["p_value"]),
+                    "window_size": len(recent_conf),
+                }
+                self.state = "ADAPTING"
             self._executor.submit(self._execute_adaptation_cycle)
         return {"status": "checked", "drift_fired": ks_result["fired"], "statistic": ks_result["statistic"], "p_value": ks_result["p_value"]}
+
 
     def get_status(self) -> Dict[str, Any]:
         """Observability telemetry dictionary."""
