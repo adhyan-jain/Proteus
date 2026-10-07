@@ -1,4 +1,45 @@
-# Proteus — Frozen Research Specification: Feedback-Controlled Synthetic Intervention (SPEC v1.0)
+# Proteus — Frozen Research Specification: Feedback-Controlled Synthetic Intervention (SPEC v1.1)
+
+## v1.1 changes (supersede any conflicting v1.0 text below; §1.5 thresholds are unchanged)
+
+v1.1 corrects validity problems found while reviewing the Step 3 implementation. It was written
+before any P0 result existed, so nothing had to be rerun. `protocol.SPEC_VERSION` is "1.1" and
+feeds both the manifest digest and the parameter digest, so v1.0 and v1.1 artifacts cannot be
+mixed.
+
+- **D1 — base model.** θ₀ := fit(D_ref), with the same learner, hyperparameters and
+  `random_state` as every candidate. TRAIN is only the population D_ref is drawn from.
+  Rationale: under v1.0, θ_R − θ₀ confounded the new real data with a ~60× reduction in training
+  data (TRAIN → D_ref), which would show up as spurious stable-traffic degradation. With
+  θ₀ = fit(D_ref) and θ_R = fit(D_ref ∪ D_real) the real-only comparison is strictly nested, and
+  later synthetic conditions nest on top (D_ref ⊂ D_ref ∪ D_real ⊂ D_ref ∪ D_real ∪ D_syn).
+  Cost: the base model is reservoir-scale, weaker on rare pre-drift classes than a model fit on
+  all of TRAIN; reports must say so. Implemented as `CandidateBuilder.build_base(view)`; the
+  free-form initial-model path is removed.
+- **D2 — fixed safety anchor.** All three envelope criteria (stable macro-F1 drop on S_gate,
+  benign-FPR increase on S_gate, benign-FPR increase on D_gate's benign rows) compare the
+  candidate with θ_base = fit(D_ref), fixed for the whole run, not with the current incumbent.
+  The utility criterion still compares the candidate with the current incumbent. Rationale: under
+  the oracle trigger the incumbent is replaced up to ~10 times; measuring safety against the
+  moving incumbent lets stable degradation accumulate to ~10 ε while every step passes.
+  Carried in `DecisionContext.anchor` (a model, not data).
+- **D3 — rejection taxonomy** (decision logic unchanged, every rejection still rejects, unverifiable
+  fails closed): `sanity`, `no_affected_region`, `utility_unmeasurable` (no D_gate evidence or no
+  bound), `utility_no_gain` (point gain <= 0), `utility_inconclusive` (point gain > 0 but LCB <= 0),
+  `envelope_unverifiable` (a quantity is undefined, e.g. no benign rows), `envelope_violated`
+  (point estimate of a degradation > its epsilon), `envelope_inconclusive` (point estimates within
+  epsilon but a UCB above it). Precedence among envelope labels: violated > unverifiable >
+  inconclusive (a known violation outranks missing evidence); every failing criterion is
+  listed. The report also records the support counts behind each statistic.
+- **D4 — residual eligibility uses recall.** I = {c ∈ A : LCB_α(1 − Recall_c(θ_R; D_sel)) > ε_def
+  ∧ n_c ≥ n_min}. F1 deficiency is kept for A and U (collateral harm should count there) but not
+  for I: adding rows of class c repairs c's recall, not other classes' leakage into c, and an
+  F1-based I could report a spurious "residual deficiency" (e.g. BENIGN, polluted by an unseen
+  attack predicted as benign). The F1-based set is logged as a diagnostic only.
+- **D5 — generator information set (specification only; no generator code yet).** Every
+  generator, including WGAN-GP pretraining and its normalisation statistics, may use only D_ref
+  plus the target class's D_fit rows. No TRAIN-wide pretraining: it would give synthetic
+  conditions pre-drift information REAL_ONLY never has, confounding H2 and F7.
 
 ## Context
 
@@ -66,7 +107,7 @@ criteria before any code is written.
 Every row gets a group id `g = blake2b(float32 feature bytes)`. **All partitioning is done on
 groups**, so identical feature vectors never cross a partition boundary.
 
-- Pre-drift pool → `TRAIN` (θ₀ fit, D_ref reservoir) | `S_cal` (KS reference, 20k) | `S_sel` (20k) | `S_gate` (20k) | `S_report` (20k) | `PRE_STREAM` (pre-drift windows).
+- Pre-drift pool → `TRAIN` (v1.1: source of the D_ref reservoir only; θ₀ := fit(D_ref)) | `S_cal` (KS reference, 20k) | `S_sel` (20k) | `S_gate` (20k) | `S_report` (20k) | `PRE_STREAM` (pre-drift windows).
 - Drift pool → split into **disjoint, non-replacing** window blocks W_t of 3000 rows.
 - Each W_t → `E_t` (30%, reporting only) | `U_t` (unlabelled rest) | `L_t` (label budget B rows, drawn uniformly from the non-E rows).
 - Labelled rows L_t go to `fit` / `sel` / `gate` in a 0.6/0.2/0.2 ratio by group hash, and stay there for good.
@@ -81,7 +122,8 @@ groups**, so identical feature vectors never cross a partition boundary.
 - **Trigger mode:** the pilot uses an *oracle trigger*, with episodes active for every post-drift window, so that detection errors are kept separate from controller behaviour. KS-triggered mode (α=0.01) is a secondary arm, and its pre-drift false-trigger rate is reported.
 
 ### 1.4 Learner
-RF with 100 trees, `random_state=seed`, `n_jobs=DEFAULT_N_JOBS`. Training set =
+RF with 100 trees, `random_state=seed`, `n_jobs=DEFAULT_N_JOBS`. The base model (v1.1) is
+θ_base = θ₀ = fit(D_ref) and is fixed for the whole run. A candidate's training set =
 `D_ref` (20k reservoir from TRAIN) ∪ `D_real` (sliding real buffer, all fit rows, capped at 5k, FIFO) ∪ `D_syn` (synthetic slot, **rebuilt from scratch on every controller run, never persisted, never in the FIFO**).
 
 ### 1.5 Frozen parameters (changing any one bumps the SPEC version)
@@ -131,7 +173,8 @@ No intervention is made on a class whose utility cannot be measured.
 
 **Real-only adaptation.** θ_R = fit(D_ref ∪ D_real). This is always computed first.
 
-**Residual deficiency / eligibility.** I = {c ∈ A : LCB_α(d_c(θ_R)) > ε_def ∧ n_c ≥ n_min}.
+**Residual deficiency / eligibility (v1.1, D4: recall).** I = {c ∈ A : LCB_α(1 − Recall_c(θ_R; D_sel)) > ε_def ∧ n_c ≥ n_min}
+(the F1-based set is logged as a diagnostic only).
 If I = ∅, the candidate is θ_R. Record the outcome as "real-only sufficient"; its frequency is a
 primary result.
 
@@ -158,9 +201,11 @@ L_k(c) = LCB_{α/K_max}(ΔU_k(c)).
 - So the decision has two free knobs, η and α, and both are pre-registered.
 
 **H. Stable-traffic degradation (two-part safety envelope).**
-1. Historical capability: Δ_S(θ) = F1macro_{c∈C_S}(θ₀; S) − F1macro_{c∈C_S}(θ; S), where C_S
+(v1.1, D2: every comparison below is against the fixed anchor θ_base = fit(D_ref), not the moving
+incumbent.)
+1. Historical capability: Δ_S(θ) = F1macro_{c∈C_S}(θ_base; S) − F1macro_{c∈C_S}(θ; S), where C_S
    is the set of pre-drift classes with support ≥ s_min in S.
-2. Operational false-positive cost: Δ_B(θ) = FPR_benign(θ; 𝒟_B) − FPR_benign(θ₀; 𝒟_B), measured on
+2. Operational false-positive cost: Δ_B(θ) = FPR_benign(θ; 𝒟_B) − FPR_benign(θ_base; 𝒟_B), measured on
    S's benign rows **and** on the benign rows of the current drift labels (D_sel or D_gate).
 
 A model is envelope-safe on (S, 𝒟) iff
@@ -188,7 +233,9 @@ Candidates are θ₀, θ_R and θ*. Tests use α/2.
 2. Otherwise promote θ_R iff LCB(U(θ_R) − U(θ₀); D_gate) > 0 and θ_R is envelope-safe on the gate sets.
 3. Otherwise keep θ₀.
 
-The rejection reason is logged as one of: utility, non-inferiority, envelope, or sanity.
+The rejection reason is logged as one of: sanity, no_affected_region, utility_unmeasurable,
+utility_no_gain, utility_inconclusive, envelope_unverifiable, envelope_violated,
+envelope_inconclusive (v1.1, D3), plus non-inferiority once θ* exists.
 
 **J.2 Canary / rollback (prequential, on L_{t−1} before it is assigned to any partition).**
 The promoted θ_new and the shadow θ_prev both score L_{t−1}. Roll back to θ_prev iff
@@ -324,8 +371,8 @@ MMD-prefilter variants are a later ablation, not part of the minimal set.
    the label delay) before any update.
 4. Step decisions use D_sel and S_sel only. Promotion uses D_gate and S_gate only. Canary uses
    L_{t−1} before it is assigned. A row never changes partition.
-5. Generators are fit only on D_fit rows of the target class. The WGAN is pretrained only on the
-   scenario's pre-drift TRAIN partition, and its normalisation stats come from there too.
+5. (v1.1, D5) Generators are fit only on D_ref plus the D_fit rows of the target class. This
+   includes WGAN-GP pretraining and its normalisation statistics: no TRAIN-wide pretraining.
 6. The KS reference is S_cal, never training rows.
 7. Every threshold in §1.5 is frozen before P0. Changing one bumps the SPEC version and reruns
    every affected condition. Nothing is tuned on E or S_report. ORACLE_DOSE is labelled
@@ -363,8 +410,9 @@ MMD-prefilter variants are a later ablation, not part of the minimal set.
 - **Generators:** every generator implements the same `fit` / `sample` protocol, sees only
   target-class D_fit rows, gets the same post-processing, and is fixed per condition. The
   controller is generator-agnostic. ROS is the null generator, SMOTE the cheap generator, and
-  WGAN-GP the learned one. WGAN-GP fits a new class by resuming from the pre-drift checkpoint on
-  that class's few D_fit rows, with all 25 one-hot slots reserved at pretraining.
+  WGAN-GP the learned one. WGAN-GP (v1.1, D5) is pretrained on D_ref only, with all 25 one-hot
+  slots reserved and normalisation statistics from D_ref, and fits a new class by resuming on
+  that class's few D_fit rows.
 
 ## Verification (of the implementation, once approved)
 - `.venv/bin/python -m pytest tests/test_intervention_*.py -q`: all leakage, metric and controller

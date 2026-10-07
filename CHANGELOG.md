@@ -259,6 +259,27 @@ all days, so it saw Friday data. New work goes in `proteus/intervention/` under 
 group-disjoint protocol; the legacy `closed_loop_full`/`evaluate_full` path and the old checkpoint
 are not to be cited as evidence for synthetic intervention.
 
+## 2026-10-08 — SPEC v1.1: base model, fixed safety anchor, decision taxonomy, recall eligibility
+
+Methodology corrections to the intervention protocol, made after reviewing the Step 3 code and
+before any P0 run (no results existed, nothing to rerun). Full text: `docs/INTERVENTION_SPEC.md`,
+section "v1.1 changes". No §1.5 threshold changed.
+
+- **D1**: theta_0 := fit(D_ref) (was: fit on all of TRAIN). Removes the TRAIN -> D_ref
+  data-size confound from the real-only comparison and makes it strictly nested.
+  `CandidateBuilder.build_base(view)` replaces the free-form `build_initial_model`.
+- **D2**: the stable-traffic envelope is measured against the fixed theta_base, not the moving
+  incumbent, so degradation cannot accumulate across promotions. Utility stays relative to the
+  incumbent. `DecisionContext.anchor`.
+- **D3**: finer rejection reasons (utility_unmeasurable / no_gain / inconclusive,
+  envelope_unverifiable / violated / inconclusive); decisions unchanged, fail-closed kept; support
+  counts added to `CandidateReport`.
+- **D4**: residual eligibility I uses recall deficiency; the F1-based set is a logged diagnostic.
+- **D5** (spec only): generators, including WGAN-GP pretraining and normalisation statistics, use
+  only D_ref + the target class's D_fit rows.
+
+`protocol.SPEC_VERSION` is now "1.1".
+
 ## Current open items
 
 See `STATUS.md` — kept current there instead of duplicated here, so there's exactly one place

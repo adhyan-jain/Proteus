@@ -18,7 +18,7 @@ import numpy as np
 
 from proteus.intervention.cache import DataBundle
 
-SPEC_VERSION = "1.0"
+SPEC_VERSION = "1.1"
 
 ROLE_FIT, ROLE_SEL, ROLE_GATE = 0, 1, 2
 ROLE_NAMES = {ROLE_FIT: "fit", ROLE_SEL: "sel", ROLE_GATE: "gate"}

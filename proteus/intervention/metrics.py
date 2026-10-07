@@ -33,6 +33,15 @@ def f1_from_conf(conf):
     return np.divide(2 * tp, den, out=np.zeros_like(den), where=den > 0)
 
 
+def recall_from_conf(conf):
+    """Per-class recall tp / support; 0 for a class with no support. Works on (K, K) or
+    (R, K, K). Used for residual eligibility (v1.1, D4)."""
+    conf = np.asarray(conf, dtype=float)
+    tp = np.diagonal(conf, axis1=-2, axis2=-1)
+    support = conf.sum(axis=-1)
+    return np.divide(tp, support, out=np.zeros_like(support), where=support > 0)
+
+
 def support_from_conf(conf):
     return np.asarray(conf).sum(axis=-1)
 

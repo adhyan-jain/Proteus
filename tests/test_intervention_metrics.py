@@ -33,6 +33,20 @@ def test_f1_is_zero_for_absent_class_and_vectorises_over_replicates():
     assert f1_from_conf(stacked).shape == (2, K)
 
 
+def test_recall_from_conf_matches_sklearn_and_is_zero_without_support():
+    from sklearn.metrics import recall_score
+    from proteus.intervention.metrics import recall_from_conf
+    y, pred = _random_case()
+    conf = confusion(y, pred, K)
+    assert np.allclose(recall_from_conf(conf),
+                       recall_score(y, pred, labels=list(range(K)), average=None,
+                                    zero_division=0))
+    empty = np.zeros((K, K), dtype=int)
+    empty[0, 0] = 3
+    r = recall_from_conf(np.stack([empty, empty]))
+    assert r.shape == (2, K) and (r[:, 0] == 1.0).all() and (r[:, 1:] == 0).all()
+
+
 def test_region_and_stable_utilities():
     y, pred = _random_case()
     conf = confusion(y, pred, K)
