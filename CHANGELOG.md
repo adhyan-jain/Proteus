@@ -326,6 +326,25 @@ before any preregistered P0 result existed (nothing to rerun). Full text: `docs/
 
 `protocol.SPEC_VERSION` is now "1.3".
 
+## 2026-10-09 — P1 campaign, S2 gate, audit, console and paper (SPEC v1.4)
+
+Implemented the approved post-P0 plan end to end. **Result: negative** (details in `METRICS_HISTORY.md`, `paper/p1/`).
+
+- **Code (new modules only; P0/protocol/learner/promotion/conditions unchanged)**: `generators.py`, `controller.py`, `gate14.py`,
+  `arms.py`, `p1_spec.py`, `p1.py`, `analyze_p1.py`, `p0_s2.py`; tests `test_intervention_{generators,controller,gate14,p1,analyze_p1,p0_s2}.py`,
+  `test_research_api.py` (leakage/isolation, step/stop logic, gate branches, canary rollback exactness, shadow-after-decision, determinism,
+  equivalence with the frozen P0 REAL_ONLY, pins of the preregistration hash).
+- **Spec v1.4** (`docs/INTERVENTION_SPEC.md`): P1 preregistration block (hashed), deviations made before any P1 data
+  (incremental step-safety filter; R-restricted endpoint; H4 activity 6/10; promotion/canary live in `gate14.py`), results addendum.
+  `protocol.SPEC_VERSION` stays 1.3 so P0 artifacts and the manifests of seeds 0–4 are reproducible.
+- **Runs**: non-preregistered smoke (seeds 0 and 3, bug-finding only) → preregistered campaign (10 seeds × 23 arms) → analysis →
+  S2 P0 gate (NO_GO_NO_ROOM: P3 not run) → P2 not run (H2 not rejected). Controller degenerated to a no-op (59/59 runs at k=0).
+- **Audit**: independent leakage recomputation (all pass), sensitivity/circularity checks, `docs/P1_HOSTILE_AUDIT.md`.
+- **Console**: new Research section (overview, P0, P1, controller, safety, ablations, claims) backed by `api/research.py`; legacy pages
+  relabelled "Legacy demo (not P1 evidence)"; fixed the legacy Models page contract; top bar shows research status.
+- **Paper**: `paper/p1/` (LaTeX, generated figures/tables/number macros, bibliography). The earlier `paper/main.tex` headline is flagged in
+  `paper/SUPERSEDED.md`.
+
 ## Current open items
 
 See `STATUS.md` — kept current there instead of duplicated here, so there's exactly one place

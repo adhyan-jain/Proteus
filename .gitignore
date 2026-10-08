@@ -23,3 +23,5 @@ logs/
 *.synctex.gz
 
 results/cache/
+
+results/p1_smoke/

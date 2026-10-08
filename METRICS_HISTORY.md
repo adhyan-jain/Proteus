@@ -403,6 +403,76 @@ macro-F1 (0.8690) times the active-class fraction (5/25=0.20) exactly.
 2. **MMD Gate Safety Filter**: Condition D (MMD-gated GAN) successfully filters out low-fidelity synthetic distributions, preventing classifier degradation and preserving baseline performance (0.8481 Macro-F1).
 3. **Validation of Closed-Loop Architecture**: This empirical result explains why static one-shot offline augmentation fails to improve classification metrics (Stage 3 finding) and proves that generative augmentation must be applied dynamically during drift events with fidelity gating.
 
+## 2026-10-08 — Intervention P0 (feasibility / data adequacy), scenario S1, frozen
+
+**Component**: `python -m proteus.intervention.p0` → `results/intervention_p0_S1_B25.json`, `results/intervention_p0_S1_B100.json`, `results/intervention_p0_S1_summary.json`
+**Scale**: CICIDS2017 (WTMC-2021 corrected), 2,100,021 rows, 80 features; S1 = Mon–Thu → Fri; seeds [0, 1, 2, 3, 4]; budgets [25, 100] labels/window; oracle trigger; SPEC v1.3; commit `7567ff1` (clean tree); wall-clock 348.2 s (RF on CPU)
+
+| Budget | Status | seeds with ≥2 GO cells | seeds assessable | GO class |
+|---|---|---|---|---|
+| B=25 | **NO_ROOM** | 2/5 | 5/5 | PortScan |
+| B=100 | **GO** | 5/5 | 5/5 | PortScan |
+
+**Outcome**: GO (GO at B=100; NO_ROOM at B=25). Validity: V1 leakage audit pass=True (30 runs, 0 violations); V3 integrity pass=True (133 cells); V4 repairability pass=True, R = {Bot, DDoS, PortScan}; V2 null region (diagnostic) pass=True.
+
+| Budget | Condition | Recovery AUC (mean [95% t-CI], n=5) | promotions / seed |
+|---|---|---|---|
+| B=25 | FROZEN | 0.000 [0.000, 0.000] | 0.0 |
+| B=25 | REAL_ONLY | 0.206 [-0.030, 0.441] | 0.6 |
+| B=25 | REAL_ONLY_ALL_LABELS | 0.182 [-0.156, 0.520] | 0.4 |
+| B=100 | FROZEN | 0.000 [0.000, 0.000] | 0.0 |
+| B=100 | REAL_ONLY | 0.381 [0.109, 0.653] | 1.6 |
+| B=100 | REAL_ONLY_ALL_LABELS | 0.182 [-0.156, 0.520] | 0.4 |
+
+- **Descriptive facts read off the per-window records (not preregistered tests)**: at B=100 the real-only candidate often has a gate-utility LCB of 0.49–0.62 yet is rejected `envelope_inconclusive` (D_gate has 84–158 benign rows, so one extra benign false positive moves the FPR by ≥ 1/158 > ε_FPR); the all-labels control is rejected 34/45 times for the same reason and its recovery AUC (0.18) is below budgeted real-only (0.38) — learning Friday PortScan genuinely costs benign FPR on the order of ε_FPR.
+- **Qualification (do not drop when citing)**: PortScan is the only class that creates a GO and sits exactly at the 3/5 repairability threshold; it carries the ambiguity flag (max D_sel conflict share 0.167, max E share 0.056); the corpus has 4,926 feature vectors with more than one label (4,331 across the two temporal pools).
+- P0 establishes feasibility and data adequacy only. It says nothing about whether synthetic data helps.
+- Provenance: params digest `52f53b4c659a8d55…`, criteria digest `584e9c0753dfc489…`, §L.1 rules sha256 `779e679aa006afaf…`; artifact sha256 of the summary `067e9e80eaedf88e…`.
+
+## 2026-10-09 — Intervention P1 campaign (SPEC v1.4, preregistered), scenario S1, B=100
+
+**Component**: `python -m proteus.intervention.p1` → `results/p1/intervention_p1_S1_B100_seed{0..9}.json`; `python -m proteus.intervention.analyze_p1` → `results/intervention_p1_S1_B100_summary.json`, `results/intervention_p1_S1_B100_decisions.json`; audits `results/p1_leakage_audit.json`, `results/p1_audit_sensitivity.json`
+**Scale**: CICIDS2017, S1, B=100 labels/window, 10 paired seeds, 23 arms, oracle trigger; base commit `7567ff1` (working tree, per-file code hashes in every seed file); P1 rules sha256 `d96b03131071ac1a…`; preregistered configuration = True; RF on CPU, ≈85 min summed per-arm wall-clock
+
+| Arm | R-recovery, deployed (mean [95% t-CI], n=10) | candidate quality (shadow) | promotions syn/real | rollbacks | S_report breaches |
+|---|---|---|---|---|---|
+| FROZEN | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0/0 | 0 | 0 |
+| REAL_ONLY | 0.623 [0.387, 0.859] | 0.911 [0.895, 0.928] | 0/14 | 0 | 0 |
+| CTRL-ROS | 0.623 [0.387, 0.859] | 0.911 [0.895, 0.928] | 0/14 | 0 | 0 |
+| CTRL-THRESH | 0.623 [0.387, 0.859] | 0.911 [0.895, 0.928] | 0/14 | 0 | 0 |
+| CTRL-SMOTE | 0.623 [0.387, 0.859] | 0.911 [0.895, 0.928] | 0/14 | 0 | 0 |
+| FIXED-SMOTE-1 | 0.623 [0.387, 0.859] | 0.915 [0.898, 0.932] | 2/13 | 0 | 2 |
+| FIXED-SMOTE-4 | 0.625 [0.388, 0.861] | 0.920 [0.903, 0.938] | 3/13 | 0 | 1 |
+| ALWAYS-SMOTE | 0.624 [0.387, 0.860] | 0.916 [0.898, 0.933] | 2/13 | 0 | 2 |
+| FIDGATE-SMOTE | 0.624 [0.388, 0.861] | 0.920 [0.902, 0.937] | 2/13 | 0 | 0 |
+| REAL_ONLY_ALL_LABELS | 0.372 [0.070, 0.674] | 0.974 [0.964, 0.984] | 0/5 | 0 | 4 |
+
+| Preregistered test | paired difference [95% CI] | result |
+|---|---|---|
+| H2 CTRL-SMOTE − REAL_ONLY | 0.000 [0.000, 0.000] | null NOT rejected (identically 0 in all 10 seeds) |
+| H3a / H3b | not tested (fixed sequence stopped at H2) | — |
+| H4 safety + activity | 0 breaches; synthetic candidate promoted in 0/10 seeds | safe by inaction |
+
+**Verdict (mechanical)**: NEGATIVE: H2 not rejected; fixed sequence stops; P2 (WGAN) cancelled. Fired: F2_H2_not_rejected, F3a_H3a_not_rejected, F3b_H3b_not_rejected, F8_degenerate_controller. P2 (WGAN-GP) not run (gate closed).
+- Controller degenerate: 59 of 59 controller runs with a need stop at k=0; no evaluated step had a positive lower bound (max LCB 0.000 / 0.000 / 0.012 for SMOTE / duplication / threshold vs η=0.02).
+- Candidate vs deployed (real-only, matched windows): 0.911 vs 0.701; seeds 0 and 5 never certified a model.
+- Exploratory: fixed-dose SMOTE ρ=4 candidates +0.0089 F1 over real-only candidates (0.0089 [0.0058, 0.0119]); deployed +0.0012 (0.0012 [-0.0015, 0.0038]).
+- Reconciliation: with the canary off, P1 real-only reproduces the frozen P0 REAL_ONLY decision, reason, region and E confusion cells at every window of seeds 0–4; manifests of seeds 0–4 equal P0's.
+- Caveats: negative controls and most ablations are vacuous (the controller never adds rows); ORACLE_DOSE is built from the base incumbent and is indicative only; exploratory contrasts are uncorrected.
+- Artifact sha256 (summary): `f48fcce0026847e7…`
+
+## 2026-10-09 — Intervention P0 on scenario S2 (the P3 gate, SPEC v1.4)
+
+**Component**: `python -m proteus.intervention.p0_s2` → `results/intervention_p0_S2_{B25,B100,summary}.json`
+**Scale**: S2 = Mon+Tue → Wed (DoS family), seeds 0–4, budgets 25 and 100; unchanged §L.1 rules (criteria scenario S2); base commit `7567ff1`; wall-clock 167.2 s
+
+| Budget | Status | assessable seeds | GO cells |
+|---|---|---|---|
+| B=25 | NO_ROOM | 5/5 | 0 |
+| B=100 | NO_ROOM | 5/5 | 0 |
+
+**Outcome**: NO_GO_NO_ROOM (NO_ROOM at B=25,100); validity all pass = True; R = {DoS GoldenEye, DoS Hulk, DoS Slowhttptest, DoS Slowhttptest - Attempted, DoS slowloris, DoS slowloris - Attempted}. Recovery AUC (real-only / all-labels) at B=100: 0.192 / 0.744. By the preregistered rule P3 (S2 arms) is not run: real-only adaptation suffices at the assessed budgets.
+
 ## Template for future entries
 
 ```

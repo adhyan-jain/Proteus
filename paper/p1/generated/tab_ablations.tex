@@ -1,0 +1,20 @@
+\begin{tabular}{lcccc}
+\toprule
+Variant & R-recovery & Contrast & Paired diff. & Prom. (syn/real) \\
+\midrule
+no step test & 0.623 [0.387, 0.859] & vs Ctrl+SMOTE & 0.000 [0.000, 0.000] & 1/14 \\
+no need test ($I{:=}A$) & 0.623 [0.387, 0.859] & vs Ctrl+SMOTE & 0.000 [0.000, 0.000] & 0/14 \\
+no step safety & 0.623 [0.387, 0.859] & vs Ctrl+SMOTE & 0.000 [0.000, 0.000] & 0/14 \\
+$K_{\max}{=}1$ & 0.623 [0.387, 0.859] & vs Ctrl+SMOTE & 0.000 [0.000, 0.000] & 0/14 \\
++MMD pre-filter & 0.623 [0.387, 0.859] & vs Ctrl+SMOTE & 0.000 [0.000, 0.000] & 0/14 \\
+pooled sel/gate & 0.628 [0.390, 0.866] & vs Ctrl+SMOTE & 0.005 [-0.000, 0.009] & 0/17 \\
+ctrl, no canary & 0.623 [0.387, 0.859] & vs Ctrl+SMOTE & 0.000 [0.000, 0.000] & 0/14 \\
+real-only, no canary & 0.623 [0.387, 0.859] & vs Ctrl+SMOTE & 0.000 [0.000, 0.000] & 0/14 \\
+NC1 wrong-class rows & 0.623 [0.387, 0.859] & vs real-only & 0.000 [0.000, 0.000] & 0/14 \\
+NC2 Gaussian & 0.623 [0.387, 0.859] & vs real-only & 0.000 [0.000, 0.000] & 0/14 \\
+NC3 shuffled & 0.623 [0.387, 0.859] & vs real-only & 0.000 [0.000, 0.000] & 0/14 \\
+NC4 placebo (DDoS) & 0.623 [0.387, 0.859] & vs real-only & 0.000 [0.000, 0.000] & 0/14 \\
+All-labels control & 0.372 [0.070, 0.674] & vs real-only & -0.251 [-0.732, 0.230] & 0/5 \\
+Oracle dose (ref.) & 0.000 [0.000, 0.000] & vs real-only & -0.623 [-0.859, -0.387] & 0/0 \\
+\bottomrule
+\end{tabular}

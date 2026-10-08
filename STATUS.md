@@ -10,7 +10,33 @@ here, and `METRICS_HISTORY.md` for every real number any run has produced.
 **Standing rule**: update this file at the end of every real work session — not after every
 commit, but whenever you stop, hand off, or finish a stage. A stale STATUS.md defeats the point.
 
-Last updated: 2026-09-19, by Antigravity session.
+Last updated: 2026-10-09, by a Claude Code session (intervention research milestone).
+
+## Handoff note — Intervention research line finished: preregistered NEGATIVE result (2026-10-09)
+
+Read this block first; older notes below are about the SDN/demo infrastructure and are still accurate for that scope.
+
+- **Research question** (post-P0): can a utility-tested, safety-constrained, sequential synthetic-dose controller beat real-only
+  adaptation under a label budget? **Answer in this regime: no.** P0 (frozen, GO at B=100, one ambiguity-qualified class: PortScan) →
+  P1 (preregistered, S1, B=100, 10 seeds, 23 arms): H2 not rejected (Δ R-recovery = 0.000 [0.000, 0.000]); the controller stops at step 0
+  in 59/59 runs; P2 (WGAN-GP) not run; S2 P0 gate = NO_GO_NO_ROOM so P3 not run.
+- **Main finding**: the binding constraint is *certification*, not candidate quality: real-only candidates reach R-F1 0.911 on held-out
+  windows but only 0.701 is deployed (matched windows); 2/10 seeds never certify a model. Exploratory: fixed-dose SMOTE candidates +0.009 F1,
+  not deployable.
+- **Where**: `paper/p1/main.pdf` (paper), `docs/INTERVENTION_SPEC.md` (v1.4 preregistration + addendum), `docs/P1_HOSTILE_AUDIT.md`,
+  `METRICS_HISTORY.md` (P0, P1, S2 entries), `results/` (all artifacts; per-seed files in `results/p1/`), console at `/` (Research).
+- **Commands**: `python -m proteus.intervention.{cache build,p0,p1,analyze_p1,p0_s2}`; `python scripts/audit_p1_{leakage,sensitivity}.py`;
+  `python paper/p1/make_assets.py && (cd paper/p1 && latexmk -pdf main.tex)`; `python scripts/write_verification_report.py`.
+- **Do not**: change any frozen constant to "rescue" the controller (that needs a new preregistration, v1.5); cite the legacy 5.91x figure
+  as evidence for synthetic data (`paper/SUPERSEDED.md`); treat the vacuous negative controls as proof of selectivity.
+- **Console ports**: `uvicorn api.server:app --port 8000` and `next start -p 3300`; on this machine port 8000 is sometimes held by another
+  project's container, then use another port and set `NEXT_PUBLIC_API_BASE`/`API_INTERNAL_URL` at build time.
+- **Side-effect warning**: starting `api/server.py` also starts the autonomous drift daemon, which can retrain and hot-swap demo releases in
+  `models/` (new `releases/v00N`, edited `active_release.json`/`manifest.json`) while pages are being loaded. After any QA session run `git status models` and
+  restore (`git checkout -- models/…`, remove the new release dirs) before committing.
+- **Open / future**: a new preregistration varying the *evidence* of the safety test (more benign gate labels, pooled/sequential evidence),
+  not the generator; KS-triggered operation; time-ordered replay; live SDN. Pre-existing untracked `.agents/hooks.json` (auto-approve hook)
+  is still unexplained and untouched.
 
 ## Handoff note — Real-SDN E2E Validation & Feature Mapping Audit Complete (2026-09-19)
 

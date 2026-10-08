@@ -129,3 +129,32 @@ sudo bash sdn/topology/smoke_test.sh
 ## 9. Claim Tracing & Evidence Map
 
 For a detailed claim-by-claim mapping between paper statements and underlying execution artifacts, refer to `docs/PAPER_EVIDENCE_MAP.md`.
+
+## 6. Intervention research line (P0 → P1 → S2 gate; SPEC v1.3/v1.4)
+
+Everything here is CPU (scikit-learn random forests); the GPU rule applies to the WGAN-GP stage (P2), which was **not run** because its gate
+(H2 ∧ H3a ∧ H3b) did not open. All commands from the repo root with `.venv`; memory guard: the cache load needs ≳ 2.5 GiB free.
+
+```bash
+# 0. one-time: verified CICIDS2017 arrays + group hashes (results/cache/, gitignored)
+.venv/bin/python -m proteus.intervention.cache build
+# 1. frozen P0 (S1; ~6 min)           -> results/intervention_p0_S1_{B25,B100,summary}.json
+.venv/bin/python -m proteus.intervention.p0
+# 2. preregistered P1 (10 seeds x 23 arms, ~2 h)  -> results/p1/intervention_p1_S1_B100_seed*.json
+PYTHONUNBUFFERED=1 .venv/bin/python -u -m proteus.intervention.p1 --out-dir results/p1
+# 3. analysis (deterministic; ~1 min) -> results/intervention_p1_S1_B100_{summary,decisions}.json
+.venv/bin/python -m proteus.intervention.analyze_p1 --in-dir results/p1
+# 4. the P3 gate (S2; ~3 min)         -> results/intervention_p0_S2_*.json
+.venv/bin/python -m proteus.intervention.p0_s2
+# 5. audits                            -> results/p1_leakage_audit.json, results/p1_audit_sensitivity.json
+.venv/bin/python scripts/audit_p1_leakage.py && .venv/bin/python scripts/audit_p1_sensitivity.py
+# 6. paper (figures/tables/number macros are generated from the artifacts)
+.venv/bin/python paper/p1/make_assets.py && (cd paper/p1 && latexmk -pdf main.tex)
+# 7. verification record + console
+.venv/bin/python scripts/write_verification_report.py
+.venv/bin/uvicorn api.server:app --port 8000      # then: cd frontend && npm run build && npx next start -p 3300
+```
+
+Determinism: every random stream is derived from (seed, window, purpose[, class]); re-running a seed reproduces its file except timings
+and `started_utc`. Provenance in each result file: P1 rules sha256, criteria/params digests (params digest equals P0's), per-file code hashes,
+git state, library versions. The preregistered text is pinned by `tests/test_intervention_p1.py::test_p1_preregistration_text_is_frozen`.

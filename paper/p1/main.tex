@@ -1,0 +1,207 @@
+\documentclass[conference]{IEEEtran}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage[T1]{fontenc}
+\usepackage{microtype}
+\input{generated/numbers.tex}
+\newcommand{\Rrec}{R\mbox{-}recovery}
+\newcommand{\thR}{\theta_{R}}
+\newcommand{\thb}{\theta_{\mathrm{base}}}
+\newcommand{\eps}{\varepsilon}
+
+\begin{document}
+
+\title{Can a Drift-Aware IDS Learn When to Synthesize?\\
+A Preregistered Negative Result on Feedback-Controlled Synthetic Intervention}
+
+\author{\IEEEauthorblockN{Adhyan Jain}
+\IEEEauthorblockA{Proteus research prototype (local, single machine)\\
+Repository: \texttt{github.com/adhyan-jain/Proteus}}}
+
+\maketitle
+
+\begin{abstract}
+Drift-aware intrusion detectors are often paired with generative data augmentation, and the gain is usually
+reported against a baseline that never sees new labels. We ask a narrower, falsifiable question: after
+\emph{real-only} adaptation under a realistic label budget, is there residual per-class deficiency, and can a
+sequential controller that adds class-targeted synthetic rows only when their \emph{observed recovery value}
+exceeds a cost, inside an explicit safety envelope, beat real-only adaptation, plain duplication, a decision-threshold
+shift and fixed-dose augmentation? We build a leak-free, group-disjoint prequential protocol on CICIDS2017
+(\nRows{} flows), freeze a feasibility stage (P0: room exists at 100 labels per window, for one ambiguity-qualified
+class, PortScan), implement the controller, three generators and controls, a UCB-gated promotion rule and a canary
+with rollback, preregister the hypotheses, and run \nArms{} arms over \nSeeds{} paired seeds. The preregistered
+test fails: the controller's paired improvement over real-only adaptation is \HTwoMean{} (95\% CI
+[\HTwoLo, \HTwoHi]), because at 100 labels per window the selection set cannot certify even the first dose
+step (\eligibleKzero{} of \eligibleRuns{} controller runs stop at zero accepted steps). Fixed-dose SMOTE does build
+slightly better \emph{candidates} (+\ShDiffFixedSmoteFourMean{} F1, CI [\ShDiffFixedSmoteFourLo, \ShDiffFixedSmoteFourHi]) but this
+does not survive deployment (+\DepDiffFixedSmoteFourMean{}, CI [\DepDiffFixedSmoteFourLo, \DepDiffFixedSmoteFourHi]). The dominant
+effect is elsewhere: real-only candidates reach R-recovery \ShRealOnlyMean{} on held-out windows but only
+\RmRealOnlyMean{} is ever deployed, because the safety gate cannot prove them safe from about a hundred benign
+labels. A second scenario (S2) offers no room for intervention at the assessed budgets. We report a negative result about the value of synthetic
+data in this regime, a diagnosis (the certification bottleneck), and the protocol and code to test it elsewhere.
+We claim no new learning algorithm.
+\end{abstract}
+
+\section{Introduction}
+Network intrusion detectors degrade when traffic drifts: new attack families appear, and a model trained on
+last week's traffic misses them. A popular response couples drift detection with generative augmentation (GANs,
+SMOTE-style interpolation) to ``synthesize the missing class''. Most reported gains compare against a frozen
+baseline or against an adapter that is given oracle labels for most of every post-drift window. In our own earlier
+demonstration the headline $5.91\times$ macro-F1 ratio arose exactly that way, and its own ablation showed real-only adaptation
+did as well or better; we therefore treat that number as superseded and not as evidence for synthetic data.
+
+This paper asks the question that comparison skips. \emph{Once a detector adapts on the real labels it actually receives
+under a budget, is anything left for synthetic data to repair, and can a controller decide---from measured recovery value,
+class-specific need, cost and an explicit safety constraint---when synthetic data is worth adding?} We make the question
+operational and falsifiable before running it.
+
+\paragraph*{What this paper contributes}
+(1) A leak-free evaluation protocol for drift adaptation under label budgets: group-disjoint partitions by feature-vector
+hash, non-replacing windows, one-window label delay, prequential scoring on held-out reporting rows, and a type-level
+guarantee that the adaptation code cannot reach them (Section~\ref{sec:protocol}).
+(2) A frozen feasibility stage (P0) whose outcome, validity checks and data adequacy are fixed in advance (Section~\ref{sec:p0}).
+(3) A controller that selects class and dose by a lower-confidence-bound gain test under an incremental safety filter, a
+promotion rule with a fixed-anchor envelope, and a canary with rollback, with controls and ablations (Section~\ref{sec:method}).
+(4) A preregistered campaign whose result is negative, plus a diagnosis that separates \emph{candidate quality} from
+\emph{certifiability} (Sections~\ref{sec:design}--\ref{sec:results}).
+\textbf{Novelty statement.} Every ingredient is known: champion--challenger model updates, high-confidence safety tests
+\cite{thomas2015,thomas2019}, SMOTE \cite{chawla2002smote}, bootstrap bounds \cite{efron1979}, fixed-sequence testing
+\cite{marcus1976}. We claim no new algorithm. The contribution is the protocol, the preregistered evidence about when this
+combination does and does not pay, and the identification of the certification step as the binding constraint.
+
+\section{Related Work}
+\textbf{Concept drift} adaptation is surveyed in \cite{gama2014}; we use prequential (test-then-train) evaluation \cite{gama2013}.
+\textbf{Class imbalance and augmentation.} Oversampling and synthetic minority generation \cite{chawla2002smote,he2009} and
+generative models for flow data \cite{ring2019,gulrajani2017} are standard; fidelity of synthetic batches is often judged by
+kernel two-sample statistics \cite{gretton2012}. Our fidelity-gated arm uses a permutation-calibrated MMD pre-filter instead of a
+fixed threshold. Threshold shifting as a cost-sensitive alternative to resampling is classical \cite{elkan2001}; we include it as
+an explicit baseline because the residual error we observe is recall lost to the benign class.
+\textbf{Evaluation hygiene.} Leakage and temporal bias in security ML are documented in \cite{arp2022,pendlebury2019}; the
+CICIDS2017 labelling problems that motivated the corrected release we use are in \cite{engelen2021,sharafaldin2018}.
+\textbf{Safe model updates.} Promoting a candidate only if a confidence bound on its improvement is positive and a bound on
+its harm is within a margin is the logic of high-confidence policy improvement and Seldonian algorithms
+\cite{thomas2015,thomas2019}; our gate is an instance of it applied to detector updates.
+
+\section{Problem and Protocol}\label{sec:protocol}
+\textbf{Data.} CICIDS2017 (WTMC-2021 corrected release \cite{engelen2021}, \nRows{} rows, 80 features after unification,
+25 labels). Scenario~S1 uses Monday--Thursday as the pre-drift pool and Friday as drift (new classes: Bot, DDoS, PortScan and
+attempted variants); scenario~S2 uses Monday--Tuesday versus Wednesday (DoS family).
+
+\textbf{Partitions.} Each row has a group id (hash of its feature bytes); \emph{all} partitioning is by group so identical feature
+vectors never straddle a boundary. For each seed the pre-drift pool is split into $\mathrm{TRAIN}$ (source of a 20k reference
+reservoir $D_{\mathrm{ref}}$), a drift-detector reference, selection and gate sets of stable traffic ($S_{\mathrm{sel}}$, $S_{\mathrm{gate}}$), a reporting set
+$S_{\mathrm{report}}$ and pre-drift stream windows. The drift pool is cut into disjoint non-replacing windows $W_t$ of 3000 rows: 30\% reporting rows
+$E_t$ (scored, never learned from), and a labelled subset $L_t$ of size $B$ whose rows arrive one window later and are assigned by
+group hash to fit ($60\%$), selection ($20\%$) and gate ($20\%$) buffers for good.
+
+\textbf{Prequential order} at window $t$: the deployed model predicts $W_t$ and $E_t$ is scored; the canary may roll back; labels of
+window $t-1$ arrive; the controller runs; the chosen model is deployed from $t+1$. The controller receives a single immutable
+\texttt{ControllerView} object with fields $D_{\mathrm{ref}},D_{\mathrm{real}},D_{\mathrm{sel}},D_{\mathrm{gate}},S_{\mathrm{sel}},S_{\mathrm{gate}}$ and \emph{no field} for $E_t$, $S_{\mathrm{report}}$ or
+future windows; static and runtime tests enforce this.
+
+\textbf{Learner and frozen parameters.} Random forest (100 trees, \texttt{random\_state}=seed), base model
+$\thb=\mathrm{fit}(D_{\mathrm{ref}})$ fixed for the whole run. Frozen before any run: $\eps_{\mathrm{def}}{=}0.05$ (deficiency floor), $s_{\min}{=}n_{\min}{=}5$, step cost $\eta{=}0.02$,
+non-inferiority margin $0.01$, envelope $\eps_S{=}0.01$ (stable macro-F1 drop) and $\eps_{\mathrm{FPR}}{=}0.005$ (benign false-positive-rate rise),
+dose ladder $\rho\in\{0,0.5,1,2,4,8\}$, $M_{\mathrm{cap}}{=}2000$, synthetic share $\le0.5$, $K_{\max}{=}10$, $\alpha{=}0.05$ with $\alpha/2$ at promotion and $\alpha/K_{\max}$ at steps,
+and 2000 paired class-stratified bootstrap resamples \cite{efron1979}.
+
+\section{Method}\label{sec:method}
+Let $F1_c(\theta;\mathcal D)$ be the one-vs-rest F1 of class $c$ and $\mathrm{LCB}_a,\mathrm{UCB}_a$ the paired bootstrap bounds. At window $t$ with incumbent $\theta_t$:
+\begin{enumerate}
+\item \textbf{Region.} $A=\{c\in M : \mathrm{LCB}_\alpha(1-F1_c(\theta_t;D_{\mathrm{sel}}))>\eps_{\mathrm{def}}\}$, where $M$ is the set of classes with support $\ge s_{\min}$ in both $D_{\mathrm{sel}}$ and $D_{\mathrm{gate}}$. If $A=\emptyset$ nothing happens.
+\item \textbf{Real-only adaptation.} $\thR=\mathrm{fit}(D_{\mathrm{ref}}\cup D_{\mathrm{real}})$ is always built first.
+\item \textbf{Need.} $I=\{c\in A:\mathrm{LCB}_\alpha(1-\mathrm{Recall}_c(\thR;D_{\mathrm{sel}}))>\eps_{\mathrm{def}},\ n_c\ge n_{\min}\}$ (recall, not F1: added rows of class $c$ repair $c$'s recall, not other classes' leakage into it).
+\item \textbf{Operator.} An operator maps a dose vector $\rho$ to a candidate: for data operators
+$\theta(\rho)=\mathrm{fit}(D_{\mathrm{ref}}\cup D_{\mathrm{real}}\cup\bigcup_{c\in I}G_c.\mathrm{sample}(m_c))$, $m_c=\min(\lfloor\rho_c n_c\rfloor,M_{\mathrm{cap}})$ with generators $G_c$ (random duplication, SMOTE) fit \emph{only} on class-$c$ rows of $D_{\mathrm{real}}$; for the threshold operator, $\thR$ with class-score multipliers $\{1,2,4,8,16\}$ followed by argmax (no refit).
+\item \textbf{Greedy dose search.} With $U_A(\theta;\mathcal D)=\frac1{|A|}\sum_{c\in A}F1_c(\theta;\mathcal D)$, a step raises one class $c\in I_{\mathrm{active}}$ one rung; its value is
+$L_k(c)=\mathrm{LCB}_{\alpha/K_{\max}}\!\big(U_A(\theta_k^{+c};D_{\mathrm{sel}})-U_A(\theta_k;D_{\mathrm{sel}})\big)$. A step is \emph{safe} iff the upper bounds (at $\alpha/K_{\max}$) of the stable macro-F1 drop on $S_{\mathrm{sel}}$, the benign-FPR rise on $S_{\mathrm{sel}}$ and the benign-FPR rise on $D_{\mathrm{sel}}$'s benign rows are $\le\eps_S,\eps_{\mathrm{FPR}},\eps_{\mathrm{FPR}}$ against the \emph{current iterate}. Accept $c^\star=\arg\max L_k$ over safe candidates if $L_k(c^\star)>\eta$; classes that were unsafe or failed leave $I_{\mathrm{active}}$; stop on no admissible action, $k=K_{\max}$, no safe candidate or $L\le\eta$. Risk is a constraint, never a weight.
+\item \textbf{Promotion} on $D_{\mathrm{gate}},S_{\mathrm{gate}}$ only, at level $\alpha/2$: the final candidate $\theta^\star$ is promoted iff it passes a sanity check, $\mathrm{LCB}(U_A(\theta^\star)-U_A(\theta_t))>0$, the \emph{anchor-relative} envelope holds ($\mathrm{UCB}\le\eps$ for all three quantities, against the fixed $\thb$ so degradation cannot accumulate over promotions), the point gain over $\thR$ is positive and $\mathrm{LCB}(U_A(\theta^\star)-U_A(\thR))\ge-0.01$. Otherwise $\thR$ goes through the unchanged real-only rule; otherwise the incumbent stays. An envelope check is labelled \emph{violated} only if its lower bound exceeds $\eps$; a failure to prove safety is \emph{inconclusive} and still blocks promotion (fail closed).
+\item \textbf{Canary.} Labels arriving after a promotion score the new and previous model; roll back iff $\mathrm{UCB}_\alpha(U_A(\mathrm{new})-U_A(\mathrm{prev}))<0$ or the benign-FPR envelope is established broken.
+\end{enumerate}
+Every arm shares the learner, partitions, budget and \emph{one} promotion function; arms differ only in how $\theta^\star$ is produced.
+
+\section{Experimental Design}\label{sec:design}
+\textbf{P0 (frozen first).} Conditions FROZEN, REAL\_ONLY and an all-labels positive control (REAL\_ONLY\_ALL\_LABELS), scenario S1, budgets $B\in\{25,100\}$, seeds 0--4, oracle trigger. A budget is GO if in $\ge3$ of 5 seeds at least two windows have a repairable class that real-only adaptation still leaves recall-deficient; NO\_ROOM if that was reachable and not reached; UNMEASURABLE otherwise. The repairable set $R$ is the set of drift classes the all-labels control repairs in $\ge3/5$ seeds. Validity checks (leakage, integrity, repairability) can invalidate the run; a null-region diagnostic is reported but never gates.
+
+\textbf{P1 arms} (all through the same gate; 10 seeds 0--9, $B{=}100$, seeds 0--4 on the \emph{same manifests} as P0): FROZEN; REAL\_ONLY; CTRL with duplication, SMOTE or threshold operator; fixed-dose SMOTE ($\rho{=}1,4$ on $I$); always-on SMOTE ($\rho{=}1$ on every class, no need test); fidelity-gated SMOTE ($\rho{=}4$ behind a label-permutation MMD pre-filter); four negative controls (SMOTE on benign rows relabelled as the target, Gaussian rows, per-feature shuffled rows, a placebo dose on DDoS); eight ablations (no step test, $I{:=}A$, no step safety, $K_{\max}{=}1$, MMD pre-filter, pooled selection/gate sets, and no canary for both controller and real-only); references (all labels; an oracle dose scored on the next window, never deployed).
+
+\textbf{Endpoints.} Primary: \emph{\Rrec}, the mean over post-drift windows of the mean E-F1 over the repairable classes ($R$ from P0; not available to any arm) of the \emph{deployed} model on $E_t$. Candidate quality (``shadow''): the same score for the model that \emph{would} have been deployed (the candidate), scored on the next window after the decision. Safety: stable macro-F1 drop and benign-FPR rise of every deployed model on $S_{\mathrm{report}}$.
+
+\textbf{Hypotheses, fixed sequence} (paired per seed, two-sided 95\% $t$-interval over seeds; each test only if the previous rejected its null \cite{marcus1976}): H2 CTRL+SMOTE $-$ REAL\_ONLY; H3a CTRL+SMOTE $-$ CTRL+duplication; H3b CTRL+SMOTE $-$ CTRL+threshold; H5 non-inferiority to fixed-dose SMOTE at the frozen margin. H4 (separate): no deployed CTRL+SMOTE model breaks the $S_{\mathrm{report}}$ envelope \emph{and} synthetic candidates are promoted in $\ge6$ of 10 seeds (else ``safe by inaction''). Reporting conditions F2--F11 (e.g.\ F8: $k{=}0$ in $>80\%$ of controller runs with a need; F9: the GO is explained by contradictory-label rows; F10: better candidates that cannot be certified) were fixed in advance.
+
+\textbf{Gating and freezing.} A learned generator (WGAN-GP, pretrained on $D_{\mathrm{ref}}$ only) runs only if H2, H3a and H3b all reject; scenario~S2 is run only through its own P0 gate under the unchanged rules, and the P1 arms run on S2 only if that gate is GO. The normative preregistration text is hashed (SHA-256 \rulesHash\ldots) and the hash, criteria digest, code-file hashes and git state are written into every result file. \textbf{Deviations made before any P1 data} (and recorded in the specification): the step safety filter is incremental rather than anchor-relative, because in the frozen P0 records the anchor-relative stable-F1 bound of the \emph{real-only} candidate already exceeds $\eps_S$ in many windows and would stall every controller independent of its operator (confirmed afterwards: the anchor-relative bound would have blocked \StepAnchorWouldBlockStable{} of \StepCandidates{} evaluated steps; it is logged, not used); the endpoint was restricted to $R$ after reading P0 descriptives. Compute: \nArms{} arms $\times$ \nSeeds{} seeds, about \totalWallMin{} minutes of per-arm wall-clock summed over arms (excluding data loading and base-model fits) on one laptop-class machine.
+
+\section{Results}\label{sec:results}
+\subsection{P0: room exists at 100 labels, for one ambiguity-qualified class}\label{sec:p0}
+P0 outcome \pZeroOutcome{} (\pZeroScope), all validity checks passing (30 runs audited, no leakage violation). $R=\{$Bot, DDoS, PortScan$\}$; PortScan is the only class that creates a GO, sits exactly at the $3/5$ repairability threshold and carries the ambiguity flag (contradictory-label feature vectors). Figure~\ref{fig:p0} and Table~\ref{tab:p0} summarise P0, which establishes feasibility and data adequacy \emph{only}. A descriptive reading of the P0 records already pointed at the later result: real-only candidates often had a gate-utility lower bound of 0.5 yet were rejected as ``envelope inconclusive'' because one extra benign false positive among about a hundred benign gate rows exceeds $\eps_{\mathrm{FPR}}$.
+
+\begin{figure}[t]\centering\includegraphics[width=0.78\columnwidth]{figures/fig_p0.pdf}
+\caption{P0 recovery AUC (mean, 95\% $t$-interval, $n{=}5$). The all-labels control is \emph{not} better than budgeted real-only adaptation at $B{=}100$: more labels produce candidates the safety gate cannot clear.}\label{fig:p0}\end{figure}
+\begin{table}[t]\centering\caption{P0, $B{=}100$: per-seed window cells.}\label{tab:p0}\footnotesize
+\input{generated/tab_p0.tex}\end{table}
+
+\subsection{P1: the preregistered test fails}
+Table~\ref{tab:hyp} and Fig.~\ref{fig:forest} show the fixed sequence. H2 is not rejected: the paired improvement of CTRL+SMOTE over real-only adaptation is \HTwoMean{} [\HTwoLo, \HTwoHi]; it is \emph{exactly} zero in all ten seeds, because the controller never changes the candidate (below). The sequence stops, the learned-generator stage (P2) is not run, and CTRL+SMOTE is non-inferior to the fixed doses only trivially. H4 is ``safe by inaction'': \hFourBreaches{} envelope breaches, synthetic candidates promoted in \hFourSeeds{} of \nSeeds{} seeds. Fired reporting conditions: F2, F3a, F3b, F8 (degenerate controller).
+
+\begin{table}[t]\centering\caption{Preregistered tests. Differences in \Rrec{}; $n{=}\nSeeds$ paired seeds.}\label{tab:hyp}\scriptsize
+\resizebox{\columnwidth}{!}{\input{generated/tab_hyp.tex}}\end{table}
+\begin{figure}[t]\centering\includegraphics[width=\columnwidth]{figures/fig_forest.pdf}
+\caption{Paired difference in deployed \Rrec{} against real-only adaptation. Every arm is within noise of real-only; the controller arms are identical to it.}\label{fig:forest}\end{figure}
+\begin{table}[t]\centering\caption{Main arms (deployed \Rrec{}, mean [95\% CI]), promotions (synthetic/real-only candidate), rollbacks, held-out envelope breaches (point estimates on $S_{\mathrm{report}}$), CPU minutes.}\label{tab:arms}\scriptsize
+\resizebox{\columnwidth}{!}{\input{generated/tab_arms.tex}}\end{table}
+
+\subsection{Why: the controller cannot certify a first step}
+Over all seeds and windows the controller faced a need set in \eligibleRuns{} runs and accepted no step in \eligibleKzero{}
+(Fig.~\ref{fig:stops}). For CTRL+SMOTE, \CandPosCtrlSmote{} of \CandCtrlSmote{} evaluated steps had a positive \emph{point} gain on the selection set (maximum \CandMaxPtCtrlSmote{}) but the largest \emph{lower bound} was \CandMaxLcbCtrlSmote{}; for duplication \CandPosCtrlRos{} point-positive, maximum bound \CandMaxLcbCtrlRos{}; for the threshold operator \CandPosCtrlThresh{} point-positive with maximum bound \CandMaxLcbCtrlThresh{}, below the step cost $\eta{=}0.02$. The first rung ($\rho{=}0.5$) adds a median of \CandMedRowsCtrlSmote{} synthetic rows; the selection set holds only on the order of a hundred to a few hundred labels of all classes, so a lower bound at level $\alpha/K_{\max}$ on so small a paired change cannot clear $\eta$. This is a statement about the frozen design at $B{=}100$, not a proof that no dose helps: the greedy search never reaches the larger doses that the fixed-dose arms test directly. The negative controls and every ablation that keeps the step test are therefore also identical to real-only adaptation (Table~\ref{tab:abl}; per-window decisions in Fig.~\ref{fig:grid}, recovery curves in Fig.~\ref{fig:curves}), so those controls cannot, by themselves, say anything about selectivity (F11 did not fire for the trivial reason that nothing was ever added).
+
+\begin{figure}[t]\centering\includegraphics[width=\columnwidth]{figures/fig_stops.pdf}
+\caption{Why the controller stopped, per seed-window.}\label{fig:stops}\end{figure}
+
+\subsection{Candidate quality is not the bottleneck; certification is}
+Fixed-dose SMOTE does build better candidates than real-only adaptation (Fig.~\ref{fig:cand}): $+\ShDiffFixedSmoteFourMean$ F1 at $\rho{=}4$ (CI [\ShDiffFixedSmoteFourLo, \ShDiffFixedSmoteFourHi]), $+\ShDiffFixedSmoteOneMean$ at $\rho{=}1$ and $+\ShDiffFidgateSmoteMean$ with the MMD pre-filter. These are exploratory descriptive contrasts, about one F1 point. Deployed, they vanish: $+\DepDiffFixedSmoteFourMean$ [\DepDiffFixedSmoteFourLo, \DepDiffFixedSmoteFourHi] at $\rho{=}4$ and $\DepDiffFixedSmoteOneMean$ at $\rho{=}1$. The oracle-dose reference (best rung chosen on the next window's reporting rows, never deployed) is only $+\ShDiffOracleDoseMean$ [\ShDiffOracleDoseLo, \ShDiffOracleDoseHi] above real-only candidates, so dose tuning has little headroom either. The gap that dominates everything is between what real-only adaptation \emph{could} deploy and what it does: candidates score \ShRealOnlyMean{} on the matched windows, the deployed model \RmRealOnlyMean{} (a gap of \gapRealOnly{}); for the all-labels control the gap is \ShRealOnlyAllLabelsMean{} versus \RmRealOnlyAllLabelsMean{}, and its deployed \Rrec{} (\RrRealOnlyAllLabelsMean) is \emph{below} the budgeted real-only arm. The gate's decisions for real-only adaptation were: \NRealOnlyPromoted{} promoted, \NRealOnlyEnvelopeInconclusive{} rejected because the envelope could not be shown safe, \NRealOnlyUtilityNoGain{} and \NRealOnlyUtilityInconclusive{} for no demonstrated gain, \NRealOnlyNoAffectedRegion{} with nothing to do (Fig.~\ref{fig:gate}). Of the \gbRejected{} real-only candidates rejected with a gate report, \gbUtilOkEnvFail{} had a demonstrated utility gain and failed only the safety envelope. The envelope criteria that failed were the stable-class macro-F1 on $S_{\mathrm{gate}}$ (\gbStableF{} windows) and the benign-FPR rise on $D_{\mathrm{gate}}$ (\gbFprCur{} windows; median \gbMedBenign{} benign gate rows, so one extra benign false positive moves the rate by \gbOneFp{}, above $\eps_{\mathrm{FPR}}{=}0.005$); the utility test failed in \gbUtil{} (exploratory counts; a window can fail several criteria). With abundant labels the benign-FPR criteria dominate instead (\gbAllFprCur{} and \gbAllFprStable{} of \gbAllRejected{} rejections, median \gbAllMedBenign{} benign gate rows): there the cost is a real false-positive increase, not sampling noise. Finally, in \seedsNeverDeployed{} of \nSeeds{} seeds (seeds \seedsNeverDeployedList) no model was ever certified, although their candidates reach 0.89--0.92.
+
+\begin{figure}[t]\centering\includegraphics[width=\columnwidth]{figures/fig_candidate_vs_deployed.pdf}
+\caption{Deployed model versus the candidate that would have been deployed, same windows. The shaded gap is value that exists but cannot be certified.}\label{fig:cand}\end{figure}
+\begin{figure}[t]\centering\includegraphics[width=\columnwidth]{figures/fig_gate_outcomes.pdf}
+\caption{Final outcome per seed-window at the promotion gate. Amber: the envelope could not be shown safe.}\label{fig:gate}\end{figure}
+\begin{figure}[t]\centering\includegraphics[width=\columnwidth]{figures/fig_decision_grid.pdf}
+\caption{CTRL+SMOTE decisions for every seed and window (no synthetic candidate is ever promoted; Fig.~\ref{fig:gate} aggregates the gate's reasons).}\label{fig:grid}\end{figure}
+\begin{figure}[t]\centering\includegraphics[width=\columnwidth]{figures/fig_curves.pdf}
+\caption{R-recovery by post-drift window (mean over seeds, deployed model).}\label{fig:curves}\end{figure}
+
+\subsection{Safety, canary and controls}
+No promoted real-only model broke the held-out envelope (\BreachRealOnly{} breaches over \NonBaseRealOnly{} non-base windows). Promoted synthetic candidates did: \BreachFixedSmoteOne{}, \BreachFixedSmoteFour{}, \BreachAlwaysSmote{} and \BreachAblNoStepTest{} breach windows (point estimates on $S_{\mathrm{report}}$) for fixed $\rho{=}1$, fixed $\rho{=}4$, always-on SMOTE and the no-step-test ablation, from \StarFixedSmoteOne{}, \StarFixedSmoteFour{}, \StarAlwaysSmote{} and \StarAblNoStepTest{} star promotions, which indicates that a UCB gate on one sample is not a guarantee on a different held-out sample over many windows. The canary performed \ChkRealOnly{} checks for real-only adaptation and rolled back \RollRealOnly{}; there were no rollbacks in any arm. In the 30 pre-drift windows the controller returned an empty region every time (\probeNonempty{} non-empty), so it does nothing without drift. Pooling selection and gate sets (a winner's-curse check, never a method) promoted \RealAblPooled{} models versus \RealRealOnly{} and moved deployed \Rrec{} by $+\DepDiffAblPooledMean$ [\DepDiffAblPooledLo, \DepDiffAblPooledHi], i.e.\ a more permissive but double-dipping gate would look slightly better.
+
+\begin{table}[t]\centering\caption{Controls, ablations and references (deployed \Rrec{}, paired difference against Ctrl+SMOTE for ablations and against real-only otherwise).}\label{tab:abl}\scriptsize
+\resizebox{\columnwidth}{!}{\input{generated/tab_ablations.tex}}\end{table}
+
+\subsection{Ambiguity and scenario S2}
+Contradictory labels do not explain the residual. For real-only candidates PortScan recall is \recallAll{} over \nGoRows{} rows, \recallClean{} on non-ambiguous rows and \recallAmbig{} on the \shareAmbig\% ambiguous rows; the deficiency on clean rows is far above $\eps_{\mathrm{def}}$ (F9 not fired). The P1 run is a replay of P0 where they overlap: with the canary off, real-only adaptation reproduces the frozen P0 REAL\_ONLY decision, reason and reporting confusion cells at every window of seeds 0--4.
+
+Scenario S2 was run only through its P0 gate under the unchanged rules: outcome \sTwoOutcome{} (\sTwoScope), valid, assessable in \sTwoAssessSeeds{} of 5 seeds at both budgets and with \sTwoGoCells{} GO cells. Repairable classes are the DoS family (\sTwoR). Recovery AUC of real-only adaptation is \sTwoAucBOneZeroZeroRealOnly{} at $B{=}100$ against \sTwoAucBOneZeroZeroRealOnlyAllLabels{} for the all-labels control, yet no residual deficiency is \emph{certifiable} in candidates, again pointing at deployment rather than candidate quality. By the preregistered rule P3 is not run.
+
+\section{Discussion}
+\textbf{What the evidence supports.} (i) Under a leak-free protocol and a realistic label budget there is real but narrow room for intervention (one class, ambiguity-qualified). (ii) A sequential controller that must prove each dose step with a confidence bound does not move off real-only adaptation at $B{=}100$. (iii) Synthetic rows built with a fixed dose improve held-out candidate quality by about a point of F1, a gain that is not deployable. (iv) The dominant loss is the distance between candidate quality and certified quality. \textbf{What it does not support.} It does not show that synthetic augmentation is useless in general, that a different learner, larger label budget, a different step/gate design, or a learned generator cannot do better, or anything about live SDN deployment. The oracle-dose and always-on arms suggest the headroom for \emph{better doses} is small here, but the controller's no-op result is conditional on the frozen constants.
+
+\textbf{Implication.} For this class of systems the practical lever is the evidence budget of the safety test (more benign gate labels, pooled or sequential evidence, a less conservative per-quantity bound chosen \emph{before} looking), not the sophistication of the generator. A preregistered follow-up would vary the evidence rather than the generator; we state it as future work and do not run it, because changing the frozen constants after seeing this result would void the preregistration.
+
+\section{Threats to Validity}
+\emph{One effective class.} Only PortScan produces a GO; positive results would concern it alone. \emph{Analysis-time set $R$.} It is derived from the all-labels control and used by the endpoint, not by any arm. \emph{Post-hoc choices.} The incremental step filter and the $R$-restricted endpoint were fixed after reading P0 descriptives and before any P1 data; they are recorded with their reason. \emph{Controls.} Because the controller never adds rows, the negative controls and most ablations are vacuous; selectivity is untested. \emph{Single learner, oracle trigger, one-window delay, shuffled stationary drift day.} KS-triggered operation and time-ordered replay are not evaluated. \emph{Exploratory contrasts} (candidate quality, oracle dose, breaches) are descriptive and not corrected for multiplicity. \emph{Held-out breaches} are point estimates on one 20k-row sample. \emph{Residual duplicates.} Identical flows can recur across windows; they are group-disjoint from reporting rows but not from other learning rows, so the canary may see duplicates of training rows. \emph{Nothing here ran on a live network}; 39 of 52 deployment features are defaulted by the OpenFlow mapper.
+
+\section{Reproducibility}
+All artifacts are in \texttt{results/} with SHA-256 digests: \texttt{intervention\_p0\_S1\_*.json} (frozen P0), \texttt{results/p1/intervention\_p1\_S1\_B100\_seed*.json} (one file per seed, with the rules hash \rulesHash, criteria digest, parameter digest and per-file code hashes), \texttt{intervention\_p1\_S1\_B100\_summary.json}, \texttt{intervention\_p1\_S1\_B100\_decisions.json} and \texttt{intervention\_p0\_S2\_*.json}. Commands from the repository root:
+\texttt{python -m proteus.intervention.cache build};
+\texttt{python -m proteus.intervention.p0} (P0, frozen);
+\texttt{python -m proteus.intervention.p1} (campaign);
+\texttt{python -m proteus.intervention.analyze\_p1};
+\texttt{python -m proteus.intervention.p0\_s2};
+\texttt{python paper/p1/make\_assets.py} and \texttt{latexmk -pdf main.tex} in \texttt{paper/p1}. Every figure, table and number in this paper is generated from those files. The campaign ran from the base commit \gitSha{} with an uncommitted working tree (committed afterwards); the per-file code hashes identify the exact code.
+
+\section{Conclusion}
+We built and preregistered the most direct version of ``feedback-controlled synthetic intervention'': decide class and dose from observed recovery value inside a safety envelope. Against a fair real-only baseline it did nothing, because with about a hundred labels per window the evidence needed to certify even a small synthetic dose does not exist. The same evidence limit throttles real-only adaptation itself, which deploys only about \RmRealOnlyMean{} of the \ShRealOnlyMean{} its candidates reach. The result is a negative one about synthetic data in this regime and a positive one about where to look next: the certification step.
+
+\bibliographystyle{IEEEtran}
+\bibliography{refs}
+\end{document}

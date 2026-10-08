@@ -2,6 +2,12 @@
 
 **Proteus** is an adaptive, closed-loop network intrusion detection architecture designed to mitigate concept drift in Software-Defined Networks (SDN). By monitoring classifier prediction confidence shifts via a two-sample Kolmogorov-Smirnov (KS) test, Proteus triggers targeted generative augmentation using a conditional Wasserstein GAN with Gradient Penalty (WGAN-GP), filters synthetic samples through a Maximum Mean Discrepancy (MMD) fidelity gate, and performs bounded-memory adaptive retraining (`BoundedBufferClassifier`) to maintain high detection rates without memory growth or retraining latency bottlenecks.
 
+> **Research status (2026-10-09).** The closed-loop architecture below is a working engineering prototype. Whether synthetic augmentation
+> actually *helps* was then tested under a leak-free, preregistered protocol (`docs/INTERVENTION_SPEC.md`, `paper/p1/`): **it did not** in
+> the tested regime (S1, 100 labels/window): a utility-tested synthetic-dose controller was indistinguishable from plain real-only
+> adaptation, and the binding constraint is the safety gate's ability to certify candidates, not candidate quality. The earlier
+> "5.91x macro-F1" figure is superseded (`paper/SUPERSEDED.md`). Console: Research pages; paper: `paper/p1/main.pdf`.
+
 ---
 
 ## 🌟 Architecture Overview
