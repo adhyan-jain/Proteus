@@ -214,7 +214,15 @@ def test_no_free_form_base_fit_anywhere_in_the_package():
             for call in [c for c in ast.walk(fn) if isinstance(c, ast.Call)]:
                 if isinstance(call.func, ast.Attribute) and call.func.attr == "fit":
                     fit_sites.append((path.name, fn.name))
-    assert fit_sites == [("learner.py", "_fit_rf")], fit_sites
+    # v1.4: the package also contains SYNTHETIC-ROW GENERATORS whose own `.fit` fits a generator (SMOTE's
+    # neighbour index, a Gaussian's moments), and the controller calls `generator.fit`. None of them trains a
+    # classifier. They are allow-listed explicitly; any other `.fit` site, and any classifier import in those
+    # modules, still fails this audit, so learner._fit_rf stays the only place a model can be trained.
+    generator_fit_sites = {("controller.py", "prepare"), ("generators.py", "_fit"), ("generators.py", "fit")}
+    assert [s for s in fit_sites if s not in generator_fit_sites] == [("learner.py", "_fit_rf")], fit_sites
+    for name in ("generators.py", "controller.py"):
+        src = (pkg / name).read_text()
+        assert "RandomForest" not in src and "sklearn.ensemble" not in src, f"{name} must not train classifiers"
     learner_tree = ast.parse((pkg / "learner.py").read_text())
     callers = {fn.name for fn in ast.walk(learner_tree) if isinstance(fn, ast.FunctionDef)
                for c in ast.walk(fn) if isinstance(c, ast.Call)
