@@ -222,8 +222,8 @@ def test_no_free_form_base_fit_anywhere_in_the_package():
     assert callers == {"build_base", "build"}, callers
 
 
-def test_spec_version_is_1_1():
-    assert SPEC_VERSION == "1.1"
+def test_spec_version_is_1_3():
+    assert SPEC_VERSION == "1.3"
 
 
 def test_the_view_still_exposes_exactly_the_frozen_fields():

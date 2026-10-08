@@ -280,6 +280,52 @@ section "v1.1 changes". No §1.5 threshold changed.
 
 `protocol.SPEC_VERSION` is now "1.1".
 
+## 2026-10-08 — SPEC v1.2: P0 decision procedure frozen in the spec; Step 4 P0 tooling
+
+An audit of the Step 4 P0 tooling (before the real-data cache was built and before any P0 run, so
+nothing to rerun) found that the go/no-go rules lived only in a code docstring and that four of them
+could change the verdict. They are now normative in `docs/INTERVENTION_SPEC.md` section L.1 and
+"v1.2 changes". No §1.5 threshold changed.
+
+- **One status per budget** (GO / NO_ROOM / UNMEASURABLE) from a single criterion — could the
+  preregistered GO criterion have been met there? — replacing the global INCONCLUSIVE-over-NO-GO
+  precedence, whose pooled ">80% unmeasurable" rate could veto a reachable GO or a reachable
+  NO-GO. `INCONCLUSIVE_MIXED` is removed: "B=25 unmeasurable, B=100 no room" is reported as
+  "NO_ROOM at B=100; B=25 unmeasurable" (NO_GO_NO_ROOM on the assessed budget).
+- **V3 split**: integrity (every measurable drift class is in the frozen model's affected region →
+  any violation is INVALID) vs data adequacy (insufficient support → UNMEASURABLE, never INVALID).
+- **V2 is a diagnostic** that never gates the P0 outcome; it blocks P1 and later claims.
+- **V4 is class-wise**: the positive control defines a repairable set R; V4 passes iff R is
+  non-empty and budget-independent; a GO may count only classes in R.
+- **V1** keeps cross-pool duplicate flows legal and adds reporting (learning-buffer rows duplicated
+  in stable-evaluation partitions, vectors with different labels across temporal pools, an
+  ambiguity flag on GO classes) that never gates; budget nesting on a matched seed is now audited.
+- **Provenance**: `criteria_digest`, `spec_rules_sha256` (hash of §L.1), validity / diagnostics /
+  data adequacy / outcome emitted as separate ordered blocks.
+
+Step 4 tooling that this audit covers (all new): `p0.py` (runner), `validity.py`,
+`diagnostics.py`, `serialize.py` (strict JSON, NaN as an explicit marker), `provenance.py`, the
+`REAL_ONLY_ALL_LABELS` positive control, and a memory-guarded, provenance-stamped cache builder
+(`cache.py`). `protocol.SPEC_VERSION` is now "1.2".
+
+## 2026-10-08 — SPEC v1.3: envelope `violated` requires a statistically established violation
+
+The real-data cache was built and a single-seed, non-preregistered smoke run (S1, B=25, seed 0)
+executed; it showed `envelope_violated` being assigned from a point estimate at tiny sample sizes
+(28–38 benign rows in D_gate: one flipped row = +3.6 pp benign-FPR against ε_FPR = 0.005). Amended
+before any preregistered P0 result existed (nothing to rerun). Full text: `docs/INTERVENTION_SPEC.md`
+"v1.3 changes". No threshold, seed, budget or scenario changed.
+
+- **F1**: per envelope quantity, PASS iff UCB_{α/2} ≤ ε; VIOLATED iff LCB_{α/2} > ε; UNVERIFIABLE if a
+  bound is undefined; otherwise INCONCLUSIVE. The point estimate no longer decides a label.
+- Promotion decisions, residual sets, budget cells, the P0 decision procedure (§L.1, hash unchanged),
+  leakage rules, partitions and model inputs are unchanged; only rejection labels move between
+  `envelope_violated` and `envelope_inconclusive`.
+- `CandidateReport` additionally records the lower bounds, the preregistered ε values and the bound
+  level, next to the existing point estimates, upper bounds and sample sizes.
+
+`protocol.SPEC_VERSION` is now "1.3".
+
 ## Current open items
 
 See `STATUS.md` — kept current there instead of duplicated here, so there's exactly one place

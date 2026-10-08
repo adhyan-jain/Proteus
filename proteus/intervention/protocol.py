@@ -18,7 +18,7 @@ import numpy as np
 
 from proteus.intervention.cache import DataBundle
 
-SPEC_VERSION = "1.1"
+SPEC_VERSION = "1.3"
 
 ROLE_FIT, ROLE_SEL, ROLE_GATE = 0, 1, 2
 ROLE_NAMES = {ROLE_FIT: "fit", ROLE_SEL: "sel", ROLE_GATE: "gate"}
@@ -87,6 +87,12 @@ class PartitionManifest:
             for a in (w.e_idx, w.u_idx, w.l_idx, w.l_role):
                 h.update(np.ascontiguousarray(a, dtype=np.int64).tobytes())
         return h.hexdigest()
+
+    def partition_rows(self):
+        """Named global row indices of every pre-drift partition. Read-only accessor for the audit
+        harness, so that nothing outside this module has to name the TRAIN index array."""
+        return {"train": self.train_idx, "ref": self.ref_idx, "s_cal": self.s_cal_idx,
+                "s_sel": self.s_sel_idx, "s_gate": self.s_gate_idx, "s_report": self.s_report_idx}
 
     def sizes(self):
         return {

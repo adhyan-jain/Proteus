@@ -306,10 +306,21 @@ def test_anchor_blocks_cumulative_stable_degradation():
     moving = promote(view, cand1, cand2, REGION, make_params(), np.random.default_rng(0), cand1)
     assert moving.promoted, "against the moving incumbent the second step looks safe (ratchet)"
     anchored = promote(view, cand1, cand2, REGION, make_params(), np.random.default_rng(0), anchor)
-    assert not anchored.promoted and anchored.reason == "envelope_violated"
+    # still rejected against the anchor. v1.3: the point estimate (0.006 > eps 0.005) no longer
+    # decides the label; the lower bound (0.00495) does not exceed eps, so the violation is not
+    # statistically established and the reason is envelope_inconclusive, not envelope_violated.
+    assert not anchored.promoted and anchored.reason == "envelope_inconclusive"
     assert anchored.report.utility_ok
     assert anchored.report.delta_fpr_stable_point == pytest.approx(0.006)
+    assert anchored.report.delta_fpr_stable_lcb <= 0.005 < anchored.report.delta_fpr_stable_ucb
     assert not anchored.report.fpr_stable_ok
+
+    t3 = truth.copy()                      # costs 240 benign rows (0.012): clearly established
+    t3[s_benign[:240]] = 1
+    worse = promote(view, cand1, FakeModel(t3), REGION, make_params(), np.random.default_rng(0),
+                    anchor)
+    assert not worse.promoted and worse.reason == "envelope_violated"
+    assert worse.report.delta_fpr_stable_lcb > 0.005
 
 
 def test_anchor_is_required(world):
@@ -376,3 +387,133 @@ def test_promotion_rejects_anything_that_is_not_a_controller_view(world):
     with pytest.raises(TypeError):
         evaluate_candidate(None, inc, FakeModel(good), REGION, make_params(),
                            np.random.default_rng(0), inc)
+
+
+# ------------------------------------------------------------------ v1.3: violated needs an LCB > eps
+from proteus.intervention.promotion import _envelope_status  # noqa: E402
+
+ENVELOPE = ("stable_f1_status", "fpr_stable_status", "fpr_current_status")
+
+
+def _small_benign_world(n_benign_gate=30):
+    """The B=25 smoke situation: only ~30 benign rows in D_gate."""
+    segs = dict(SEGMENTS, gate={0: n_benign_gate, 1: 30, 2: 40})
+    view, truth, ranges = make_view(segs)
+    inc_table = truth.copy()
+    inc_table[truth == 2] = 0
+    return view, truth, ranges, FakeModel(inc_table)
+
+
+def test_envelope_status_truth_table():
+    eps = 0.005
+    nan = float("nan")
+    assert _envelope_status(0.001, 0.004, eps) == "ok"             # UCB <= eps: safe
+    assert _envelope_status(0.2, 0.004, eps) == "ok"               # UCB decides ok, whatever the LCB
+    assert _envelope_status(0.006, 0.02, eps) == "violated"        # LCB > eps: established
+    assert _envelope_status(0.005, 0.02, eps) == "inconclusive"    # LCB == eps is not > eps
+    assert _envelope_status(-0.03, 0.12, eps) == "inconclusive"    # cannot decide either way
+    assert _envelope_status(nan, 0.02, eps) == "inconclusive"      # UCB defined, LCB not
+    assert _envelope_status(0.9, nan, eps) == "unverifiable"       # undefined UCB fails closed
+    assert _envelope_status(nan, nan, eps) == "unverifiable"
+    assert _envelope_status(0.005, 0.005, eps) == "ok"             # boundary: UCB == eps passes
+
+
+def test_genuinely_established_violation_is_labelled_violated(world):
+    view, truth, ranges, inc, good = world
+    table = good.copy()
+    benign_gate = _rows(ranges, truth, "gate", 0)
+    table[benign_gate[: int(0.2 * len(benign_gate))]] = 1           # 20 of 100 benign rows flipped
+    r = _promote(view, inc, table).report
+    assert r.fpr_current_status == "violated"
+    assert r.delta_fpr_current_lcb > r.eps_fpr                      # the bound itself exceeds eps
+    assert r.delta_fpr_current_point == pytest.approx(0.2)
+    assert r.n_gate_benign == 100
+
+
+def test_small_sample_unresolved_case_is_inconclusive_not_violated():
+    """One flipped benign row among 30: the point estimate (3.3 pp) is ~7x eps, which v1.2 called
+    'violated'. The data cannot establish a degradation beyond eps, so v1.3 says inconclusive."""
+    view, truth, ranges, inc = _small_benign_world(30)
+    good = truth.copy()
+    good[_rows(ranges, truth, "gate", 0)[0]] = 1                    # exactly one benign row flipped
+    d = _promote(view, inc, good)
+    r = d.report
+    assert r.n_gate_benign == 30 and r.utility_ok
+    assert r.delta_fpr_current_point == pytest.approx(1 / 30)       # > eps: the old v1.2 trigger
+    assert r.delta_fpr_current_point > r.eps_fpr
+    assert r.delta_fpr_current_lcb <= r.eps_fpr < r.delta_fpr_current_ucb
+    assert r.fpr_current_status == "inconclusive"
+    assert not d.promoted and d.reason == "envelope_inconclusive"   # still rejected
+
+
+def test_clearly_safe_case_passes_and_is_promoted(world):
+    view, truth, ranges, inc, good = world
+    d = _promote(view, inc, good)
+    r = d.report
+    assert d.promoted and d.reason == "promoted"
+    assert all(getattr(r, s) == "ok" for s in ENVELOPE)
+    assert r.delta_stable_f1_ucb <= r.eps_stable_f1
+    assert r.delta_fpr_stable_ucb <= r.eps_fpr and r.delta_fpr_current_ucb <= r.eps_fpr
+
+
+def test_report_carries_raw_quantities_bounds_epsilon_and_level(world):
+    view, truth, ranges, inc, good = world
+    table = good.copy()
+    table[_rows(ranges, truth, "s_gate", 0)[:15]] = 1
+    r = _promote(view, inc, table).report
+    p = make_params()
+    assert (r.eps_stable_f1, r.eps_fpr, r.envelope_alpha) == (p.eps_s, p.eps_fpr, p.promotion_alpha)
+    assert (r.n_s_gate_benign, r.n_s_gate_rows, r.n_gate_benign, r.n_stable_classes) == \
+        (150, 210, 100, 2)
+    for point, lo, hi in (("delta_stable_f1_point", "delta_stable_f1_lcb", "delta_stable_f1_ucb"),
+                          ("delta_fpr_stable_point", "delta_fpr_stable_lcb", "delta_fpr_stable_ucb"),
+                          ("delta_fpr_current_point", "delta_fpr_current_lcb", "delta_fpr_current_ucb")):
+        assert getattr(r, lo) <= getattr(r, hi)
+        assert getattr(r, lo) - 1e-9 <= getattr(r, point) <= getattr(r, hi) + 1e-9
+    from proteus.intervention.serialize import dumps_strict
+    text = dumps_strict(r)                                          # all of it survives serialisation
+    assert "delta_fpr_stable_lcb" in text and "envelope_alpha" in text
+
+
+def test_sanity_failure_still_reports_epsilon_and_level(world):
+    view, truth, ranges, inc, good = world
+    bad = promote(view, inc, FakeModel(good, proba="nan"), REGION, make_params(),
+                  np.random.default_rng(0), inc)
+    assert bad.reason == "sanity" and bad.report.eps_fpr == make_params().eps_fpr
+
+
+def test_relabelling_never_changes_a_promotion_decision(world):
+    """Sweep harms from none to heavy. Promotion must equal 'utility ok and every UCB <= eps' (the
+    unchanged rule), and the v1.2 point-estimate rule differs from v1.3 only in the
+    violated/inconclusive split, never in ok vs not-ok."""
+    view, truth, ranges, inc, good = world
+    p = make_params()
+    benign_s = _rows(ranges, truth, "s_gate", 0)
+    benign_g = _rows(ranges, truth, "gate", 0)
+    saw_split = False
+    for n_s in (0, 1, 3, 10, 40):
+        for n_g in (0, 1, 3, 10, 40):
+            table = good.copy()
+            table[benign_s[:n_s]] = 1
+            table[benign_g[:n_g]] = 1
+            d = _promote(view, inc, table)
+            r = d.report
+            ucb_pass = (r.delta_stable_f1_ucb <= p.eps_s and r.delta_fpr_stable_ucb <= p.eps_fpr
+                        and r.delta_fpr_current_ucb <= p.eps_fpr)
+            assert d.promoted == (r.utility_ok and ucb_pass)
+            for status, point, ucb_, lcb_, eps in (
+                    (r.stable_f1_status, r.delta_stable_f1_point, r.delta_stable_f1_ucb,
+                     r.delta_stable_f1_lcb, p.eps_s),
+                    (r.fpr_stable_status, r.delta_fpr_stable_point, r.delta_fpr_stable_ucb,
+                     r.delta_fpr_stable_lcb, p.eps_fpr),
+                    (r.fpr_current_status, r.delta_fpr_current_point, r.delta_fpr_current_ucb,
+                     r.delta_fpr_current_lcb, p.eps_fpr)):
+                v12 = "ok" if ucb_ <= eps else ("violated" if point > eps else "inconclusive")
+                assert (status == "ok") == (v12 == "ok")            # pass/fail identical to v1.2
+                if status != v12:                                   # only the split may move ...
+                    assert {status, v12} == {"violated", "inconclusive"}
+                    assert v12 == "violated" and status == "inconclusive"   # ... and only downwards
+                    saw_split = True
+                if status == "violated":
+                    assert lcb_ > eps
+    assert saw_split, "the sweep should include at least one small-sample case v1.2 over-called"

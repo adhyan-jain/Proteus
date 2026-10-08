@@ -23,11 +23,15 @@ utility_* -> envelope_*; every failing criterion is listed in `CandidateReport.f
   utility_unmeasurable   no D_gate evidence, or the bound is undefined
   utility_no_gain        point gain <= 0
   utility_inconclusive   point gain > 0 but its LCB <= 0
-  envelope_violated      some degradation's point estimate already exceeds its epsilon
+  envelope_violated      (v1.3) some degradation is statistically ESTABLISHED beyond its epsilon:
+                         the one-sided lower confidence bound LCB_{alpha/2} exceeds epsilon
   envelope_unverifiable  some quantity is undefined (no outranking violation)
-  envelope_inconclusive  all point estimates within epsilon, but some UCB exceeds it
+  envelope_inconclusive  no UCB-based pass, but no established violation either (LCB <= epsilon):
+                         the evidence cannot decide, e.g. one flipped row among ~30 benign rows
 Among envelope labels a known violation outranks missing evidence. The labels only say WHY a
-candidate was rejected; they never change whether it was.
+candidate was rejected; they never change whether it was (v1.3 changed labels, not decisions: the
+promote/reject rule still requires UCB_{alpha/2} <= epsilon for every envelope quantity).
+v1.2 labelled "violated" from the POINT estimate, which at small n is a granularity artifact.
 
 D_sel and S_sel are never read here (they steer step decisions, not promotion). The function has
 no access to reporting rows, unlabelled rows, the drift-detector reference or future windows: its
@@ -86,6 +90,14 @@ class CandidateReport:
     s_gate_support: tuple          # rows per class in S_gate
     n_s_gate_benign: int
     n_stable_classes: int          # |C_S|
+    # v1.3: raw quantities behind each envelope label, so a reader can see sample size (above),
+    # point estimate, both bounds, epsilon and the label without recomputing anything.
+    delta_stable_f1_lcb: float = float("nan")      # LCB_{alpha/2} of the stable macro-F1 drop
+    delta_fpr_stable_lcb: float = float("nan")     # LCB_{alpha/2} of the benign-FPR rise on S_gate
+    delta_fpr_current_lcb: float = float("nan")    # LCB_{alpha/2} of the benign-FPR rise on D_gate
+    eps_stable_f1: float = float("nan")            # the preregistered epsilons the bounds meet
+    eps_fpr: float = float("nan")
+    envelope_alpha: float = float("nan")           # one-sided level of every bound (alpha / 2)
 
     @property
     def utility_ok(self):
@@ -153,12 +165,16 @@ def _utility_status(point, lcb_value):
     return "no_gain" if point <= 0.0 else "inconclusive"
 
 
-def _envelope_status(point, ub_value, eps):
+def _envelope_status(lcb_value, ub_value, eps):
+    """v1.3. ok: UCB <= eps (safety demonstrated, the only promotable state). violated: the LCB
+    exceeds eps, i.e. degradation beyond eps is statistically established. Anything else with an
+    undefined bound is unverifiable; a defined UCB above eps without an established violation is
+    inconclusive. The point estimate no longer decides the label."""
     if not np.isfinite(ub_value):
         return "unverifiable"
     if ub_value <= eps:
         return "ok"
-    if np.isfinite(point) and point > eps:
+    if np.isfinite(lcb_value) and lcb_value > eps:
         return "violated"
     return "inconclusive"
 
@@ -188,14 +204,15 @@ def evaluate_candidate(view: ControllerView, incumbent, candidate, region,
         s_gate_support=tuple(int(v) for v in s_support), n_s_gate_benign=int(s_support[benign]),
         n_stable_classes=len(stable))
 
+    eps = dict(eps_stable_f1=params.eps_s, eps_fpr=params.eps_fpr, envelope_alpha=a)
     sane, msg = sanity_check(candidate, view.ref_X.shape[1], k)
     if not sane:
         return CandidateReport(
             False, msg, _NAN, _NAN, _NAN, _NAN, _NAN, _NAN, _NAN, _NAN, "not_evaluated",
-            "not_evaluated", "not_evaluated", "not_evaluated", ("sanity",), **support)
+            "not_evaluated", "not_evaluated", "not_evaluated", ("sanity",), **support, **eps)
 
     # drift-side evidence: D_gate (utility vs incumbent; benign FPR vs anchor)
-    gain_point = gain_lcb = fpr_cur_point = fpr_cur_ucb = _NAN
+    gain_point = gain_lcb = fpr_cur_point = fpr_cur_ucb = fpr_cur_lcb = _NAN
     if len(view.gate_y) and region:
         p_inc, p_cand, p_anc = (m.predict(view.gate_X) for m in (incumbent, candidate, anchor))
         conf_inc, conf_cand, conf_anc = bootstrap_confusions(
@@ -204,21 +221,21 @@ def evaluate_candidate(view: ControllerView, incumbent, candidate, region,
         gain_lcb = lcb(gain, a)
         gain_point = float(region_utility_conf(confusion(view.gate_y, p_cand, k), region)
                            - region_utility_conf(confusion(view.gate_y, p_inc, k), region))
-        fpr_cur_ucb = ucb(benign_fpr_conf(conf_cand, benign) - benign_fpr_conf(conf_anc, benign),
-                          a)
+        fpr_cur = benign_fpr_conf(conf_cand, benign) - benign_fpr_conf(conf_anc, benign)
+        fpr_cur_ucb, fpr_cur_lcb = ucb(fpr_cur, a), lcb(fpr_cur, a)
         fpr_cur_point = (_benign_fpr_point(view.gate_y, p_cand, k, benign)
                          - _benign_fpr_point(view.gate_y, p_anc, k, benign))
 
     # stable-traffic evidence: S_gate, vs the anchor
-    ds_point = ds_ucb = fpr_s_point = fpr_s_ucb = _NAN
+    ds_point = ds_ucb = fpr_s_point = fpr_s_ucb = ds_lcb = fpr_s_lcb = _NAN
     if len(view.s_gate_y) and stable:
         p_anc, p_cand = anchor.predict(view.s_gate_X), candidate.predict(view.s_gate_X)
         conf_anc, conf_cand = bootstrap_confusions(
             view.s_gate_y, [p_anc, p_cand], k, params.n_boot, rng)
-        ds_ucb = ucb(stable_macro_f1_conf(conf_anc, stable)
-                     - stable_macro_f1_conf(conf_cand, stable), a)
-        fpr_s_ucb = ucb(benign_fpr_conf(conf_cand, benign) - benign_fpr_conf(conf_anc, benign),
-                        a)
+        ds = stable_macro_f1_conf(conf_anc, stable) - stable_macro_f1_conf(conf_cand, stable)
+        ds_ucb, ds_lcb = ucb(ds, a), lcb(ds, a)
+        fpr_s = benign_fpr_conf(conf_cand, benign) - benign_fpr_conf(conf_anc, benign)
+        fpr_s_ucb, fpr_s_lcb = ucb(fpr_s, a), lcb(fpr_s, a)
         ds_point = float(stable_macro_f1_conf(confusion(view.s_gate_y, p_anc, k), stable)
                          - stable_macro_f1_conf(confusion(view.s_gate_y, p_cand, k), stable))
         fpr_s_point = (_benign_fpr_point(view.s_gate_y, p_cand, k, benign)
@@ -226,15 +243,17 @@ def evaluate_candidate(view: ControllerView, incumbent, candidate, region,
 
     statuses = {
         "utility": _utility_status(gain_point, gain_lcb),
-        "stable_f1": _envelope_status(ds_point, ds_ucb, params.eps_s),
-        "fpr_stable": _envelope_status(fpr_s_point, fpr_s_ucb, params.eps_fpr),
-        "fpr_current": _envelope_status(fpr_cur_point, fpr_cur_ucb, params.eps_fpr),
+        "stable_f1": _envelope_status(ds_lcb, ds_ucb, params.eps_s),
+        "fpr_stable": _envelope_status(fpr_s_lcb, fpr_s_ucb, params.eps_fpr),
+        "fpr_current": _envelope_status(fpr_cur_lcb, fpr_cur_ucb, params.eps_fpr),
     }
     failed = tuple(n for n, s in statuses.items() if s != "ok")
     return CandidateReport(
         True, "ok", gain_point, gain_lcb, ds_point, ds_ucb, fpr_s_point, fpr_s_ucb,
         fpr_cur_point, fpr_cur_ucb, statuses["utility"], statuses["stable_f1"],
-        statuses["fpr_stable"], statuses["fpr_current"], failed, **support)
+        statuses["fpr_stable"], statuses["fpr_current"], failed, **support,
+        delta_stable_f1_lcb=ds_lcb, delta_fpr_stable_lcb=fpr_s_lcb,
+        delta_fpr_current_lcb=fpr_cur_lcb, **eps)
 
 
 def _envelope_reason(report):

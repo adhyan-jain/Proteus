@@ -1,4 +1,79 @@
-# Proteus — Frozen Research Specification: Feedback-Controlled Synthetic Intervention (SPEC v1.1)
+# Proteus — Frozen Research Specification: Feedback-Controlled Synthetic Intervention (SPEC v1.3)
+
+## v1.3 changes (supersede any conflicting v1.0–v1.2 text below; §1.5 thresholds are unchanged)
+
+v1.3 is a one-item amendment to the envelope rejection taxonomy (D3). It was made after the real-data
+cache existed and a single-seed, non-preregistered smoke run (S1, B=25, seed 0) had been executed,
+and before any preregistered P0 result existed, so nothing has to be rerun. The smoke run showed
+that `envelope_violated` was assigned from a *point estimate* at tiny sample sizes: with 28–38
+benign rows in D_gate, one flipped row moves the empirical benign-FPR by 1/28 ≈ 3.6 percentage
+points, 7× the preregistered ε_FPR = 0.005, even though the data cannot establish a degradation
+beyond ε (the upper bound rejected the candidate correctly, but the label read "unsafe").
+
+- **F1 — an envelope check is `violated` only when the violation is statistically established.**
+  For each envelope quantity q (stable macro-F1 drop on S_gate, benign-FPR rise on S_gate,
+  benign-FPR rise on D_gate's benign rows), with its preregistered ε (ε_S or ε_FPR, §1.5) and the
+  one-sided level α/2 used for promotion, over the same paired class-stratified bootstrap
+  replicates as before:
+  - **PASS** (`ok`): UCB_{α/2}(q) ≤ ε. This is the only state that can be promoted.
+  - **VIOLATED**: LCB_{α/2}(q) > ε — degradation beyond ε is statistically established.
+  - **UNVERIFIABLE**: a bound is undefined (e.g. no benign rows). Fails closed, as before.
+  - **INCONCLUSIVE**: UCB_{α/2}(q) > ε and LCB_{α/2}(q) ≤ ε — the evidence cannot establish
+    either safety or violation.
+  The labels are exhaustive and mutually exclusive per quantity. The reason for a rejected
+  candidate keeps the precedence violated > unverifiable > inconclusive (v1.1, D3). The point
+  estimate no longer decides any label; it is still reported.
+- **Decisions are unchanged.** A candidate is promoted iff its utility criterion passes and *every*
+  envelope quantity is PASS (UCB ≤ ε); v1.3 only relabels rejections between `envelope_violated`
+  and `envelope_inconclusive`. Residual-set construction, budget cells, the P0 decision procedure
+  (§L.1 is byte-identical to v1.2; its SHA-256 is unchanged), leakage rules, partitions, model
+  inputs, every numerical ε, the seed set, the budgets and the scenario definitions are untouched.
+  The utility labels (`utility_no_gain` is still assigned from the point gain) are out of scope of
+  this amendment and are not changed.
+- **Raw quantities stay in the output.** Each candidate report carries, per quantity: the sample
+  sizes (`n_gate_benign`, `n_s_gate_benign`, `n_s_gate_rows`, `n_stable_classes`), the point
+  estimate, `…_lcb` and `…_ucb`, the preregistered ε (`eps_stable_f1`, `eps_fpr`), the level
+  (`envelope_alpha`) and the resulting label.
+
+## v1.2 changes (supersede any conflicting v1.0/v1.1 text below; §1.5 thresholds are unchanged)
+
+v1.2 freezes the P0 decision procedure. It was written after the Step 4 tooling existed but before
+the real-data cache was built and before any P0 result existed, so nothing has to be rerun. The
+rules previously lived in the approved review plan and in `validity.py`; a hostile reviewer must be
+able to read them here, so they are now normative in §L.1 (`protocol.SPEC_VERSION = "1.2"` feeds the
+manifest and params digests; a `criteria_digest` and the SHA-256 of §L.1 travel with every result).
+No §1.5 threshold changes; the new rules use only counts already in the review plan (2 windows,
+3-of-5 and 4-of-5 seeds) and the frozen ε_def and n_min.
+
+- **E1 — one status per budget, no global precedence.** Every budget is classified independently as
+  GO, NO_ROOM or UNMEASURABLE by one criterion: *could the preregistered GO criterion have been met
+  there?* GO is a subset of "assessable", so the three statuses partition the budgets; there is no
+  precedence question and no pooled unmeasurable-rate veto (the old ">80% of cells unmeasurable"
+  rule is now a descriptive statistic only).
+- **E2 — V3 is split.** *Integrity* (validity): every measurable drift class must be in the frozen
+  model's affected region (FROZEN cannot predict a class absent from D_ref, so an exception is a
+  pipeline defect) → any violation is INVALID. *Data adequacy* (not validity): insufficient
+  support makes a budget UNMEASURABLE, never INVALID. Both are reported.
+- **E3 — V2 is a mandatory diagnostic that never gates the P0 outcome.** A non-empty pre-drift
+  affected region can come from a reservoir-scale θ_base missing rare *pre-drift* classes, which
+  cannot create a GO. A failed V2 blocks P1 and any later claim until a spec revision defines how
+  pre-existing deficiency enters A, U and I.
+- **E4 — V4 is class-wise.** The positive control defines a *repairable set* R of drift classes
+  that abundant labels actually repair. V4 passes iff R ≠ ∅ (and R is identical at every budget).
+  A GO may count only classes in R; classes outside R are reported as unrepaired and can never
+  generate a GO.
+- **E5 — V1 keeps cross-pool duplicates legal** and adds reporting that never gates the outcome:
+  rows of the learning buffers duplicated in stable-evaluation partitions, and feature vectors that
+  carry different labels across temporal pools, with an ambiguity flag on GO classes. Contradictory
+  vectors can be intrinsically unrepairable, so a flagged GO requires interpretation.
+- **E6 — budget scope.** V1, integrity, adequacy and V4 are evaluated at every budget (the old
+  "V3 at some budget" rule is removed). Budgets are nested on a matched seed (checked, part of V1).
+- **E7 — INCONCLUSIVE_MIXED is removed.** B=25 UNMEASURABLE with B=100 NO_ROOM is reported as
+  "NO_ROOM at B=100; B=25 unmeasurable" and the budget-grid conclusion is NO_GO_NO_ROOM on the
+  assessed budget. The only INCONCLUSIVE outcome is "no budget assessable".
+- **E8 — provenance.** Results carry `spec_version`, `criteria_digest` (the constants of §L.1),
+  `spec_rules_sha256` (the text of §L.1), the params digest, manifest digests and git SHA, and
+  keep validity, diagnostics, data adequacy and outcome in separate, ordered blocks.
 
 ## v1.1 changes (supersede any conflicting v1.0 text below; §1.5 thresholds are unchanged)
 
@@ -235,7 +310,8 @@ Candidates are θ₀, θ_R and θ*. Tests use α/2.
 
 The rejection reason is logged as one of: sanity, no_affected_region, utility_unmeasurable,
 utility_no_gain, utility_inconclusive, envelope_unverifiable, envelope_violated,
-envelope_inconclusive (v1.1, D3), plus non-inferiority once θ* exists.
+envelope_inconclusive (v1.1, D3; the envelope_violated / envelope_inconclusive boundary is
+redefined by v1.3 F1: violated only when the LCB exceeds ε), plus non-inferiority once θ* exists.
 
 **J.2 Canary / rollback (prequential, on L_{t−1} before it is assigned to any partition).**
 The promoted θ_new and the shadow θ_prev both score L_{t−1}. Roll back to θ_prev iff
@@ -321,13 +397,94 @@ MMD-prefilter variants are a later ablation, not part of the minimal set.
 - The pilot has no headline claim; it is a go/no-go.
 
 ### L. Smallest falsifying pilot (scenario S1, 5 seeds, H = 10 post-drift windows + 4 pre-drift)
-- **P0, room for intervention (REAL_ONLY + FROZEN only; cheap; B ∈ {25, 100}).** Measure I across
-  runs.
-  - **H1 is falsified** if, at every budget, fewer than 3 of 5 seeds have a non-empty I in at least
-    2 post-drift windows. Synthetic intervention then has nothing to fix in S1.
-  - In that case, run P0 on S2 before concluding anything. If S2 also falsifies H1, stop: the
-    result is "real-only adaptation suffices under the tested budgets", and it gets reported as
-    such.
+- **P0, room for intervention (FROZEN, REAL_ONLY and the REAL_ONLY_ALL_LABELS positive control;
+  cheap; B ∈ {25, 100}).** Measure I across runs. **v1.2: the decision procedure is §L.1 below;
+  the earlier "H1 is falsified if…" wording is superseded by it.**
+
+<!-- P0-DECISION-RULES:BEGIN -->
+#### L.1 P0 decision procedure (v1.2; normative, frozen before any P0 result exists)
+
+Where code and this section disagree, this section is the specification. All counts below are the
+ones of the approved review plan; no §1.5 threshold is touched, and none of these constants may be
+changed after a P0 result exists (changing one bumps the SPEC version).
+
+**Notation.** t_d = `n_pre_windows` is the first post-drift window; it only sees pre-drift labels
+(label delay), so "post-drift windows" means t > t_d. D = the *drift classes*: classes with at least
+one row in the drift pool and none in the pre-drift pool. At (budget b, seed s, window t): M_t = the
+measurable classes, A_t = the affected region, I_t = the recall-based residual set (v1.1, D4),
+n_c = the number of real fit rows of class c in the view. Budgets are nested: for a matched seed the
+B=25 labelled rows are a prefix of the B=100 rows with identical roles and identical E_t.
+
+**Scope.** Every check below is evaluated at EVERY budget of the grid, for every seed and every
+condition, on the same manifests. Only R (checked to be budget-independent) and the final outcome
+rule combine information across budgets.
+
+**Repairable set R.** Seed s *repairs* a drift class c iff, at the final window of the
+REAL_ONLY_ALL_LABELS positive control, c ∈ M, n_c ≥ n_min and c ∉ I. R = {c ∈ D : c is repaired in
+at least 3 of 5 seeds}. Drift classes outside R are *unrepaired* and are reported separately with
+their cause (residual deficiency, unmeasurable, or thin real support). A class outside R can never
+generate a GO, however deficient it appears.
+
+**Cells and budget status** (REAL_ONLY, post-drift windows only). A cell (b, s, t) is
+*assessable* iff some c ∈ R ∩ M_t has n_c ≥ n_min. It is a *GO cell* iff I_t ∩ R ≠ ∅. Every GO cell
+is assessable (c ∈ I implies c ∈ A ⊆ M and n_c ≥ n_min). Each budget receives exactly one status:
+- **GO(b)** if at least 3 of 5 seeds have at least 2 GO cells;
+- otherwise **NO_ROOM(b)** if at least 3 of 5 seeds have at least 2 assessable cells (the GO
+  criterion was reachable and was not reached: informative negative evidence);
+- otherwise **UNMEASURABLE(b)** (the GO criterion was unreachable: no evidence either way).
+The three statuses are exhaustive and mutually exclusive. Insufficient support yields UNMEASURABLE,
+never INVALID. The pooled share of unmeasurable cells is reported but is not a decision input.
+
+**Validity (any failure ⇒ INVALID).**
+- **V1, leakage and partition integrity.** Zero rows in any view array that come from E_t,
+  S_report or S_cal, or from a group of theirs in the same pool; zero unlabelled rows (budget
+  regime); zero rows from window ≥ t. Pre-pool partitions and the E/learning sides of the windows
+  are pairwise group-disjoint within their pool; D_ref ⊆ TRAIN; no window row is reused; and the
+  budgets are nested on every matched seed (labelled prefix, identical E_t). A group that occurs in
+  both the pre-drift and the drift pool (an identical flow on different days) is legal and does NOT
+  fail V1; it is reported (see diagnostics).
+- **V3, integrity.** For FROZEN, at every post-drift (b, s, t) and every c ∈ D ∩ M_t: c ∈ A_t, with
+  zero exceptions. FROZEN never predicts a class absent from D_ref, so an exception is a pipeline
+  defect. A GO cell that is not assessable is likewise an integrity violation. The number of cells
+  checked is reported (the check is vacuous where nothing is measurable).
+- **V4, repairability of the positive control.** R ≠ ∅, and R is identical at every budget. If R is
+  empty, abundant labels do not repair any drift class and the learner or reservoir is fixed first.
+
+**Diagnostics (mandatory, reported before the outcome, never gate it).**
+- **V2, null region.** At each budget, A_FROZEN at the last pre-drift window is empty in at least 4
+  of 5 seeds. A failed V2 does not change the P0 outcome; it blocks P1 and any later claim until a
+  spec revision defines how pre-existing (non-drift) deficiency enters A, U and I.
+- **Cross-pool duplicate reporting.** Counts, per learning buffer (D_real, D_sel, D_gate), of rows
+  whose group occurs in S_report, S_gate, S_sel, S_cal or D_ref, split by pool of the row (training
+  rows exactly duplicated in stable evaluation rows are the D_real counts), plus the number of
+  groups and rows that occur in both temporal pools.
+- **Conflicting-label reporting.** The number of groups (feature vectors) that carry more than one
+  label anywhere in the corpus, split into within-pool and across-pool conflicts, and for every
+  drift class the share of its final-window D_sel rows and of its pooled E rows whose group
+  carries another label. A class that generates a GO and has either share ≥ ε_def (§1.5) is flagged
+  "possibly ambiguity-driven". The flag never gates the outcome, but contradictory vectors can be
+  intrinsically unrepairable, so a GO that carries the flag must be reported with that
+  qualification and requires interpretation before it is cited.
+- **Descriptive.** Unmeasurable-cell fraction, support counts, the D3 rejection taxonomy, recovery
+  on E_t, the S_report effect against θ_base, buffer evictions, wall-clock time.
+
+**Outcome (exclusive, exhaustive, applied in this order; only a run whose scenario, budgets,
+seeds, params digest and criteria digest equal the preregistered ones receives an outcome, any other
+run is reported as "not preregistered" with no outcome).**
+1. **INVALID** if any validity check fails. The invalid run makes no H1 statement; the named cause
+   is fixed and all of P0 is rerun with the same seeds.
+2. **GO** if GO(b) holds for some b. Proceed to P1 at the smallest GO budget.
+3. **NO_GO_NO_ROOM** if no budget is GO and NO_ROOM(b) holds for some b. The conclusion is stated
+   for the assessed budgets only, mechanically, e.g. "NO_ROOM at B=100; B=25 unmeasurable"; an
+   UNMEASURABLE budget is not evidence either way. Run P0 on S2 under these same rules; if S2 is
+   also NO_GO_NO_ROOM, stop: "real-only adaptation suffices at the assessed budgets".
+4. **INCONCLUSIVE_UNMEASURABLE** if every budget is UNMEASURABLE. Rerun P0 adding B = 400 (same
+   seeds, nested) and re-evaluate over {25, 100, 400}; if it is still INCONCLUSIVE_UNMEASURABLE,
+   S1 is declared not assessable under the frozen protocol and P0 moves to S2.
+There is no other outcome label (in particular no "mixed" outcome). s_min, n_min and ε are never
+relaxed to obtain a different status.
+<!-- P0-DECISION-RULES:END -->
+
 - **P1, intervention (only if P0 passes; the budget is the smallest one that passed P0, chosen
   from REAL_ONLY data only).** Conditions: FROZEN, REAL_ONLY, CTRL-ROS, FIXED-SMOTE ρ∈{1,4},
   CTRL-SMOTE.

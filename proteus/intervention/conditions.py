@@ -49,9 +49,14 @@ class Condition(Protocol):
     def decide(self, view: ControllerView, incumbent: Any, ctx: DecisionContext) -> Outcome: ...
 
 
+LABEL_REGIME_BUDGET = "budget"          # only the B rows of L_t are labelled (the headline regime)
+LABEL_REGIME_ALL_NON_E = "all_non_e"    # every non-E row of a window is labelled (positive control)
+
+
 class Frozen:
     """Never adapts. Does not read the view; returns the incumbent object itself."""
     name = "FROZEN"
+    label_regime = LABEL_REGIME_BUDGET
 
     def decide(self, view, incumbent, ctx):
         return Outcome(model=incumbent, promoted=False, reason="frozen", candidate=None,
@@ -61,6 +66,7 @@ class Frozen:
 class RealOnly:
     """Fit a candidate on ref + real fit rows from the view, pass it through promotion."""
     name = "REAL_ONLY"
+    label_regime = LABEL_REGIME_BUDGET
 
     def decide(self, view, incumbent, ctx):
         require_view(view)
@@ -83,3 +89,24 @@ class RealOnly:
                       "n_train_rows": candidate.n_train_rows, "decision": decision.as_dict()})
         return Outcome(decision.model, decision.promoted, decision.reason, candidate,
                        info.region, residual.eligible, trace)
+
+
+class RealOnlyAllLabels(RealOnly):
+    """POSITIVE CONTROL, never a headline method (SPEC v1.1 section 4, "refs").
+
+    Decision logic is identical to REAL_ONLY (same learner, same promotion rule, same envelope
+    anchor, same thresholds). Only the label regime differs: every non-E row of every window is
+    labelled (instead of the B rows of L_t), arriving with the same one-window delay and assigned
+    to fit / sel / gate by the same group hash. E_t, S_report and S_cal stay unreachable. The
+    labelled rows of the budget regime are a strict subset of this regime's, on the same manifest.
+    It reproduces the oracle-label regime of the old Stage-7 headline under the new protocol, so
+    P0's V4 can check that the learner can absorb new classes when labels are abundant.
+
+    Known caveat, reported in every result file: the real buffer is a 5000-row FIFO and this regime
+    adds ~1260 fit rows per window, so it evicts early rows. The strict nesting
+    D_ref subset-of D_real subset-of candidate therefore holds for the *current* buffer contents
+    only, and the control is allowed to forget old real rows. That is a property of the control,
+    not a defect: it is a reference point, not an arm of any comparison."""
+    name = "REAL_ONLY_ALL_LABELS"
+    label_regime = LABEL_REGIME_ALL_NON_E
+    is_positive_control = True
