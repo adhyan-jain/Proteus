@@ -1,4 +1,132 @@
-# Proteus — Frozen Research Specification: Feedback-Controlled Synthetic Intervention (SPEC v1.3)
+# Proteus — Frozen Research Specification: Feedback-Controlled Synthetic Intervention (SPEC v1.3 for P0, v1.4 for P1+)
+
+## v1.4 changes: the P1 preregistration (supersede conflicting v1.0–v1.3 text for P1/P2/P3; §1.5 thresholds and §L.1 are unchanged)
+
+v1.4 was written after the frozen P0 result existed (`results/intervention_p0_S1_*.json`, GO at B=100,
+NO_ROOM at B=25) and **before any P1 data existed**. It does not touch P0: §L.1 is byte-identical (its
+SHA-256 is pinned by a test), `protocol.SPEC_VERSION` stays "1.3" (it names the partition/P0 protocol and
+feeds the manifest and P0 parameter digests, so the P1 manifests of seeds 0–4 are the P0 manifests, and the
+P0 artifacts stay reproducible at commit 7567ff1), and P1 artifacts carry `p1_spec_version = "1.4"`,
+`p1_criteria_digest` and `p1_rules_sha256` (the hash of the text between the P1-PREREGISTRATION markers).
+Nothing in `p0.py`, `validity.py`, `cache.py`, `protocol.py`, `metrics.py`, `learner.py`, `promotion.py`,
+`conditions.py` or `params.py` was modified; all v1.4 code is new modules (`generators.py`, `controller.py`,
+`gate14.py`, `arms.py`, `p1_spec.py`, `p1.py`, `analyze_p1.py`).
+
+Deviations from the approved plan, all made before any P1 data: (a) the promotion/canary extension lives in
+the new `gate14.py` instead of editing `promotion.py` (stricter: the P0 code path is untouched);
+(b) **U4 refined**: the plan said step safety compares S_sel quantities with the fixed anchor. In the frozen
+P0 data the anchor-relative stable-macro-F1 bound of the *real-only* candidate already exceeds ε_S in many
+B=100 windows at the looser α/2 (tiny-support stable classes), and at α/K_max it is noisier still, so an
+anchor-relative step filter would stall every controller at k=0 independent of the operator. The step filter
+is therefore **incremental** (against the current iterate th_k); the anchor-relative S_sel numbers are
+logged next to it; the final certification against the fixed anchor is the unchanged gate (D2) in
+`gate14.promote_star`; (c) the H4 activity condition is stated as 6 of 10 seeds (the plan's "3" was written
+for 5 seeds); (d) the frozen measurability rule M needs support ≥ s_min in D_sel **and** D_gate, so D_gate
+contributes label *counts* (never values) to the step search; this is inherited from §2 and is tested.
+
+<!-- P1-PREREGISTRATION:BEGIN -->
+#### P1 preregistration (v1.4; normative, frozen before any P1 result exists)
+
+Where code and this section disagree, this section is the specification. No constant here may change after a
+P1 result exists; a change bumps `P1_SPEC_VERSION` and reruns everything it touches.
+
+**Scope.** Scenario S1, B=100 (the smallest GO budget of P0), oracle trigger, label delay 1, seeds 0–9.
+Partition protocol and manifests are those of P0 (`protocol.SPEC_VERSION` 1.3); for seeds 0–4 the manifest
+digest must equal the P0 B=100 manifest digest (recorded as `matches_p0_manifest`). R, the repairable set,
+is read from the frozen P0 summary (`validity.v4_repairability.repairable_set` = {Bot, DDoS, PortScan}); it is
+an analysis-time construct that no arm ever receives.
+
+**Common machinery.** Every adaptive arm shares the learner (RF, 100 trees, `random_state=seed`), the
+partitions, the label budget, the base model th_base = fit(D_ref) and ONE promotion function. The
+`REAL_ONLY` arm is the P0 `RealOnly` decision verbatim. The controller (`controller.py`): A, th_R, I as in
+§2 (recall-based I, D4); greedy dose search; step value L_k(c) = LCB_{α/K_max}(U_A(th_k^{+c}) − U_A(th_k);
+D_sel); a step is *safe* iff UCB_{α/K_max} of (stable macro-F1 drop on S_sel) ≤ ε_S, of (benign-FPR rise on
+S_sel) ≤ ε_FPR and of (benign-FPR rise on D_sel's benign rows) ≤ ε_FPR, each **against the current iterate**
+(undefined ⇒ unsafe); accept c* = argmax L over safe candidates with L > η; unsafe or failed classes leave
+I_active; stop on no admissible action, k = K_max, no safe candidate, or best L ≤ η. Doses are prefixes of
+one synthetic pool per class drawn from (seed, t, class); m_c = min(⌊ρ_c n_c⌋, M_cap); synthetic share ≤ φ_max.
+Promotion (`gate14.promote_star`, D_gate/S_gate only, level α/2): th* is promoted iff sanity, LCB(U(th*) −
+U(incumbent)) > 0, the frozen v1.3 envelope against the anchor passes (UCB ≤ ε for all three quantities),
+the POINT gain U(th*) − U(th_R) > 0 and LCB(U(th*) − U(th_R)) ≥ −ε_ni; otherwise th_R goes through the
+unchanged real-only rule; otherwise the incumbent stays. Canary (J.2, `gate14.canary`, level α, in every arm
+except those named NO-CANARY): the labels that arrive after a promotion score the new and the previous
+model; roll back iff UCB(U(new) − U(prev)) < 0 or LCB(FPR_benign(new) − FPR_benign(anchor)) > ε_FPR; missing
+evidence never rolls back.
+
+**Arms.** FROZEN; REAL_ONLY; CTRL-ROS, CTRL-SMOTE (operator = duplicated / SMOTE rows); CTRL-THRESH
+(operator = score multipliers {1,2,4,8,16} on th_R, argmax, no refit); FIXED-SMOTE-1 and FIXED-SMOTE-4 (one
+shot ρ·n_c rows for each class in I, scaled jointly down to φ_max); ALWAYS-SMOTE (ρ=1 for every class with
+n_c ≥ n_min, no need test, no search); FIDGATE-SMOTE (FIXED-SMOTE-4 behind a label-permutation MMD²
+pre-filter, 100 permutations, admit iff p > 0.05); controls NC1-DONOR-SMOTE (SMOTE on D_ref BENIGN rows
+labelled as the target class), NC2-GAUSSIAN, NC3-SHUFFLE (controller with those generators),
+NC4-PLACEBO-DDOS (FIXED ρ=4 on DDoS regardless of need); ablations ABL-NO-STEP-TEST (rank/accept by POINT
+gain), ABL-I-EQ-A (I := A ∩ {n_c ≥ n_min}), ABL-NO-STEP-SAFETY, ABL-KMAX1, ABL-MMD (CTRL-SMOTE behind the
+MMD pre-filter), ABL-POOLED (step and gate both on D_sel ∪ D_gate: a winner's-curse check, never a method),
+ABL-NO-CANARY-CTRL, ABL-NO-CANARY-REAL; references REAL_ONLY_ALL_LABELS (the P0 positive control) and
+ORACLE_DOSE (th(ρ) for every ladder ρ on I, never deployed, scored by the runner). NC5: CTRL-SMOTE is run
+(without deploying) on the pre-drift windows t ≥ 1; it must return an empty region.
+
+**Generator information set (D5).** Each generator is fit only on the rows of its target class in D_real
+(NC1: on D_ref BENIGN rows), draws no other data, and its output is clipped to the bounds of the rows it was
+fit on. D_syn is rebuilt per call, never enters D_real/D_sel/D_gate, and is never persisted.
+
+**Endpoints** (always on E_t and S_report). *Primary:* **R-recovery** = per seed, the mean over post-drift
+windows t > t_d of the mean E-F1 over the classes of R with E support ≥ s_min in that window, of the
+**deployed** model. *Candidate quality (shadow):* the same quantity over windows t_d+2…last for the model
+that WOULD have been deployed, i.e. th* if k > 0, else th_R if built, else the deployed model, scored on
+E_{t+1} after the decision; compared with the deployed model on the same windows. *Secondary:* the v1.3
+recovery AUC, per-class E-F1/recall, ambiguous vs non-ambiguous E rows (a group is ambiguous iff its feature
+vector carries more than one label anywhere in the corpus), stable macro-F1 drop and benign-FPR rise on
+S_report, promotions by branch, rollbacks, doses, stop reasons, wall-clock.
+
+**Hypotheses** (paired per seed, 10 seeds, two-sided 95% t-interval; "rejected" means lower bound > 0).
+Fixed sequence — each test is made only if the previous one rejected its null:
+H2 CTRL-SMOTE − REAL_ONLY; H3a CTRL-SMOTE − CTRL-ROS; H3b CTRL-SMOTE − CTRL-THRESH;
+H5 non-inferiority: for each ρ ∈ {1,4}, LB(CTRL-SMOTE − FIXED-SMOTE-ρ) ≥ −ε_ni.
+H4 (separate family): no deployed CTRL-SMOTE model after a promotion has, on S_report, a point stable
+macro-F1 drop > ε_S or benign-FPR rise > ε_FPR against th_base; and the star branch promoted at least once
+in ≥ 6 of 10 seeds (otherwise the result is "safe by inaction", F10).
+Controls, ablations and references are descriptive: paired differences with the same intervals, no
+hypothesis test.
+
+**Falsification / reporting conditions** (never a reason to retune). F2/F3a/F3b: the H2/H3a/H3b lower bound
+≤ 0. F4: an H4 breach, or rollbacks > 20% of promotions. F5: UCB(CTRL-SMOTE − FIXED-SMOTE-ρ) < −ε_ni for
+some ρ (established inferior; failing to establish H5 is "not established"). F7: P2 only. F8: k = 0 in
+> 80% of controller runs with I ≠ ∅. F9: pooled over post-drift windows and seeds, 1 − recall of PortScan on
+NON-ambiguous E rows for the shadow th_R of REAL_ONLY is ≤ ε_def (the GO was ambiguity-driven). F10: shadow
+R-recovery of CTRL-SMOTE exceeds that of REAL_ONLY (LB > 0) while the deployed difference's LB ≤ 0
+(certification bottleneck). F11: a negative control (NC1–NC4) beats REAL_ONLY with LB > 0 (a gain is not
+attributable to class-specific synthetic content).
+
+**Gating.** P2 (WGAN-GP generator, pre-drift-only retrain on D_ref, GPU, cuda assert) runs only if H2, H3a
+and H3b all reject; its single test is CTRL-WGAN − CTRL-SMOTE (F7). P3 (S2): S2 P0 is run under §L.1
+unchanged (criteria scenario S2); only if S2 is GO at some budget, FROZEN, REAL_ONLY, CTRL-ROS, CTRL-THRESH
+and CTRL-SMOTE are run on S2 at its smallest GO budget, seeds 0–9, with R from the S2 P0 summary, and H2 is
+tested the same way. Nothing else is run for P3.
+
+**Prohibited.** Changing any threshold, ladder, arm definition, endpoint or seed set after a P1 result
+exists; selecting a seed, window or arm after seeing outcomes; dropping a failed arm; reporting a
+non-preregistered smoke run as a result.
+<!-- P1-PREREGISTRATION:END -->
+
+### v1.4 results addendum (written after the campaign; outside the hashed block, changes nothing above)
+
+- **P1 (S1, B=100, seeds 0–9, 23 arms, preregistered configuration, rules hash `d96b0313…`)**: H2 not rejected
+  (paired CTRL-SMOTE − REAL_ONLY R-recovery = 0.000, 95% CI [0.000, 0.000], identically 0 in every seed). The fixed
+  sequence stops; **P2 (WGAN-GP) is not run** (gate closed). Fired conditions: F2, F3a, F3b, F8 (59 of 59 controller runs with
+  a need stop at k = 0: no evaluated step had a positive lower bound; max LCB 0.000 / 0.000 / 0.012 for SMOTE / duplication /
+  threshold against η = 0.02). H4: 0 S_report breaches but 0/10 seeds with a promoted synthetic candidate → "safe by inaction".
+- **P3**: the S2 P0 gate was run under the unchanged §L.1 rules (criteria scenario S2, wrapper `p0_s2.py`): valid, outcome
+  NO_GO_NO_ROOM (NO_ROOM at B=25 and B=100, 0 GO cells, assessable in 5/5 seeds) → by the preregistered rule the S2 arms are not
+  run and the S2 conclusion is "real-only adaptation suffices at the assessed budgets".
+- **Exploratory, not preregistered tests** (reported as such): fixed-dose SMOTE candidates are ≈ +0.009 F1 better than real-only
+  candidates (ρ=4, CI [0.006, 0.012]) but deployed ≈ +0.001 (CI includes 0); real-only candidates reach 0.911 vs 0.701 deployed
+  on matched windows (certification gap 0.210); of 62 real-only rejections with a gate report, 26 had a demonstrated utility gain
+  and failed only the envelope (stable-class macro-F1 31×, benign-FPR on D_gate 21×; median 130 benign gate rows).
+- **Provenance**: every seed file carries SHA-256 of all `proteus/intervention/*.py`; the campaign runtime modules are
+  byte-identical across the 10 files and to the current tree. Only `analyze_p1.py` (post-campaign analysis edits: removal of an
+  unused key, the gate-blocking diagnostic, decision-trace export) and the later-added `p0_s2.py` differ.
+- Hostile-review audit: `docs/P1_HOSTILE_AUDIT.md`; paper: `paper/p1/`.
 
 ## v1.3 changes (supersede any conflicting v1.0–v1.2 text below; §1.5 thresholds are unchanged)
 
