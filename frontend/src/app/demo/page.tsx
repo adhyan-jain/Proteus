@@ -124,6 +124,10 @@ export default async function OverviewPage() {
 
   return (
     <div className="flex flex-col gap-5">
+      <div className="rounded border border-warn/40 bg-warn-dim/20 px-4 py-2.5 text-[12px] text-text-secondary">
+        <strong className="text-warn">LEGACY DEMO.</strong> Demo-scale single-seed console. Its “closed-loop vs baseline” gain is driven by oracle labels on
+        most of every window and is <strong>not</strong> evidence that synthetic data helps; the evidence is on the Research pages.
+      </div>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <h1 className="text-[15px] font-semibold text-text-primary">System Overview</h1>

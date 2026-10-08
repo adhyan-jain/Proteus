@@ -4,12 +4,19 @@ import { chromium } from "playwright";
 import fs from "node:fs";
 import path from "node:path";
 
-const BASE = process.env.QA_BASE_URL ?? "http://localhost:3100";
+const BASE = process.env.QA_BASE_URL ?? "http://localhost:3300";
 const OUT_DIR = path.resolve(import.meta.dirname, "screenshots");
 fs.mkdirSync(OUT_DIR, { recursive: true });
 
 const ROUTES = [
   "/",
+  "/research/p0",
+  "/research/p1",
+  "/research/controller",
+  "/research/safety",
+  "/research/ablations",
+  "/research/limits",
+  "/demo",
   "/live-detection",
   "/experiments",
   "/drift",

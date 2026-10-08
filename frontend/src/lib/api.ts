@@ -13,7 +13,7 @@ function getApiBase(): string {
 
 export type NotAvailable = { available: false; reason: string };
 
-async function get<T>(path: string): Promise<T> {
+export async function get<T>(path: string): Promise<T> {
   const base = getApiBase();
   const res = await fetch(`${base}${path}`, { cache: "no-store" });
   if (!res.ok) {
@@ -132,14 +132,16 @@ export type DatasetSummary =
   | NotAvailable;
 
 export type ModelsInfo = {
-  demo_model: {
-    name: string;
-    trained_on: string;
-    n_features: number;
-    class_names: string[];
-    conditions_trained: string[];
+  deployed_model: {
+    release_version: string;
+    version: string;
+    created_at: string;
+    model_type: string;
+    training_metadata: { dataset: string; n_samples: number; n_features: number; n_classes: number };
+    artifacts: { model: { sha256: string; size_bytes: number } };
   } | null;
-  full_scale_model: NotAvailable;
+  active_release: string | null;
+  demo_results: { data_source: string | null; conditions: string[] | null };
   insdn_model: NotAvailable;
 };
 

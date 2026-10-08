@@ -14,26 +14,28 @@ export default async function ModelsPage() {
       <h1 className="text-[15px] font-semibold text-text-primary">Models & Datasets</h1>
 
       <Panel>
-        <PanelHeader title="Demo-Scale Model" subtitle="Trained inside the single results.pkl experiment run" />
+        <PanelHeader title="Deployed demo release" subtitle="The versioned model artifact served by the inference API (demo scale, not a research model)" />
         <PanelBody>
-          {models.demo_model ? (
+          {models.deployed_model ? (
             <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-              <Stat label="Trained on" value={models.demo_model.trained_on} />
-              <Stat label="Features" value={fmtInt(models.demo_model.n_features)} />
-              <Stat label="Classes" value={String(models.demo_model.class_names.length)} />
-              <Stat label="Conditions trained" value={models.demo_model.conditions_trained.join(", ")} />
+              <Stat label="Release" value={models.active_release ?? models.deployed_model.release_version} />
+              <Stat label="Model" value={models.deployed_model.model_type} />
+              <Stat label="Trained on" value={`${models.deployed_model.training_metadata.dataset}`} />
+              <Stat label="Features / classes" value={`${fmtInt(models.deployed_model.training_metadata.n_features)} / ${models.deployed_model.training_metadata.n_classes}`} />
+              <Stat label="Training samples" value={fmtInt(models.deployed_model.training_metadata.n_samples)} />
+              <Stat label="Demo run data" value={models.demo_results.data_source ?? "—"} />
             </div>
           ) : (
-            <EmptyState reason="No demo model trained yet." />
+            <EmptyState reason="No model release is loaded by the API." />
           )}
         </PanelBody>
       </Panel>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Panel>
-          <PanelHeader title="Full-Scale Model (CICIDS2017/InSDN)" />
+          <PanelHeader title="Research models (CICIDS2017, P0/P1)" />
           <PanelBody>
-            <EmptyState title="NOT AVAILABLE" reason={models.full_scale_model.reason} />
+            <EmptyState title="NOT PERSISTED" reason="The research pipeline refits the random forest at every window and seed and keeps only the decisions and scores in results/p1/*.json; there is no research model artifact to serve." />
           </PanelBody>
         </Panel>
         <Panel>

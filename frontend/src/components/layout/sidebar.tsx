@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { NAV_ITEMS } from "./nav-items";
+import { NAV_GROUPS } from "./nav-items";
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -14,29 +14,36 @@ export function Sidebar() {
         <span className="text-[13px] font-bold tracking-[0.14em] text-text-primary">PROTEUS</span>
       </div>
       <nav className="flex-1 overflow-y-auto py-2">
-        {NAV_ITEMS.map((item) => {
-          const active = pathname === item.href;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-2 border-l-2 px-4 py-2 text-[12.5px] transition-colors",
-                active
-                  ? "border-network bg-surface-2 text-text-primary"
-                  : "border-transparent text-text-secondary hover:border-border-strong hover:bg-surface-2/60 hover:text-text-primary"
-              )}
-            >
-              {item.label}
-            </Link>
-          );
-        })}
+        {NAV_GROUPS.map((group) => (
+          <div key={group.title} className="mb-2">
+            <p className="px-4 pb-1 pt-2 text-[9.5px] font-semibold uppercase tracking-[0.14em] text-text-disabled">
+              {group.title}
+            </p>
+            {group.items.map((item) => {
+              const active = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "flex items-center gap-2 border-l-2 px-4 py-1.5 text-[12.5px] transition-colors",
+                    active
+                      ? "border-network bg-surface-2 text-text-primary"
+                      : "border-transparent text-text-secondary hover:border-border-strong hover:bg-surface-2/60 hover:text-text-primary"
+                  )}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
+        ))}
       </nav>
       <div className="border-t border-border-subtle px-4 py-3">
         <p className="mono text-[10px] leading-relaxed text-text-disabled">
-          drift-aware GAN-augmented IDS
+          feedback-controlled synthetic
           <br />
-          research prototype
+          intervention · research
         </p>
       </div>
     </aside>
