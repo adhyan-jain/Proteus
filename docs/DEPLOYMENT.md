@@ -41,7 +41,7 @@ Proteus cleanly separates **offline research, training, and benchmarking** from 
 ## 2. Model Artifact Management & Release Versioning
 
 > [!NOTE]
-> **Deployment Artifact Scope**: The default release bundle (`v001`, `models/releases/v001/`) is a lightweight 5-class reference model (`NSL-KDD-Schema-Reference`, 52 features) designed for low-latency live API inference, container healthchecks, and frontend dashboard telemetry. The full-scale 25-class Stage 7 research experiments (`CICIDS2017`, 78 features, 1.2M flows) operate via `proteus.closed_loop_full` in the offline research benchmarking pipeline, reporting metrics to `results/results.pkl` and `METRICS_HISTORY.md`.
+> **Deployment Artifact Scope**: The default release bundle (`v001`, `models/releases/v001/`) is a lightweight 5-class reference model (`NSL-KDD-Schema-Reference`, 52 features) designed for low-latency live API inference, container healthchecks, and frontend dashboard telemetry. The full-scale 25-class Stage 7 research experiments (`CICIDS2017`, 78 features, 1.2M flows) operate via `proteus.closed_loop_full` in the offline research benchmarking pipeline, writing its metrics to `results/`.
 
 Model artifacts are managed under `models/releases/` as immutable, versioned bundles with cryptographic SHA256 checksums, with `models/active_release.json` maintaining the active production pointer:
 

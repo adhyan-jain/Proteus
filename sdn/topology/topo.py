@@ -19,7 +19,7 @@ see CLAUDE.md's environment-discipline rule):
     sudo python3 sdn/topology/topo.py
 
 or via the smoke test script (sdn/topology/smoke_test.sh), which also starts the Ryu controller
-first. NOT run by this agent session -- no sudo access here (see STATUS.md). Import-checked
+first. NOT run by this agent session -- no sudo access here (see ARCHITECTURE.md). Import-checked
 (`python3 -c "from mininet... import ..."` succeeds) and syntax-checked
 (`python3 -m py_compile`), not yet executed against a live kernel.
 """

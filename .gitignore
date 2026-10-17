@@ -12,16 +12,7 @@ node_modules/
 .next/
 .agents/
 logs/
-*.aux
-*.bbl
-*.blg
-*.log
-*.out
-*.toc
-*.fls
-*.fdb_latexmk
-*.synctex.gz
 
 results/cache/
 
-results/p1_smoke/
+graphify-out/

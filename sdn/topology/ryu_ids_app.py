@@ -4,7 +4,7 @@ scale-up.
 Two jobs:
   1. Basic L2 learning-switch forwarding, so the Mininet topology in topo.py actually carries
      traffic (built directly on `ryu.app.simple_switch_13.SimpleSwitch13`, Ryu's own reference
-     app, confirmed working on this machine per STATUS.md -- extended, not reinvented).
+     app, confirmed working on this machine per ARCHITECTURE.md -- extended, not reinvented).
   2. Periodic live OpenFlow flow-stats export, mapped onto Stage 1's unified feature schema via
      `feature_mapper.map_flow_stat_to_schema()` (see that module's docstring for exactly which
      schema columns can/cannot be populated from a live stat poll and why).
@@ -18,7 +18,7 @@ and bind its OpenFlow listener (default 0.0.0.0:6653) waiting for a switch to co
 in this session: `ryu-manager --verbose` loads this module cleanly (imports resolve, app
 registers, listener binds) with no Mininet/root involved. What could NOT be verified without
 root: an actual OVS switch (from topo.py, run with sudo) connecting to it and real flow-stats
-replies arriving -- that needs the repo owner's sudo session, see STATUS.md.
+replies arriving -- that needs the repo owner's sudo session, see ARCHITECTURE.md.
 
 ## Extension point for Stage 6 (live classifier inference)
 
@@ -32,11 +32,10 @@ route drift-detector-flagged samples onward -- deliberately not done here per th
 in the brief.
 """
 import sys
-from operator import attrgetter
 
 from ryu.app import simple_switch_13
 from ryu.controller import ofp_event
-from ryu.controller.handler import CONFIG_DISPATCHER, DEAD_DISPATCHER, MAIN_DISPATCHER
+from ryu.controller.handler import DEAD_DISPATCHER, MAIN_DISPATCHER
 from ryu.controller.handler import set_ev_cls
 from ryu.lib import hub
 from ryu.lib.packet import ether_types, ethernet, ipv4, packet, tcp, udp

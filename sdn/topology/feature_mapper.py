@@ -72,7 +72,7 @@ Left as `None` (schema columns present, value explicitly missing, never fabricat
     packet_count); no per-packet length samples are available from an aggregate counter.
 
 This is intentionally a partial, honestly-labeled mapping -- see the module docstring above and
-`STATUS.md` for the summary. Extending it (flow pairing, packet-in-timestamp IAT tracking) is
+`ARCHITECTURE.md` for the summary. Extending it (flow pairing, packet-in-timestamp IAT tracking) is
 future work, not silently faked here.
 """
 from __future__ import annotations

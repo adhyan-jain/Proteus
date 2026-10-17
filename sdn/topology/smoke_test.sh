@@ -5,7 +5,7 @@
 # controller path.
 #
 # REQUIRES ROOT (Mininet creates network namespaces at runtime) and cannot be run by an agent
-# session in this repo -- no sudo access is available there (see STATUS.md). Run this yourself:
+# session in this repo -- no sudo access is available there (see ARCHITECTURE.md). Run this yourself:
 #
 #   sudo bash sdn/topology/smoke_test.sh
 #
@@ -59,13 +59,13 @@ APP="$REPO_ROOT/sdn/topology/ryu_ids_app.py"
 TOPO="$REPO_ROOT/sdn/topology/topo.py"
 
 if [[ ! -x "$RYU_BIN" ]]; then
-    echo "FAIL: $RYU_BIN not found -- run sdn/setup_ryu_venv.sh first (per STATUS.md, this is" >&2
+    echo "FAIL: $RYU_BIN not found -- run sdn/setup_ryu_venv.sh first (per ARCHITECTURE.md, this is" >&2
     echo "already done on this machine as of the last handoff, but check)." >&2
     exit 1
 fi
 
 if ! command -v mn >/dev/null 2>&1; then
-    echo "FAIL: 'mn' not found -- Mininet isn't installed. See STATUS.md's Blocked section." >&2
+    echo "FAIL: 'mn' not found -- Mininet isn't installed. See ARCHITECTURE.md's Known limits section." >&2
     exit 1
 fi
 

@@ -35,7 +35,7 @@ def attack_like(dst_ip: str, port_start: int = 1, port_end: int = 200, timeout: 
     """A fast sweep across many ports in quick succession -- the traffic shape CICIDS2017/InSDN
     label as a port-scan/probe attack: many short-lived connection attempts to one host across
     a wide port range in a short time window. Not hping3/nmap (neither is installed on this
-    machine as of this writing -- see STATUS.md), but the same recognizable pattern using only
+    machine as of this writing -- see ARCHITECTURE.md), but the same recognizable pattern using only
     the stdlib socket module already available in every Mininet host."""
     print(f"[attack-like] scanning {dst_ip} ports {port_start}-{port_end}")
     opened = 0

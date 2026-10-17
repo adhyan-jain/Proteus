@@ -2,11 +2,9 @@
 
 Proteus is a drift-aware, GAN-augmented intrusion detection system (IDS) for
 Software-Defined Networks (SDN). This file is the standing operating manual for any Claude
-Code session working in this repo. **Read `STATUS.md` first** — it has the current running
-state, what's blocked, and what's mid-decision, updated at the end of every session. This file
-is the operating rules; `STATUS.md` is "where things actually are right now." See also
-`ARCHITECTURE.md` (what exists and how it fits together), `CHANGELOG.md` (how it got this way,
-in order), and `METRICS_HISTORY.md` (every real metric any run has produced, over time).
+Code session working in this repo. Read `README.md` (what it is, how to run it) and
+`ARCHITECTURE.md` (how it fits together, and **Known limits**, which is the live list of what is
+broken or unverified) before changing anything.
 
 ## Absolute rules — non-negotiable
 
@@ -40,12 +38,13 @@ in order), and `METRICS_HISTORY.md` (every real metric any run has produced, ove
    plausible-looking made-up number.
 6. **Statistical rigor for any final reported result**: a minimum of 5 random seeds, mean +
    95% confidence interval, not a single run presented as "the" result — this applies to the
-   full-scale evaluation pipeline (Stage 7 in `ARCHITECTURE.md`'s stage numbering), not
+   full-scale evaluation pipeline (`proteus/evaluate_full.py`), not
    necessarily to every intermediate diagnostic.
 7. **Do not modify `app.py`** (the Streamlit demo) or anything under `frontend/`/`api/` (the
    Next.js mission-control UI + its data API) unless a backend change makes one of them
    genuinely unable to run (a function signature it calls no longer exists — not a cosmetic
-   number mismatch). If you must touch it, change the minimum necessary and say exactly what
+   number mismatch). One explicit exception was granted on 2026-10-17: removing the
+   research-console wiring from `api/` and `frontend/`. If you must touch it, change the minimum necessary and say exactly what
    and why in the commit message. These are both explicitly frozen, standing-instruction files
    from the repo owner — they get touched only on direct, explicit request.
 8. **Git discipline**:
@@ -83,38 +82,20 @@ in order), and `METRICS_HISTORY.md` (every real metric any run has produced, ove
 
 ## Where things are
 
-- `proteus/` — Python backend. `data.py`/`baseline.py`/`gan.py`/`drift.py`/`fidelity.py`/
-  `stream.py`/`pipeline.py` are the small, fast **demo** backend behind `app.py` (Streamlit) —
-  frozen, see rule 7. `data_full.py`/`gan_full.py` are the **paper-grade, full-scale** backend
-  built on real CICIDS2017 + InSDN — this is where new backend work happens.
-- `data/MANIFEST.md` — the source-of-truth record of exactly where every dataset came from,
-  with hashes. Update it whenever a dataset source changes.
-- `api/` — read-only FastAPI layer serving `results/results.pkl` and precomputed dataset
-  summaries as JSON, for the Next.js frontend to consume. Shares `.venv`.
-- `frontend/` — the Next.js/TypeScript/Tailwind "mission control" UI. Separate from, and does
-  not replace, the Streamlit demo.
-- `sdn/` — Ryu controller venv setup (`setup_ryu_venv.sh`, tested and reproducible) and its
-  frozen requirements snapshot. Mininet itself is a system package, not something pip-installed
-  here — see `ARCHITECTURE.md` for current install status.
-- `checkpoints/` — model checkpoints (gitignored, large binaries).
-- `results/` — computed run artifacts, several formats (`.pkl` for the demo, `.json` for the
-  full-scale pipeline's diagnostics) — gitignored, regenerate by re-running the relevant script.
-- `ARCHITECTURE.md` — current-state system description.
-- `CHANGELOG.md` — chronological record of how the system got here, stage by stage, including
-  what changed and why when the spec itself changed mid-project.
+See the layout table in `README.md`. In short: `proteus/` backend (the `*_full` modules are
+the paper-grade, full-scale path where new backend work happens; the others are the frozen
+demo), `api/` read-only FastAPI layer, `frontend/` Next.js console, `sdn/` Ryu/Mininet,
+`models/` release bundles, `data/MANIFEST.md` dataset provenance (update it whenever a dataset
+source changes). `checkpoints/` and `results/` are gitignored run artifacts. The earlier research
+programme (preregistered studies, papers, dossiers) was archived outside the repo on 2026-10-17;
+its short summary is in `README.md`.
 
 ## Before you start any new work
 
-1. Check `git log --oneline` and `git status` to see what else is in flight — this repo has had
-   multiple concurrent agents; don't assume a clean starting state.
+1. Check `git log --oneline` and `git status` — this repo has had multiple concurrent agents;
+   don't assume a clean starting state.
 2. If touching training code, verify GPU availability first (rule 1).
-3. If touching dataset loading, check `data/MANIFEST.md` for the sourcing standard already
-   established — match it, don't regress to an unverified mirror.
-4. Update `ARCHITECTURE.md` and `CHANGELOG.md` when you land a real architectural or
-   pipeline-stage change — not for every commit, but whenever a future session would need this
-   context to understand the system's current shape or why it diverged from an earlier plan.
-5. **Append to `METRICS_HISTORY.md` whenever a run produces new real metrics** — a training
-   run, an evaluation pass, a diagnostic. This is a standing rule, not optional: the file exists
-   specifically so metrics are comparable across runs over time instead of scattered across
-   individual JSON artifacts and scrollback. Follow its template; every number must trace to an
-   artifact that actually exists on disk (note the path), never a backfilled or estimated value.
+3. If touching dataset loading, check `data/MANIFEST.md` for the sourcing standard — match it,
+   don't regress to an unverified mirror.
+4. When you change behaviour, update the **Known limits** list in `ARCHITECTURE.md` so it stays
+   true. Every number you report must come from a computation that actually ran (rule 5).

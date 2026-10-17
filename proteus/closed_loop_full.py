@@ -13,7 +13,7 @@ local Mininet/Ryu traffic stream," with drift injected via real held-out attack 
 replayed into the emulated topology. **That live-Mininet integration is not what this module
 does today** -- Mininet requires root at runtime, this environment has no sudo access, and
 Stage 0's smoke test (which must pass before anything downstream can honestly be called "live")
-has not been run. See `STATUS.md` for that blocker.
+has not been run. See `ARCHITECTURE.md` for that blocker.
 
 What this module *does* provide, and what it's honest to call it: a `TrafficSource` protocol
 with two implementations --
@@ -63,7 +63,7 @@ class TrafficSource(ABC):
 
 class LiveMininetSource(TrafficSource):
     """NOT YET USABLE -- requires Stage 0's smoke test to pass first (needs root, see
-    STATUS.md). Placeholder showing the intended integration shape: reads exported schema rows
+    ARCHITECTURE.md). Placeholder showing the intended integration shape: reads exported schema rows
     from the Ryu controller (sdn/topology/ryu_ids_app.py) via whatever IPC/queue mechanism gets
     built once that's live (a file-based queue, a local socket, etc. -- deliberately not
     decided here, since designing it before the smoke test passes would be guessing at
@@ -72,7 +72,7 @@ class LiveMininetSource(TrafficSource):
     def __init__(self, *args, **kwargs):
         raise NotImplementedError(
             "LiveMininetSource requires Stage 0's Mininet smoke test to pass first (needs the "
-            "repo owner's sudo session -- see STATUS.md's 'Blocked' section). Use "
+            "repo owner's sudo session -- see ARCHITECTURE.md's 'Known limits'). Use "
             "RealDataReplaySource for now, and label any results from it as replay-based, not "
             "live-traffic, per this module's docstring.")
 

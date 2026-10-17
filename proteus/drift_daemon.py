@@ -17,7 +17,7 @@ import os
 import threading
 import time
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Any, Callable
+from typing import Dict, List, Optional, Tuple, Any
 
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
@@ -317,8 +317,6 @@ class AutonomousDriftWorker:
                 self.state = "MONITORING"
                 return
 
-            # Reconstruct reference reservoir from base model training or buffer
-            ref_samples = getattr(active_bundle.clf, "n_samples_seen_", 5000)
             log.info(f"Retraining BoundedBufferClassifier on {len(X_recent)} recent streaming flows...")
 
             # Initialize BoundedBufferClassifier
