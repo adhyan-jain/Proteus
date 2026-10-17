@@ -83,9 +83,6 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-from api.research import router as research_router  # noqa: E402  read-only research artifacts
-app.include_router(research_router)
-
 # CORS setup for web frontend
 app.add_middleware(
     CORSMiddleware,
