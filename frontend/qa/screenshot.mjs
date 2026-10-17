@@ -10,13 +10,6 @@ fs.mkdirSync(OUT_DIR, { recursive: true });
 
 const ROUTES = [
   "/",
-  "/research/p0",
-  "/research/p1",
-  "/research/controller",
-  "/research/safety",
-  "/research/ablations",
-  "/research/limits",
-  "/demo",
   "/live-detection",
   "/experiments",
   "/drift",

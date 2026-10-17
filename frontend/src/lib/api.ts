@@ -13,7 +13,7 @@ function getApiBase(): string {
 
 export type NotAvailable = { available: false; reason: string };
 
-export async function get<T>(path: string): Promise<T> {
+async function get<T>(path: string): Promise<T> {
   const base = getApiBase();
   const res = await fetch(`${base}${path}`, { cache: "no-store" });
   if (!res.ok) {

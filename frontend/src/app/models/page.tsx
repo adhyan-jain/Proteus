@@ -14,7 +14,7 @@ export default async function ModelsPage() {
       <h1 className="text-[15px] font-semibold text-text-primary">Models & Datasets</h1>
 
       <Panel>
-        <PanelHeader title="Deployed demo release" subtitle="The versioned model artifact served by the inference API (demo scale, not a research model)" />
+        <PanelHeader title="Deployed demo release" subtitle="The versioned model artifact served by the inference API (demo scale)" />
         <PanelBody>
           {models.deployed_model ? (
             <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -32,12 +32,6 @@ export default async function ModelsPage() {
       </Panel>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <Panel>
-          <PanelHeader title="Research models (CICIDS2017, P0/P1)" />
-          <PanelBody>
-            <EmptyState title="NOT PERSISTED" reason="The research pipeline refits the random forest at every window and seed and keeps only the decisions and scores in results/p1/*.json; there is no research model artifact to serve." />
-          </PanelBody>
-        </Panel>
         <Panel>
           <PanelHeader title="InSDN-Trained Model" />
           <PanelBody>

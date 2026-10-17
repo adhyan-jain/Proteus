@@ -1,19 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { research, type StagesDoc } from "@/lib/research";
+import { api, type ExperimentLatest } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 
 export function TopBar() {
-  const [stages, setStages] = useState<StagesDoc | null>(null);
+  const [exp, setExp] = useState<ExperimentLatest | null>(null);
   const [apiUp, setApiUp] = useState<boolean | null>(null);
   const [now, setNow] = useState<string>("");
 
   useEffect(() => {
-    research
-      .stages()
+    api
+      .experimentsLatest()
       .then((d) => {
-        setStages(d);
+        setExp(d);
         setApiUp(true);
       })
       .catch(() => setApiUp(false));
@@ -23,9 +23,7 @@ export function TopBar() {
     return () => clearInterval(id);
   }, []);
 
-  const s = stages?.stages as Record<string, { ran?: boolean }> | undefined;
-  const branch = stages?.stages.gates.p1_branch ?? null;
-  const verdict = branch ? branch.split(":")[0] : null;
+  const experimentAvailable = exp && exp.available;
 
   return (
     <header className="flex h-auto min-h-12 shrink-0 flex-wrap items-center justify-between gap-2 border-b border-border-subtle bg-surface-1 px-3 py-2 sm:px-4 sm:py-0">
@@ -33,17 +31,27 @@ export function TopBar() {
         <Badge tone={apiUp === null ? "idle" : apiUp ? "good" : "bad"} dot>
           {apiUp === null ? "connecting" : apiUp ? "api online" : "api offline"}
         </Badge>
-        <Badge tone={s?.p0_summary?.ran ? "good" : "idle"} className="hidden sm:inline-flex">
-          P0 {s?.p0_summary?.ran ? "frozen" : "not run"}
-        </Badge>
-        <Badge tone={!s?.p1_summary?.ran ? "idle" : verdict === "POSITIVE" ? "good" : verdict === "NEGATIVE" ? "warn" : "network"} className="hidden sm:inline-flex">
-          P1 {s?.p1_summary?.ran ? (verdict ?? "run").toLowerCase() : "not run"}
-        </Badge>
-        <Badge tone="idle" dot className="hidden md:inline-flex">
+        <Badge tone="idle" dot>
           no live controller
         </Badge>
+        {experimentAvailable ? (
+          <Badge tone="network" className="hidden sm:inline-flex">
+            model: proteus-demo-classifier · {exp.class_names.length} classes
+          </Badge>
+        ) : (
+          <Badge tone="idle" className="hidden sm:inline-flex">
+            no experiment run
+          </Badge>
+        )}
       </div>
-      <span className="mono text-[11px] text-text-secondary">{now}</span>
+      <div className="flex items-center gap-4">
+        {experimentAvailable && (
+          <span className="mono hidden text-[11px] text-text-tertiary lg:inline">
+            single-seed demo run · {exp.n_timesteps} timesteps
+          </span>
+        )}
+        <span className="mono text-[11px] text-text-secondary">{now}</span>
+      </div>
     </header>
   );
 }

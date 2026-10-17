@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Proteus — Drift-Aware IDS Console",
-  description: "Research console for a drift-aware, GAN-augmented intrusion detection system for SDN.",
+  description: "Console for a drift-aware, GAN-augmented intrusion detection system for SDN.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
