@@ -79,7 +79,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Proteus SDN-IDS API",
     version=VERSION,
-    description="Drift-Aware, GAN-Augmented Intrusion Detection System API & Research Dashboard Server",
+    description="Drift-Aware, GAN-Augmented Intrusion Detection System API & Dashboard Server",
     lifespan=lifespan,
 )
 

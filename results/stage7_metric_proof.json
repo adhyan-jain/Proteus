@@ -1,9 +1,0 @@
-{
-  "final_macro_f1_25_class": 0.1738082667162422,
-  "mean_post_drift_macro_f1": 0.14948519501219507,
-  "min_post_drift_macro_f1": 0.11710493049545947,
-  "max_post_drift_macro_f1": 0.18497612243246103,
-  "std_post_drift_macro_f1": 0.023697757345058672,
-  "timesteps_evaluated": 16,
-  "n_seeds_in_artifact": 1
-}
