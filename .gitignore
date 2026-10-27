@@ -16,3 +16,24 @@ logs/
 results/cache/
 
 graphify-out/
+
+# research/insdn_controller: derived/regenerable artifacts and the archived invalid study
+research/insdn_controller/feats*/
+research/insdn_controller/tc/
+research/insdn_controller/attacker_ips*.json
+research/insdn_controller/logs_*.txt
+research/insdn_controller/paper/*.aux
+research/insdn_controller/paper/*.log
+research/insdn_controller/paper/*.bbl
+research/insdn_controller/paper/*.blg
+research/insdn_controller/paper/*.fdb_latexmk
+research/insdn_controller/paper/*.fls
+research/insdn_controller/paper/*.out
+
+# live testbed outputs: root-owned raw captures and helper scripts written at run time
+research/insdn_controller/live/out/
+research/insdn_controller/live/out_smoke/
+research/insdn_controller/live/campaign/
+research/insdn_controller/live/_client.py
+research/insdn_controller/live/__pycache__/
+research/insdn_controller/**/__pycache__/

@@ -99,3 +99,22 @@ force-mapped onto an unrelated CICIDS2017 label.
   (19.9%), DDoS (35.5%), Probe (28.5%), DoS (15.6%), BFA (0.41%), Web-Attack (0.056%), BOTNET
   (0.048%), U2R (0.0049%).
 - Stratified 70/15/15 train/val/test split: 240,722 / 51,583 / 51,584 rows.
+
+## InSDN controller-interface PCAPs (research/insdn_controller)
+
+**Source**: same institutional host as the InSDN CSVs (UCD ASEADOS Lab); the PCAP groups sit beside the CSV
+archive.
+
+- Index: `https://aseados.ucd.ie/datasets/SDN/InSDN_PCAPS_Groups/` (HTTP 301 to `aseados.ucd-cs.ie`, same lab)
+- Archives: `Metsplotable-2_Group.zip` (128,670,710 B), `OVS_Group.zip` (214,566,711 B), `Normal_Group.zip`
+  (3,195,931,515 B)
+- Retrieved: 2026-10-27. `Metsplotable-2_Group.zip` and `OVS_Group.zip` were downloaded in full and pass
+  `unzip -t`. For `Normal_Group.zip` only the 11 controller captures (`Normal-ONOS_*.pcap`,
+  `Normal_ONOS.gz_10.pcap`) were extracted via HTTP range requests on the ZIP members (each checked against
+  its recorded uncompressed size); the host-side `Normal-h3_*.pcap` members were not fetched.
+- Used: the 44 `*ONOS*` controller-interface captures (11 benign, 33 attack). SHA-256 of every extracted
+  ONOS capture and of the two full archives: `data/raw/insdn_pcaps/ONOS_CAPTURES.sha256` (gitignored with
+  `data/raw/`).
+- Extracted to `data/raw/insdn_pcaps/ex/` (gitignored, not committed).
+- Used only by `research/insdn_controller/` (controller-native detection study); the paper-grade
+  `proteus/*_full` pipeline still uses the CSVs above.
