@@ -19,7 +19,7 @@
 | Item | Blocker |
 |---|---|
 | Detection evaluated with benign and attack traffic interleaved in one session, in a second testbed (the only way to remove the session/label-coverage confound) | needs labelled attack traffic from an external source; not built in these sessions |
-| Tree-model baseline | `xgboost` install failed on the network; training must stay on the GPU |
+| Tree-model baseline | DONE (W=5 s, strict labels, 10 seeds, GPU): XGBoost BAcc 0.952 ± 0.013 vs linear 0.961 ± 0.011 vs MLP 0.958 ± 0.012 (capture-grouped CV; `results/v4_strict_W5_xgb.json`). Trees give no gain. |
 | Fourth review pass | after the paper update with the corrected-campaign numbers (the third review is done and applied: verdict "defensible as a scoped workshop measurement-and-validity paper, not a detector paper") |
 
 ## Honest venue assessment
