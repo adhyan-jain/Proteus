@@ -1,0 +1,24 @@
+<section id="packetin" data-transition="fade" style="background:#F6F4EF;color:#1C2430;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:space-between;gap:32px">
+<h2 style="font-size:60px;font-weight:600;line-height:1.1">What it does see: roughly one PacketIn per data packet</h2>
+<div style="display:flex;gap:48px">
+<table style="width:50%;font-size:26px">
+<tr><th style="width:44%">Metasploitable-2</th><th style="width:30%">Target pkts</th><th style="width:26%">Ratio</th></tr>
+<tr><td>Brute force</td><td>1,311</td><td>1.20</td></tr>
+<tr><td>DDoS</td><td>652,495</td><td>1.22</td></tr>
+<tr><td>DoS</td><td>13,078</td><td>15.69</td></tr>
+<tr><td>Exploit</td><td>86</td><td>3.86</td></tr>
+<tr><td>Probe</td><td>507,650</td><td>1.01</td></tr>
+</table>
+<table style="width:50%;font-size:26px">
+<tr><th style="width:44%">OVS host</th><th style="width:30%">Target pkts</th><th style="width:26%">Ratio</th></tr>
+<tr><td>Botnet</td><td>902</td><td>1.11</td></tr>
+<tr><td>DDoS</td><td>6,510,923</td><td>0.08</td></tr>
+<tr><td>Probe</td><td>86,705</td><td>1.29</td></tr>
+<tr><td>Brute force</td><td>5,892</td><td>0.68</td></tr>
+<tr><td>App. and net. DoS</td><td>604,511</td><td>1.03–1.09</td></tr>
+<tr><td>Web</td><td>987</td><td>1.22</td></tr>
+</table>
+</div>
+<p style="font-size:30px;line-height:1.35;color:#4A5568">Ratio = PacketIns seen by ONOS ÷ data packets recorded at the target. Nine of twelve scenarios fall between 0.68 and 1.29. The OVS DDoS is the outlier: 6.5M target packets but few PacketIns, consistent with control-channel saturation (not tested directly).</p>
+<aside>The ratios compare two separately recorded captures, so they are indicative, not an exact per-packet count; time alignment between the captures is unverified. Metasploitable DoS (15.7) and exploit (3.9) show the controller sees more than the target capture recorded. The corrected parser matters here: the first version lost up to 90 percent of PacketIns on the DDoS captures; the fixed one drops 12 KB out of 7.38M decoded messages. Values are from results/gap_attack_v2.json.</aside>
+</section>

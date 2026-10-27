@@ -1,0 +1,23 @@
+<section id="contrib" data-transition="fade" style="background:#F6F4EF;color:#1C2430;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:space-between;gap:36px">
+<h2 style="font-size:64px;font-weight:600;line-height:1.1">Contributions</h2>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:28px">
+<div style="display:flex;flex-direction:column;gap:12px;background:#FFFFFF;padding:36px;border:1px solid #DDD9CF;border-radius:16px">
+<p style="font-family:'IBM Plex Mono', monospace;font-size:26px;color:#8A5A12">1 · MEASURED GAP</p>
+<p style="font-size:30px;line-height:1.35">Inside InSDN, the controller’s flow entries are MAC pairs or eth_type only, and it sees about one PacketIn per target packet in most scenarios.</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;background:#FFFFFF;padding:36px;border:1px solid #DDD9CF;border-radius:16px">
+<p style="font-family:'IBM Plex Mono', monospace;font-size:26px;color:#8A5A12">2 · PIPELINE</p>
+<p style="font-size:30px;line-height:1.35">A reproducible OpenFlow 1.3 control-channel parser and featuriser for InSDN’s 44 ONOS captures, with parser loss reported.</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;background:#FFFFFF;padding:36px;border:1px solid #DDD9CF;border-radius:16px">
+<p style="font-family:'IBM Plex Mono', monospace;font-size:26px;color:#8A5A12">3 · DETECTION FROM THAT VIEW</p>
+<p style="font-size:30px;line-height:1.35">0.946 balanced accuracy on unseen captures; the PacketIn-rate heuristic reaches 0.616; simple models suffice.</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;background:#0F1B2D;color:#F6F4EF;padding:36px;border-radius:16px">
+<p style="font-family:'IBM Plex Mono', monospace;font-size:26px;color:#5CC8B8">4 · EVALUATION LESSON</p>
+<p style="font-size:30px;line-height:1.35">InSDN sessions are separable from background traffic alone (0.94), so report within-session, capture-grouped results.</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.35;color:#4A5568">Plus a fifth: a Mininet/Ryu study showing forwarding granularity and timeouts set what an IDS can observe. Novelty rests on “inside InSDN, controller-observable only”; LAN-SDN-NIDS (2026) builds a new dataset instead.</p>
+<aside>Claim carefully. We are not first to use control-plane telemetry: Arévalo-Herrera et al. (Data, 2026) released a new dataset with PacketIn and FlowMod metrics. What we add is the measurement inside the most-used existing SDN benchmark, its controller captures analysed for the first time as far as our searches show (searches are not proof), the controller-observable-only evaluation, and the confound quantification. Related work verified: Sarhan et al. 2022, Engelen et al. 2021, Pinto et al. 2025, Pekar and Jozsa 2024, Arp et al. 2022.</aside>
+</section>

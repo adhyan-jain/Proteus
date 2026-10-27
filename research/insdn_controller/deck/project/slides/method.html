@@ -1,0 +1,23 @@
+<section id="method" data-transition="fade" style="background:#F6F4EF;color:#1C2430;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:space-between;gap:40px">
+<h2 style="font-size:64px;font-weight:600;line-height:1.1">Method: parse the control channel, label from the dataset’s own flows</h2>
+<div style="display:flex;gap:28px">
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;background:#FFFFFF;padding:36px;border:1px solid #DDD9CF;border-radius:16px">
+<p style="font-family:'IBM Plex Mono', monospace;font-size:26px;color:#8A5A12">1 · PARSE</p>
+<p style="font-size:30px;line-height:1.35">44 ONOS captures (11 benign, 33 attack, 7 classes). 7.38M OpenFlow messages decoded; 134 resyncs, 12 KB lost.</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;background:#FFFFFF;padding:36px;border:1px solid #DDD9CF;border-radius:16px">
+<p style="font-family:'IBM Plex Mono', monospace;font-size:26px;color:#8A5A12">2 · FEATURES</p>
+<p style="font-size:30px;line-height:1.35">22 per 1 s window from PacketIn headers and flow-stats deltas, with 3 windows of history.</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;background:#FFFFFF;padding:36px;border:1px solid #DDD9CF;border-radius:16px">
+<p style="font-family:'IBM Plex Mono', monospace;font-size:26px;color:#8A5A12">3 · LABELS</p>
+<p style="font-size:30px;line-height:1.35">Window = attack iff a PacketIn’s 5-tuple matches an attack flow in InSDN’s CSV. Unmatched windows inside attack captures are excluded.</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;background:#0F1B2D;color:#F6F4EF;padding:36px;border-radius:16px">
+<p style="font-family:'IBM Plex Mono', monospace;font-size:26px;color:#5CC8B8">4 · PROTOCOL</p>
+<p style="font-size:30px;line-height:1.35">No capture in both train and test. 10 seeds, GPU training, balanced accuracy.</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.35;color:#4A5568">Truncated PacketIns (182k, headers only) still parse, so labels are unaffected.</p>
+<aside>Labels are the part reviewers will probe. A window is labelled by matching each PacketIn’s embedded 5-tuple, in either direction, to the Flow IDs in InSDN’s own CSV. We tried an alternative that also counts IPs seen only in attack flows; it covers spoofed floods but overlaps with the IP-count features, so it is a sensitivity variant. Strict labels leave brute force, web and exploit with only 6 to 12 attack windows each; say this up front. Parser reliability: the first parser dropped the whole stream buffer on any desync and lost up to 90 percent of PacketIns on some DDoS captures; the resync fix reduced loss to 12 KB.</aside>
+</section>

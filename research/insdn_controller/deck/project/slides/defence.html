@@ -1,0 +1,12 @@
+<section id="defence" data-transition="fade" style="background:#0F1B2D;color:#F6F4EF;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:space-between;gap:32px">
+<h2 style="font-size:60px;font-weight:600;line-height:1.1">Likely questions, and honest answers</h2>
+<table style="width:100%;font-size:26px;color:#F6F4EF">
+<tr><th style="width:32%">Question</th><th style="width:68%">Answer</th></tr>
+<tr><td>Is this just a better classifier?</td><td>No. A linear model matches the MLP. The claim is the measured controller view and the evaluation protocol.</td></tr>
+<tr><td>Is it novel?</td><td>Within InSDN, controller-observable only: yes as far as searches show. Not first to use control-plane telemetry.</td></tr>
+<tr><td>Is the session confound fatal?</td><td>It inflates capture-level scores. Within-session, non-empty windows still give 0.906 per capture.</td></tr>
+<tr><td>One testbed only?</td><td>Yes. Next: a live Mininet and Ryu study comparing forwarding apps, with interleaved benign and attack traffic.</td></tr>
+</table>
+<p style="font-size:28px;line-height:1.35;color:#C9D3E0">Limits: one InSDN testbed · strict labels leave brute force, web and exploit with 6 to 12 attack windows · no tree baseline · offline replay · live study is benign-only on one switch, so no cross-testbed detection yet.</p>
+<aside>Robustness, all computed: 5 s windows give 0.958 overall and 0.944 within attack sessions. Under the broader IP-based label rule the MLP drops to 0.881 (1 s) and 0.887 (5 s), still well above the best threshold (0.748 and 0.769), but Metasploitable-2 to OVS transfer no longer beats a threshold (0.678 vs 0.678). What is still open for a journal version: a second attack testbed with interleaved benign and attack traffic, and detection under the other forwarding modes. Figures come from results/v4_*.json, results/gap_attack_v2.json and results/live_modes_v2.json.</aside>
+</section>

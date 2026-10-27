@@ -1,0 +1,15 @@
+<section id="problem" data-transition="fade" style="background:#F6F4EF;color:#1C2430;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:space-between;gap:48px">
+<h2 style="font-size:68px;font-weight:600;line-height:1.1">Benchmarks score features a controller never receives</h2>
+<div style="display:flex;gap:40px">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#FFFFFF;padding:44px;border:1px solid #DDD9CF;border-radius:16px">
+<p style="font-family:'IBM Plex Mono', monospace;font-size:26px;color:#8A5A12;text-transform:uppercase;letter-spacing:1px">What the benchmark gives</p>
+<p style="font-size:34px;line-height:1.35">InSDN CSV: 80+ CICFlowMeter statistics per bidirectional 5-tuple flow, computed offline from packet captures at the victim host.</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#0F1B2D;color:#F6F4EF;padding:44px;border-radius:16px">
+<p style="font-family:'IBM Plex Mono', monospace;font-size:26px;color:#5CC8B8;text-transform:uppercase;letter-spacing:1px">What an OpenFlow controller gets</p>
+<p style="font-size:34px;line-height:1.35">PacketIn headers, packet and byte counters of the flow entries it installed, and its own FlowMod and PacketOut decisions.</p>
+</div>
+</div>
+<p style="font-size:38px;font-weight:500;line-height:1.3">Question: what can be detected from the controller’s own view?</p>
+<aside>This is the gap. Inter-arrival moments, per-direction length statistics and flag counts cannot be computed by a controller. Prior work criticises benchmark flow features for realism (Engelen et al., Pinto et al., Pekar and Jozsa) but none of it asks what an SDN controller actually observes. InSDN is convenient because its authors also captured the ONOS controller interface during every scenario.</aside>
+</section>

@@ -1,0 +1,18 @@
+<section id="results" data-transition="fade" style="background:#0F1B2D;color:#F6F4EF;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:space-between;gap:32px">
+<h2 style="font-size:60px;font-weight:600;line-height:1.1">On unseen captures, simple models detect from the controller view</h2>
+<table style="width:100%;font-size:26px;color:#F6F4EF">
+<tr><th style="width:46%">Method</th><th style="width:20%">Balanced acc.</th><th style="width:17%">Recall</th><th style="width:17%">FPR</th></tr>
+<tr><td>MLP, all features</td><td>0.946 ± 0.016</td><td>0.893</td><td>0.001</td></tr>
+<tr><td>MLP, PacketIn features only</td><td>0.943 ± 0.015</td><td>0.887</td><td>0.002</td></tr>
+<tr><td>Logistic regression</td><td>0.939 ± 0.016</td><td>0.887</td><td>0.009</td></tr>
+<tr><td>MLP, single window</td><td>0.934 ± 0.015</td><td>0.870</td><td>0.003</td></tr>
+<tr><td>Threshold: source-IP entropy</td><td>0.852 ± 0.029</td><td>0.763</td><td>0.059</td></tr>
+<tr><td>Threshold: dst-port entropy</td><td>0.839 ± 0.018</td><td>0.736</td><td>0.059</td></tr>
+<tr><td>MLP, flow-stats features only</td><td>0.699 ± 0.036</td><td>0.683</td><td>0.284</td></tr>
+<tr><td>Threshold: PacketIn burst</td><td>0.643 ± 0.008</td><td>0.912</td><td>0.627</td></tr>
+<tr><td>Threshold: PacketIn rate</td><td>0.616 ± 0.011</td><td>0.793</td><td>0.561</td></tr>
+</table>
+<p style="font-size:30px;line-height:1.35;color:#C9D3E0">A linear model matches the MLP, so the value is the controller view, not model size. The common PacketIn-rate heuristic is weak because benign traffic also reaches the controller packet by packet.</p>
+<p style="position:absolute;left:128px;bottom:64px;font-size:24px;color:#8FA0B8">Grouped 5-fold CV by capture, 1 s windows, strict labels, 10 seeds, 95% CI over seeds (results/v4_strict_W1.json)</p>
+<aside>Be precise about the intervals: they come from re-shuffling which captures fall in which fold and from model initialisation, on the same 44 captures. They are not intervals over new testbeds. We also ran a capture-level cluster bootstrap on pooled window counts; it is in the result file (A_capture_cluster_bootstrap) and is wider, for example 0.926 to 0.995 for the MLP. No tree-model baseline: the XGBoost install failed on the network and GPU-only training rules out substituting a CPU model. Robustness is in the paper: 5 s windows give 0.958; the broader IP-based label rule gives 0.881 (1 s) with the same ranking against thresholds.</aside>
+</section>
