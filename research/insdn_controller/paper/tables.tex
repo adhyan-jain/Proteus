@@ -1,0 +1,133 @@
+\begin{table}[t]
+\caption{Controller captures (1\,s windows). Under strict labels, ambiguous windows of attack captures are excluded (``kept'').}
+\label{tab:inventory}
+\centering\footnotesize\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lrrrrr}
+\toprule
+Class & Captures & Windows & Kept & Attack win. & PacketIns \\
+\midrule
+Normal & 11 & 33,283 & 33,283 & 0 & 789,569 \\
+DoS & 11 & 861 & 805 & 456 & 845,362 \\
+DDoS & 6 & 499 & 184 & 55 & 1,340,347 \\
+Probe & 4 & 5,968 & 2,921 & 1,965 & 621,986 \\
+Brute force & 4 & 604 & 359 & 6 & 5,564 \\
+Exploit & 4 & 88 & 71 & 12 & 332 \\
+Web & 3 & 636 & 275 & 12 & 1,199 \\
+Botnet & 1 & 160 & 152 & 83 & 1,002 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\caption{Target-side traffic vs.\ controller observations per scenario (ratio = PacketIns per target packet).}
+\label{tab:gap}
+\centering\footnotesize
+\begin{tabular}{llrrrr}
+\toprule
+Group & Scenario & Target pkts & 5-tuples & PacketIns & Ratio \\
+\midrule
+Metasp. & Brute force & 1,311 & 295 & 1,574 & 1.20 \\
+Metasp. & DDoS & 652,495 & 651,083 & 799,253 & 1.22 \\
+Metasp. & DoS & 13,078 & 989 & 205,198 & 15.69 \\
+Metasp. & Exploit & 86 & 18 & 332 & 3.86 \\
+Metasp. & Probe & 507,650 & 51,150 & 510,194 & 1.01 \\
+OVS & Botnet & 902 & 164 & 1,002 & 1.11 \\
+OVS & DDoS & 6,510,923 & 6,508,402 & 541,094 & 0.08 \\
+OVS & Probe & 86,705 & 79,021 & 111,792 & 1.29 \\
+OVS & Brute force & 5,892 & 1,112 & 3,990 & 0.68 \\
+OVS & App.\ DoS & 299,625 & 41,738 & 308,681 & 1.03 \\
+OVS & Net.\ DoS & 304,886 & 20,979 & 331,483 & 1.09 \\
+OVS & Web & 987 & 176 & 1,199 & 1.21 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\caption{Unseen captures, grouped 5-fold CV, $W{=}1$\,s, strict labels, 10 seeds (mean{\scriptsize$\pm$}95\% CI over seeds).}
+\label{tab:cv}
+\centering\footnotesize\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lccc}
+\toprule
+Method & BAcc & Recall & FPR \\
+\midrule
+MLP, all features & 0.946{\scriptsize$\pm$0.016} & 0.893 & 0.001 \\
+MLP, PacketIn features only & 0.943{\scriptsize$\pm$0.015} & 0.887 & 0.002 \\
+Logistic regression (history) & 0.939{\scriptsize$\pm$0.016} & 0.887 & 0.009 \\
+MLP, single window & 0.934{\scriptsize$\pm$0.015} & 0.870 & 0.003 \\
+Thr.\ source-IP entropy & 0.852{\scriptsize$\pm$0.029} & 0.763 & 0.059 \\
+Thr.\ dst-port entropy & 0.839{\scriptsize$\pm$0.018} & 0.736 & 0.059 \\
+MLP, flow-stats features only & 0.699{\scriptsize$\pm$0.036} & 0.683 & 0.284 \\
+Thr.\ PacketIn burst & 0.643{\scriptsize$\pm$0.008} & 0.912 & 0.627 \\
+Thr.\ PacketIn rate & 0.616{\scriptsize$\pm$0.011} & 0.793 & 0.561 \\
+\midrule
+MLP, within attack sessions & 0.942{\scriptsize$\pm$0.016} & 0.893 & 0.008 \\
+\quad macro-averaged over captures & 0.906{\scriptsize$\pm$0.009} & -- & -- \\
+Trivial: ``any IP PacketIn'' (same windows) & 0.995 & -- & -- \\
+\quad macro over captures & 1.000 & -- & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\caption{Pooled window-count BAcc with a capture-level cluster bootstrap (2000 resamples, stratified by class).}
+\label{tab:boot}
+\centering\footnotesize\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lcc}
+\toprule
+Method & Pooled BAcc & 95\% CI \\
+\midrule
+MLP, all features & 0.984 & [0.926, 0.995] \\
+Logistic regression & 0.979 & [0.921, 0.991] \\
+MLP, single window & 0.979 & [0.905, 0.993] \\
+Thr.\ source-IP entropy & 0.923 & [0.783, 0.959] \\
+Thr.\ dst-port entropy & 0.926 & [0.792, 0.953] \\
+Thr.\ PacketIn rate & 0.467 & [0.245, 0.817] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\caption{Withheld attack family (BAcc, $W{=}1$\,s, strict labels). ``Best thr.'': best of four thresholds, chosen per family.}
+\label{tab:family}
+\centering\footnotesize\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lccc}
+\toprule
+Withheld family & MLP & Logistic & Best thr. \\
+\midrule
+Flood (DoS+DDoS) & 0.936{\scriptsize$\pm$0.011} & 0.953 & 0.814 \\
+Probe & 0.997{\scriptsize$\pm$0.000} & 0.988 & 0.970 \\
+Web & 0.904{\scriptsize$\pm$0.020} & 0.909 & 0.699 \\
+Brute force & 0.891{\scriptsize$\pm$0.029} & 0.913 & 0.888 \\
+Exploit & 0.929{\scriptsize$\pm$0.037} & 0.997 & 0.929 \\
+Botnet & 0.932{\scriptsize$\pm$0.024} & 0.803 & 0.965 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\caption{Cross-deployment transfer (BAcc, strict labels).}
+\label{tab:cross}
+\centering\footnotesize\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lccc}
+\toprule
+Train $\rightarrow$ test & MLP & Logistic & Best thr. \\
+\midrule
+Metasploitable-2 $\rightarrow$ OVS & 0.905{\scriptsize$\pm$0.021} & 0.928 & 0.866 \\
+OVS $\rightarrow$ Metasploitable-2 & 0.990{\scriptsize$\pm$0.001} & 0.985 & 0.947 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\caption{Session probe: predicting benign vs.\ attack \emph{session} from PacketIn features after removing attack-matched PacketIns (${\ge}5$ remaining per window). The residual can still contain unlisted attack traffic (D1: 424 of 518 attack-session windows contain unmatched-IP PacketIns), and D2 rests on 6 windows from 2 captures.}
+\label{tab:confound}
+\centering\footnotesize\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lcc}
+\toprule
+Variant & BAcc & Majority \\
+\midrule
+All windows (D1) & 0.940{\scriptsize$\pm$0.005} & 0.500 \\
+Attack-free windows only (D2) & 0.950{\scriptsize$\pm$0.031} & 0.500 \\
+\bottomrule
+\end{tabular}
+\end{table}

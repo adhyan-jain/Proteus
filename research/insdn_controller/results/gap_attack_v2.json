@@ -1,0 +1,597 @@
+{
+ "Metsplotable-2_Group/metasploitable-2_brute-force-attack": {
+  "label": "brute",
+  "target_files": [
+   "metasploitable2-BRF_telnet.pcap",
+   "metasploitable2-BRF_tomcat_apache.pcap"
+  ],
+  "onos_files": [
+   "ONOS_-BRF_tomcat_apache.pcap",
+   "ONOS_BRF_telnet.pcap"
+  ],
+  "target": {
+   "packets": 1311,
+   "five_tuples": 295,
+   "src_ips": 4
+  },
+  "controller": {
+   "packet_in": 1574,
+   "flow_mod": 8,
+   "stats_replies": 19,
+   "entry_observations_by_match": {
+    "eth_type": 76,
+    "in_port|eth_src|eth_dst": 16
+   },
+   "stats_gap_median_s": 0.14603400230407715
+  },
+  "packet_in_per_target_packet": 1.2006102212051868
+ },
+ "Metsplotable-2_Group/metasploitable-2_ddos": {
+  "label": "ddos",
+  "target_files": [
+   "metasploitable-2_ddos-SYN.pcap",
+   "metasploitable-2_ddos-UDP.pcap",
+   "metasploitable-2_ddos-icmp.pcap"
+  ],
+  "onos_files": [
+   "ONOS_DDoS_ICMP.pcap",
+   "ONOS_DDoS_SYN.pcapng",
+   "ONOS_DDoS_TCP.pcap"
+  ],
+  "target": {
+   "packets": 652495,
+   "five_tuples": 651083,
+   "src_ips": 440165
+  },
+  "controller": {
+   "packet_in": 799253,
+   "flow_mod": 5,
+   "stats_replies": 74,
+   "entry_observations_by_match": {
+    "eth_type": 296,
+    "in_port|eth_src|eth_dst": 15
+   },
+   "stats_gap_median_s": 4.736183166503906
+  },
+  "packet_in_per_target_packet": 1.2249181986068858
+ },
+ "Metsplotable-2_Group/metasploitable-2_dos": {
+  "label": "dos",
+  "target_files": [
+   "metasploitable-2_dos-slowloris.pcap",
+   "metasploitable-2_dos_syn.pcap"
+  ],
+  "onos_files": [
+   "ONOS_DoS-SYN.pcapng",
+   "ONOS_DoS_slowloris.pcap"
+  ],
+  "target": {
+   "packets": 13078,
+   "five_tuples": 989,
+   "src_ips": 4
+  },
+  "controller": {
+   "packet_in": 205198,
+   "flow_mod": 189,
+   "stats_replies": 96,
+   "entry_observations_by_match": {
+    "eth_type": 384,
+    "in_port|eth_src|eth_dst": 80
+   },
+   "stats_gap_median_s": 3.4290419816970825
+  },
+  "packet_in_per_target_packet": 15.690319620737116
+ },
+ "Metsplotable-2_Group/metasploitable-2_exploit": {
+  "label": "exploit",
+  "target_files": [
+   "metasploitable-2-irc_exploit.pcap",
+   "metasploitable-2_distcc-exploit.pcap",
+   "metasploitable-2_samba_exploit.pcap",
+   "metasploitable2-VSFTPD_exploit.pcap"
+  ],
+  "onos_files": [
+   "ONOS_VSFTPD_exploit.pcap",
+   "ONOS_distcc_exploit.pcap",
+   "ONOS_irc_exploit.pcap",
+   "ONOS_samba_exploit.pcap"
+  ],
+  "target": {
+   "packets": 86,
+   "five_tuples": 18,
+   "src_ips": 8
+  },
+  "controller": {
+   "packet_in": 332,
+   "flow_mod": 10,
+   "stats_replies": 35,
+   "entry_observations_by_match": {
+    "eth_type": 140,
+    "in_port|eth_src|eth_dst": 24
+   },
+   "stats_gap_median_s": 0.14259004592895508
+  },
+  "packet_in_per_target_packet": 3.86046511627907
+ },
+ "Metsplotable-2_Group/metasploitable-2_probe": {
+  "label": "probe",
+  "target_files": [
+   "metasploitable-2_probe_msf__scan.pcap",
+   "metasploitable2_probe_wmap_scan.pcap"
+  ],
+  "onos_files": [
+   "ONOS_Scan_probe_wmap_scan.pcap",
+   "ONOS__probe_msf__scan.pcap"
+  ],
+  "target": {
+   "packets": 507650,
+   "five_tuples": 51150,
+   "src_ips": 4
+  },
+  "controller": {
+   "packet_in": 510194,
+   "flow_mod": 146,
+   "stats_replies": 796,
+   "entry_observations_by_match": {
+    "eth_type": 3184,
+    "in_port|eth_src|eth_dst": 636
+   },
+   "stats_gap_median_s": 0.5983643531799316
+  },
+  "packet_in_per_target_packet": 1.0050113267014675
+ },
+ "Normal_Group/Normal_1": {
+  "label": "normal",
+  "target_files": [],
+  "onos_files": [
+   "Normal-ONOS_1.pcap"
+  ],
+  "target": {
+   "packets": 0,
+   "five_tuples": 0,
+   "src_ips": 0
+  },
+  "controller": {
+   "packet_in": 16528,
+   "flow_mod": 12,
+   "stats_replies": 330,
+   "entry_observations_by_match": {
+    "eth_type": 1320,
+    "in_port|eth_src|eth_dst": 325
+   },
+   "stats_gap_median_s": 0.4452090263366699
+  },
+  "packet_in_per_target_packet": null
+ },
+ "Normal_Group/Normal_10": {
+  "label": "normal",
+  "target_files": [],
+  "onos_files": [
+   "Normal-ONOS_11.pcap"
+  ],
+  "target": {
+   "packets": 0,
+   "five_tuples": 0,
+   "src_ips": 0
+  },
+  "controller": {
+   "packet_in": 84547,
+   "flow_mod": 86,
+   "stats_replies": 1270,
+   "entry_observations_by_match": {
+    "eth_type": 5080,
+    "in_port|eth_src|eth_dst": 1873
+   },
+   "stats_gap_median_s": 0.6599338054656982
+  },
+  "packet_in_per_target_packet": null
+ },
+ "Normal_Group/Normal_11": {
+  "label": "normal",
+  "target_files": [],
+  "onos_files": [
+   "Normal-ONOS_12.pcap"
+  ],
+  "target": {
+   "packets": 0,
+   "five_tuples": 0,
+   "src_ips": 0
+  },
+  "controller": {
+   "packet_in": 131600,
+   "flow_mod": 1047,
+   "stats_replies": 7428,
+   "entry_observations_by_match": {
+    "eth_type": 29712,
+    "in_port|eth_src|eth_dst": 10798
+   },
+   "stats_gap_median_s": 0.6693210601806641
+  },
+  "packet_in_per_target_packet": null
+ },
+ "Normal_Group/Normal_2": {
+  "label": "normal",
+  "target_files": [],
+  "onos_files": [
+   "Normal-ONOS_2.pcap"
+  ],
+  "target": {
+   "packets": 0,
+   "five_tuples": 0,
+   "src_ips": 0
+  },
+  "controller": {
+   "packet_in": 41191,
+   "flow_mod": 34,
+   "stats_replies": 925,
+   "entry_observations_by_match": {
+    "eth_type": 3700,
+    "in_port|eth_src|eth_dst": 839
+   },
+   "stats_gap_median_s": 0.9307494163513184
+  },
+  "packet_in_per_target_packet": null
+ },
+ "Normal_Group/Normal_3": {
+  "label": "normal",
+  "target_files": [],
+  "onos_files": [
+   "Normal-ONOS_3.pcap"
+  ],
+  "target": {
+   "packets": 0,
+   "five_tuples": 0,
+   "src_ips": 0
+  },
+  "controller": {
+   "packet_in": 14886,
+   "flow_mod": 15,
+   "stats_replies": 264,
+   "entry_observations_by_match": {
+    "eth_type": 1056,
+    "in_port|eth_src|eth_dst": 255
+   },
+   "stats_gap_median_s": 1.9788708686828613
+  },
+  "packet_in_per_target_packet": null
+ },
+ "Normal_Group/Normal_4": {
+  "label": "normal",
+  "target_files": [],
+  "onos_files": [
+   "Normal-ONOS_4.pcap"
+  ],
+  "target": {
+   "packets": 0,
+   "five_tuples": 0,
+   "src_ips": 0
+  },
+  "controller": {
+   "packet_in": 82337,
+   "flow_mod": 8,
+   "stats_replies": 339,
+   "entry_observations_by_match": {
+    "eth_type": 1356,
+    "in_port|eth_src|eth_dst": 355
+   },
+   "stats_gap_median_s": 1.978819489479065
+  },
+  "packet_in_per_target_packet": null
+ },
+ "Normal_Group/Normal_5": {
+  "label": "normal",
+  "target_files": [],
+  "onos_files": [
+   "Normal-ONOS_5.pcap"
+  ],
+  "target": {
+   "packets": 0,
+   "five_tuples": 0,
+   "src_ips": 0
+  },
+  "controller": {
+   "packet_in": 171815,
+   "flow_mod": 24,
+   "stats_replies": 1503,
+   "entry_observations_by_match": {
+    "eth_type": 6012,
+    "in_port|eth_src|eth_dst": 1887
+   },
+   "stats_gap_median_s": 1.3250519037246704
+  },
+  "packet_in_per_target_packet": null
+ },
+ "Normal_Group/Normal_6": {
+  "label": "normal",
+  "target_files": [],
+  "onos_files": [
+   "Normal-ONOS_6.pcap"
+  ],
+  "target": {
+   "packets": 0,
+   "five_tuples": 0,
+   "src_ips": 0
+  },
+  "controller": {
+   "packet_in": 122429,
+   "flow_mod": 24,
+   "stats_replies": 2059,
+   "entry_observations_by_match": {
+    "eth_type": 8236,
+    "in_port|eth_src|eth_dst": 2480
+   },
+   "stats_gap_median_s": 1.3250925540924072
+  },
+  "packet_in_per_target_packet": null
+ },
+ "Normal_Group/Normal_7": {
+  "label": "normal",
+  "target_files": [],
+  "onos_files": [
+   "Normal-ONOS_8.pcap"
+  ],
+  "target": {
+   "packets": 0,
+   "five_tuples": 0,
+   "src_ips": 0
+  },
+  "controller": {
+   "packet_in": 37820,
+   "flow_mod": 3,
+   "stats_replies": 513,
+   "entry_observations_by_match": {
+    "eth_type": 2052,
+    "in_port|eth_src|eth_dst": 684
+   },
+   "stats_gap_median_s": 1.3249880075454712
+  },
+  "packet_in_per_target_packet": null
+ },
+ "Normal_Group/Normal_8": {
+  "label": "normal",
+  "target_files": [],
+  "onos_files": [
+   "Normal-ONOS_9.pcap"
+  ],
+  "target": {
+   "packets": 0,
+   "five_tuples": 0,
+   "src_ips": 0
+  },
+  "controller": {
+   "packet_in": 49159,
+   "flow_mod": 3,
+   "stats_replies": 740,
+   "entry_observations_by_match": {
+    "eth_type": 2960,
+    "in_port|eth_src|eth_dst": 988
+   },
+   "stats_gap_median_s": 1.325145959854126
+  },
+  "packet_in_per_target_packet": null
+ },
+ "Normal_Group/Normal_9": {
+  "label": "normal",
+  "target_files": [],
+  "onos_files": [
+   "Normal_ONOS.gz_10.pcap"
+  ],
+  "target": {
+   "packets": 0,
+   "five_tuples": 0,
+   "src_ips": 0
+  },
+  "controller": {
+   "packet_in": 37257,
+   "flow_mod": 3,
+   "stats_replies": 229,
+   "entry_observations_by_match": {
+    "eth_type": 916,
+    "in_port|eth_src|eth_dst": 304
+   },
+   "stats_gap_median_s": 1.5929499864578247
+  },
+  "packet_in_per_target_packet": null
+ },
+ "OVS_Group/Botnet": {
+  "label": "botnet",
+  "target_files": [
+   "S1_Botnet.pcap"
+  ],
+  "onos_files": [
+   "ONOS_Botnet.pcap"
+  ],
+  "target": {
+   "packets": 902,
+   "five_tuples": 164,
+   "src_ips": 3
+  },
+  "controller": {
+   "packet_in": 1002,
+   "flow_mod": 9,
+   "stats_replies": 96,
+   "entry_observations_by_match": {
+    "eth_type": 384,
+    "in_port|eth_src|eth_dst": 84
+   },
+   "stats_gap_median_s": 0.4340500831604004
+  },
+  "packet_in_per_target_packet": 1.1108647450110865
+ },
+ "OVS_Group/DDoS": {
+  "label": "ddos",
+  "target_files": [
+   "h4-DDoS-ICMP.pcap",
+   "h4-DDoS-SYN.pcap",
+   "h4-DDoS-UDP.pcap"
+  ],
+  "onos_files": [
+   "ONOS-DDoS-ICMP.pcap",
+   "ONOS-DDoS-SYN.pcap",
+   "ONOS-DDoS-UDP.pcap"
+  ],
+  "target": {
+   "packets": 6510923,
+   "five_tuples": 6508402,
+   "src_ips": 5499648
+  },
+  "controller": {
+   "packet_in": 541094,
+   "flow_mod": 1833,
+   "stats_replies": 91,
+   "entry_observations_by_match": {
+    "eth_type": 364,
+    "in_port|eth_src|eth_dst": 47
+   },
+   "stats_gap_median_s": 1.5609499216079712
+  },
+  "packet_in_per_target_packet": 0.08310557504673301
+ },
+ "OVS_Group/Probe": {
+  "label": "probe",
+  "target_files": [
+   "S1_interface-Probe.pcap",
+   "docker-interface_Probe.pcap"
+  ],
+  "onos_files": [
+   "ONOS_Probe-Docker.pcap",
+   "ONOS_Probe-Vhosts.pcap"
+  ],
+  "target": {
+   "packets": 86705,
+   "five_tuples": 79021,
+   "src_ips": 9
+  },
+  "controller": {
+   "packet_in": 111792,
+   "flow_mod": 236,
+   "stats_replies": 2388,
+   "entry_observations_by_match": {
+    "eth_type": 9552,
+    "in_port|eth_src|eth_dst": 2241
+   },
+   "stats_gap_median_s": 0.07661700248718262
+  },
+  "packet_in_per_target_packet": 1.289337408453953
+ },
+ "OVS_Group/brute-force-attack": {
+  "label": "brute",
+  "target_files": [
+   "docker_brute-force-attack-brup-suite.pcap",
+   "docker_brute-force-attack-hydra.pcap"
+  ],
+  "onos_files": [
+   "ONOS_brute-force-attack-brup-suite.pcap",
+   "ONOS_brute-force-attack-hydra.pcap"
+  ],
+  "target": {
+   "packets": 5892,
+   "five_tuples": 1112,
+   "src_ips": 4
+  },
+  "controller": {
+   "packet_in": 3990,
+   "flow_mod": 19,
+   "stats_replies": 224,
+   "entry_observations_by_match": {
+    "eth_type": 896,
+    "in_port|eth_src|eth_dst": 195
+   },
+   "stats_gap_median_s": 0.14716064929962158
+  },
+  "packet_in_per_target_packet": 0.6771894093686355
+ },
+ "OVS_Group/dos/Application_DoS": {
+  "label": "dos",
+  "target_files": [
+   "h4_DoS-Slowloris.pcap",
+   "h4_DoS-Slowloris_Apache killer.pcap",
+   "h4_DoS-Slowloris_R-U-Dead-Yet or Rudy.pcap",
+   "h4_DoS-Slowloris_Slow Read.pcap",
+   "h4_DoS_TorshHummer.pcap",
+   "h4_DoS_hulk.pcap"
+  ],
+  "onos_files": [
+   "ONOS_Dos-hulk.pcap",
+   "ONOS_Slowloris.pcap",
+   "ONOS_Slowloris_Apache killer.pcap",
+   "ONOS_Slowloris_R-U-Dead-Yet or Rudy.pcap",
+   "ONOS_Slowloris_Slow Read.pcap",
+   "ONOS_torshhummer.pcap"
+  ],
+  "target": {
+   "packets": 299625,
+   "five_tuples": 41738,
+   "src_ips": 12
+  },
+  "controller": {
+   "packet_in": 308681,
+   "flow_mod": 44,
+   "stats_replies": 200,
+   "entry_observations_by_match": {
+    "eth_type": 800,
+    "in_port|eth_src|eth_dst": 120
+   },
+   "stats_gap_median_s": 0.20568013191223145
+  },
+  "packet_in_per_target_packet": 1.0302244472256987
+ },
+ "OVS_Group/dos/Network_DoS": {
+  "label": "dos",
+  "target_files": [
+   "h4-HTTP-flood.pcap",
+   "h4-TCP-flood.pcap",
+   "h4-UDP-flood.pcap"
+  ],
+  "onos_files": [
+   "ONOS-HTTP-flood.pcap",
+   "ONOS-TCP-flood.pcap",
+   "ONOS-UDP-flood.pcap"
+  ],
+  "target": {
+   "packets": 304886,
+   "five_tuples": 20979,
+   "src_ips": 6
+  },
+  "controller": {
+   "packet_in": 331483,
+   "flow_mod": 69,
+   "stats_replies": 113,
+   "entry_observations_by_match": {
+    "eth_type": 452,
+    "in_port|eth_src|eth_dst": 63
+   },
+   "stats_gap_median_s": 0.9001035690307617
+  },
+  "packet_in_per_target_packet": 1.087235884888122
+ },
+ "OVS_Group/web_attack": {
+  "label": "web",
+  "target_files": [
+   "Docker-Interface_SQL-Injection.pcap",
+   "Docker-Interface_reverse-shell.pcap",
+   "Docker_interface-XSS_Burp.pcap"
+  ],
+  "onos_files": [
+   "ONOS-interface_XSS_Burp.pcap",
+   "ONOS_SQL-Injection.pcap",
+   "ONOS_reverse-shell.pcap"
+  ],
+  "target": {
+   "packets": 987,
+   "five_tuples": 176,
+   "src_ips": 6
+  },
+  "controller": {
+   "packet_in": 1199,
+   "flow_mod": 0,
+   "stats_replies": 384,
+   "entry_observations_by_match": {
+    "eth_type": 1536,
+    "in_port|eth_src|eth_dst": 128
+   },
+   "stats_gap_median_s": 0.7236108779907227
+  },
+  "packet_in_per_target_packet": 1.2147922998986829
+ }
+}

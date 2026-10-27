@@ -1,0 +1,281 @@
+\documentclass[conference]{IEEEtran}
+\usepackage{amsmath,booktabs,multirow,graphicx,url}
+\usepackage[hidelinks]{hyperref}
+
+\begin{document}
+\title{What Does the SDN Controller Actually See?\\
+Controller-Observable Telemetry in InSDN's Own OpenFlow Control Channel}
+
+\author{\IEEEauthorblockN{Adhyan Jain}
+\IEEEauthorblockA{[Affiliation]}}
+
+\maketitle
+
+\begin{abstract}
+SDN intrusion-detection research is evaluated mostly on benchmark CSVs of CICFlowMeter 5-tuple flow records,
+computed offline from packet captures at the attacked host. Whether an SDN controller can observe anything
+resembling these records is rarely checked. We check it inside the benchmark itself. InSDN, a widely used SDN
+intrusion dataset, also published packet captures of its ONOS controller's OpenFlow~1.3 control channel; we parse
+all 44 of them (11 benign and 33 attack sessions across seven attack classes). In every flow-statistics reply, and in
+all 3\,827 FlowMods, in these captures the controller's flow entries match only on \texttt{eth\_type} or
+\texttt{(in\_port, eth\_src, eth\_dst)}; none matches IP addresses or transport ports, so the dataset's labelled
+5-tuple flows are not counters the controller can read. What the controller does receive is a dense PacketIn stream: in 9 of 12 attack
+scenarios, between 0.68 and 1.29 PacketIns per data packet seen at the target. Using only this controller-observable
+view, small models reach a balanced accuracy of 0.946 on unseen captures under capture-grouped cross-validation
+(against 0.616 for a PacketIn-rate threshold) and 0.89--1.00 on all six withheld attack families (best
+single-feature threshold 0.70--0.97); logistic regression matches the neural network overall. We then show that these numbers cannot be read as attack-detection accuracy: InSDN records
+benign and attack traffic in separate sessions and its labels cover only part of the controller-visible traffic, so
+within attack sessions a trivial ``any IP PacketIn'' rule scores 0.995 under strict labels, and our session probes
+cannot separate session identity from unlisted attack traffic. We report this as a validity threat for controller-side
+evaluation on InSDN. Finally, a benign-traffic Mininet/Ryu case study (5 runs per mode) shows that the forwarding
+application sets what the controller observes: per-flow forwarding produced about 10\,300 TCP PacketIns per run against
+about 12 for MAC-pair forwarding (at least 675$\times$ in every paired run, for both timeouts), and a 2\,s idle timeout reduced the
+IP-specific entries a 1\,s poller sees from $151.9\pm1.8$ to $36.8\pm0.4$ per reply. A first campaign with a flawed
+application, in which ping and ARP entries shadowed TCP, understated the PacketIn effect by more than two orders of
+magnitude; we report both.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Software-defined networking, intrusion detection, OpenFlow, ONOS, InSDN, telemetry, evaluation methodology
+\end{IEEEkeywords}
+
+\section{Introduction}
+Machine-learning intrusion detection for software-defined networks (SDN) is commonly motivated by the controller's
+global view~\cite{kreutz2015sdn}. In practice, evaluation rarely involves a controller: models are trained and
+tested on flow records computed by CICFlowMeter~\cite{lashkari2017cicflowmeter} from packet captures at the attacked
+hosts, then described as SDN detectors. InSDN~\cite{elsayed2020insdn} is a prominent example; its CSV release of
+$\sim$344k labelled bidirectional 5-tuple flows with 80+ statistical features is widely used as an SDN benchmark.
+
+A controller cannot compute those features for flows it does not see in full. An OpenFlow~1.3 controller~\cite{onf2012openflow13} observes PacketIn
+messages for packets that miss the flow table, flow-statistics replies with packet and byte counters for whatever
+entries its forwarding application installed, and its own FlowMod/PacketOut decisions. Inter-arrival-time moments,
+per-direction length statistics and flag counts are not in that vocabulary. Earlier work criticised benchmark flow
+features for diverging from real flow metering~\cite{engelen2021troubleshooting,pinto2025flowexporter,pekar2024integrity},
+argued for standard feature sets~\cite{sarhan2022standard}, and measured the cost of assuming complete
+flows~\cite{pekar2024partial}; a recent dataset records control-plane telemetry on a new testbed~\cite{lansdnnids2026}.
+Controller-side detectors based on PacketIn behaviour exist~\cite{braga2010lightweight,mousavi2015early,shin2013avantguard,wang2015floodguard,dhawan2015sphinx},
+but they are evaluated on their own traffic. We found no work that measures, inside InSDN, what the
+controller observed, or that evaluates detection restricted to that view (our searches were conducted in October
+2026; they are evidence, not proof, of absence).
+
+InSDN's authors also captured the ONOS~\cite{berde2014onos} controller interface during every scenario. We analyse
+these captures and make five contributions:
+\begin{enumerate}
+\item \textbf{A measured observability gap (\S\ref{sec:gap}).} Across all flow-statistics replies, only two match
+structures occur and none involves IP or transport fields (also true of all 3\,827 FlowMods); in 9 of 12 scenarios the
+controller receives 0.68 to 1.29 PacketIns per target packet.
+\item \textbf{A reproducible control-channel pipeline (\S\ref{sec:method}).} An OpenFlow~1.3 parser and window
+featuriser for the 44 captures with reported parser loss, and window labels grounded in InSDN's own flow labels.
+\item \textbf{Detection from the controller's view, as a feasibility result (\S\ref{sec:results}).} Evaluated on
+unseen captures, withheld attack families and across the two target deployments, against threshold heuristics and
+simpler models, over 10 seeds.
+\item \textbf{A validity analysis (\S\ref{sec:confound}).} Under InSDN's design, the detection scores cannot be
+separated from session recognition and label coverage; we quantify what a trivial rule achieves and what our probes
+can and cannot show.
+\item \textbf{A forwarding-application case study (\S\ref{sec:live}).} In a Mininet/Ryu testbed with benign traffic,
+per-flow forwarding produces about 10\,300 TCP PacketIns per run against about 12 for MAC-pair forwarding, and the
+idle timeout sets how many entries a poller sees; a first campaign with a flawed application understated this effect.
+\end{enumerate}
+
+\section{Background and Related Work}
+\textbf{What an OpenFlow controller observes.} Under reactive forwarding, the first packet of an unmatched flow
+reaches the controller as a PacketIn carrying the packet's headers; the controller answers with a PacketOut and
+optionally installs an entry via FlowMod. It can poll per-entry packet and byte counters with multipart
+flow-statistics requests~\cite{onf2012openflow13}. Which entries exist, and hence what the counters mean, is decided
+by the forwarding application, not by the IDS.
+
+\textbf{Benchmark realism and evaluation pitfalls.} Sommer and Paxson~\cite{sommer2010outside} and Arp et
+al.~\cite{arp2022dos} catalogue pitfalls of ML-based detection, including spurious correlations. Engelen et
+al.~\cite{engelen2021troubleshooting} found labelling and flow-construction errors in CICIDS2017; Pekar and Jozsa
+studied dataset integrity~\cite{pekar2024integrity} and train/test flow completeness~\cite{pekar2024partial};
+Pinto et al.~\cite{pinto2025flowexporter} showed detectors depend on the flow exporter; Sarhan et
+al.~\cite{sarhan2022standard} argued for standard NetFlow feature sets. These concern flow-record features; none asks
+what an SDN controller can observe.
+
+\textbf{Controller-side detection and control-plane data.} PacketIn and flow-table signals have long been used to
+detect flooding at the controller~\cite{braga2010lightweight,mousavi2015early} and to protect it~\cite{shin2013avantguard,wang2015floodguard,dhawan2015sphinx}.
+Arévalo-Herrera et al.~\cite{lansdnnids2026} release a dataset that pairs traffic features with control-plane
+metrics (PacketIn and FlowMod counts) collected on an OpenDaylight testbed. Our work is complementary: we do not
+introduce a new dataset, but characterise and use the controller-side captures already shipped with InSDN, so
+results remain comparable with the large body of InSDN work.
+
+\section{What the Controller Sees in InSDN}\label{sec:gap}
+\textbf{Data.} InSDN~\cite{elsayed2020insdn} was generated with Mininet hosts and an Open vSwitch switch controlled by
+ONOS; attacks target a Metasploitable-2 VM or the OVS host. Besides the CSVs, the authors published PCAP groups
+(\emph{Normal}, \emph{Metasploitable-2}, \emph{OVS}) recorded at the target and at the controller interface. We
+downloaded them from the dataset's institutional host; the Metasploitable-2 and OVS archives passed ZIP integrity
+checks, and for the Normal archive we fetched only the controller captures through HTTP range requests on its ZIP
+members, each checked against its recorded size. SHA-256 hashes of the 44 captures and the two full archives are
+released with the code (\texttt{capture\_hashes.sha256}).
+The 44 controller captures (\texttt{*ONOS*}) are the subject of this paper (Table~\ref{tab:inventory}).
+
+\textbf{Granularity.} We decoded every OpenFlow~1.3 multipart flow-statistics reply in all 44 captures. Only two
+match structures occur: \texttt{eth\_type} (the controller's default punt rules; 80\,464 entry observations) and
+\texttt{(in\_port, eth\_src, eth\_dst)} (reactive forwarding; 24\,437 observations). No entry matches IP addresses
+or transport ports. A 5-tuple flow, the unit InSDN labels, is therefore never a counter the controller can read; a
+MAC-pair entry aggregates every flow between two hosts. The 3\,827 FlowMods the controller sent show the same: 3\,811
+match \texttt{(in\_port, eth\_dst, eth\_src)}, 16 match \texttt{eth\_type}, and none has IP or transport fields, so a
+short-lived 5-tuple entry cannot have slipped between two polls. This describes the ONOS forwarding configuration used
+in InSDN; it is not a property of OpenFlow in general.
+
+\textbf{The PacketIn stream.} Table~\ref{tab:gap} pairs each attack scenario's target-side captures with its
+controller captures. In 9 of 12 scenarios the controller receives between 0.68 and 1.29 PacketIns per data packet
+recorded at the target. Two Metasploitable-2 scenarios show 3.9 and 15.7. The OVS DDoS scenario shows 0.08 (6.5M
+target packets against 541k PacketIns), consistent with control-channel saturation under a spoofed flood; we did not
+test this directly. The two sides are separate recordings and their alignment is unverified, so ratios are
+indicative, not exact per-packet counts. The Normal group has no target-side captures, so we have no such ratio for
+benign traffic. Because each PacketIn carries the packet's headers, the 5-tuple is visible to the controller per
+packet, but never as a per-flow counter.
+
+\textbf{Implication.} A model trained on InSDN's CSV consumes statistics (inter-arrival moments, per-direction length
+moments, flag counts per 5-tuple) that this controller never receives. The deployable signal is the PacketIn header
+stream plus coarse MAC-pair counters, which we use directly.
+
+\section{Controller-Observable Detection}\label{sec:method}
+\textbf{Parsing.} We reassemble each TCP direction of the control channel (port 6653), split it into OpenFlow
+messages by header length, and decode PacketIn (with the embedded Ethernet frame), PacketOut, FlowMod, FlowRemoved
+and flow-statistics replies. On a header desynchronisation the parser scans forward for the next position that
+starts a chain of two plausible headers. Over the 44 captures it decoded 7\,381\,679 messages, resynchronised
+134 times and discarded 12\,217 bytes; reassembly is in arrival order with sequence-number deduplication only, so
+these loss figures are a lower bound. (A first version that dropped its whole buffer on every desync discarded
+44.6\,MB and lost up to $\sim$90\% of PacketIns on some DDoS captures; all reported results use the corrected parser.)
+182\,153 PacketIns are truncated by the switch to a header prefix; their headers still parse and labelling is
+unaffected.
+
+\textbf{Features.} For each window of $W{=}1$\,s we compute 22 controller-observable features: counts of PacketIn,
+PacketOut, FlowMod, FlowRemoved and statistics replies; from PacketIn frames, the number of distinct source and
+destination MACs, IPs and destination ports, TCP/UDP/ICMP/ARP fractions, the SYN-only fraction of TCP, mean frame
+length, and the entropies of source IP and destination port; and, from consecutive statistics replies of the same
+entry, the number of entries and the sum and maximum of packet and byte deltas. The model input concatenates the
+current and three previous windows ($\log(1{+}x)$ transformed).
+
+\textbf{Labels grounded in the dataset (strict).} Labelling a window by the capture it came from would mark every
+quiet window of an attack session as an attack. Instead we label each PacketIn by matching its 5-tuple (either
+direction) to InSDN's CSV Flow IDs. A window is an attack window iff it contains at least one PacketIn matching an
+attack flow. In attack captures, a window with no attack match but with PacketIns of unmatched IP traffic is
+ambiguous and is excluded from training and scoring; benign captures keep all windows. This is restrictive and
+sparse: the CSV covers only part of each capture, so after exclusion brute force, exploit and web keep only 6, 12 and
+12 attack windows, and DDoS 55 of 499 (Table~\ref{tab:inventory}). As \S\ref{sec:confound} shows, the exclusion also
+removes exactly the hard negatives of attack sessions.
+
+\textbf{Detectors and baselines.} A two-layer MLP (64--32 units, dropout, class-weighted cross-entropy, 40 epochs)
+trained on an NVIDIA RTX 4060 GPU; a logistic-regression model on the same inputs; a single-window MLP; ablations to
+PacketIn-derived or flow-statistics-derived features; and four single-feature thresholds fitted on the training
+folds (PacketIn rate, a causal per-capture-normalised burst rate, source-IP entropy, destination-port entropy). We did
+not obtain a gradient-boosted-tree baseline: the package could not be installed in this environment, and training is
+restricted to the GPU.
+
+\textbf{Protocol.} No capture appears in both training and test. (A)~5-fold cross-validation grouped by capture file
+and stratified by class; (B)~leave-one-attack-family-out, with DoS and DDoS withheld together as ``flood''; (C)~cross-deployment,
+training on one target group and testing on the other, with disjoint benign captures; (D)~session probes; (E)~a
+label-shuffle sanity check. Every experiment uses 10 seeds (fold assignment and initialisation). We report mean and
+95\% $t$-interval over seeds, which reflects fold and initialisation variability on the same 44 captures, not
+sampling of new testbeds, and a stratified cluster bootstrap over captures for pooled window counts (a CI of pooled
+window BAcc, dominated by the many benign windows, hence not comparable to the seed mean). Folds are grouped by
+capture file, not by scenario: variants of one scenario (e.g.\ SYN, UDP and ICMP DDoS) can fall on both sides of a
+fold, so (A) is optimistic; (B) and (C) are the scenario-held-out tests. Balanced accuracy (BAcc) is the headline
+because classes are imbalanced.
+
+\section{Results}\label{sec:results}
+\textbf{Unseen captures (Table~\ref{tab:cv}).} The controller-observable MLP reaches BAcc 0.946 with a window
+false-positive rate of 0.001. The PacketIn-rate threshold, the usual SDN flooding heuristic, reaches only 0.616; a
+likely reason is that benign sessions also produce heavy PacketIn volume, but we cannot verify this against a
+target-side benign ratio (\S\ref{sec:gap}). Entropy thresholds do better (0.839--0.852) but stay below the learned
+models. PacketIn features carry the signal (0.943 alone); flow-statistics features alone reach 0.699 at 1\,s with a
+high FPR (0.918 at 5\,s), consistent with MAC-pair counters being coarse. A logistic-regression model (0.939) and a single-window MLP (0.934) are
+close to the full model overall, so history and non-linearity add little here, although logistic regression differs
+on some withheld families (e.g.\ botnet 0.803 vs.\ 0.932). The capture-level bootstrap (Table~\ref{tab:boot}) is
+wider than the seed intervals and pools windows, so it is dominated by benign windows; there the entropy thresholds
+look competitive with the learned models, and the seed-level comparisons are the more informative ones. The
+label-shuffle control (each capture given another capture's window-label sequence) gives BAcc $0.512\pm0.054$ at
+1\,s and $0.508\pm0.067$ at 5\,s, i.e.\ chance; it shows the pipeline does not read labels from where it should not,
+and says nothing about label--feature overlap or session identity.
+
+\textbf{Withheld attack families (Table~\ref{tab:family}).} With a family absent from training, the MLP beats the best
+single-feature threshold on flood (0.936 vs.\ 0.814), probe (0.997 vs.\ 0.970) and web (0.904 vs.\ 0.699), ties on
+brute force and exploit, and loses on botnet (0.932 vs.\ 0.965; one capture). The best threshold is chosen per
+family in hindsight, which favours the baseline, and brute force, exploit and web rest on 6--12 attack windows.
+
+\textbf{Across deployments (Table~\ref{tab:cross}).} Training on OVS-target sessions and testing on
+Metasploitable-2 sessions gives 0.990 (best threshold 0.947); the reverse gives 0.905 (best threshold 0.866).
+
+\textbf{Window length.} With $W{=}5$\,s (strict labels, 10 seeds) the picture is consistent: BAcc 0.958 for the MLP
+(logistic regression 0.961, single window 0.944) and the PacketIn-rate threshold at 0.527. Flow-statistics features
+alone improve to 0.918, since a longer window usually spans a counter poll. Cross-deployment gives 0.978 (OVS
+$\rightarrow$ Metasploitable-2; best threshold 0.910) and 0.895 (reverse; 0.860).
+
+\input{tables}
+
+\section{Validity: Can We Tell Attacks from Sessions?}\label{sec:confound}
+InSDN's benign and attack traffic were recorded in separate sessions, and its CSV labels cover only part of the
+traffic visible to the controller. Both can inflate the scores above, a spurious-correlation pitfall~\cite{arp2022dos}.
+We tested this and report what the evidence does and does not show.
+
+\textbf{Within-session scoring under strict labels is trivial.} Restricting to windows of attack captures that contain
+at least one PacketIn, the MLP scores BAcc 0.942 pooled and 0.906 macro-averaged over captures
+(Table~\ref{tab:cv}). A trivial rule, ``at least one IP PacketIn in the window'', scores 0.995 pooled and 1.000
+macro on the same windows (2\,589 attack and 320 attack-free windows at 1\,s; 616 and 22 at 5\,s, where it scores
+1.000). The reason is the ambiguity mask: it removes attack-session windows with IP traffic not matched by the CSV,
+leaving attack-free windows that are almost all ARP/LLDP only (317 of 320 have no IP PacketIn). We therefore do not
+use the strict within-session figure as evidence of detection.
+
+\textbf{With broader labels the margin over the trivial rule is real but not clean.} Under the IP-based label rule
+(\S\ref{sec:discussion}), which keeps all windows, the same trivial rule scores 0.741 pooled and 0.700 macro at 1\,s
+(0.653 and 0.668 at 5\,s), while the MLP scores 0.794 and 0.855 (0.715 and 0.782). The MLP is ahead, but this rule
+labels windows by IP membership, which overlaps with the IP-count features, so the comparison is not independent.
+
+\textbf{The session probe is too small and too impure to quantify session identity (Table~\ref{tab:confound}).} We
+remove attack-matched PacketIns, drop controller-reply counts, keep windows with at least five remaining PacketIns, and
+train the MLP to predict whether a window comes from an attack session. It reaches BAcc 0.940 (majority 0.500), but the
+attack side has 518 windows, of which 424 (82\%) contain unmatched-IP PacketIns that may simply be attack traffic the
+CSV does not list; the stricter variant using only attack-free windows has 6 windows from 2 captures at 1\,s (0.950)
+and 2 windows at 5\,s (0.550). Under the IP-based rule the corresponding probe scores 0.806 and 0.783, again with
+unlisted traffic in the ``attack-free'' class. We conclude only that the available data cannot rule out
+session-recognition as a source of the scores; we do not claim that sessions are separable independently of attack
+traffic.
+
+\textbf{Consequence.} The headline scores of \S\ref{sec:results} are feasibility evidence that PacketIn-level features
+distinguish InSDN's attack captures from its benign captures, not a measurement of attack-detection accuracy. A
+convincing evaluation needs benign and attack traffic interleaved within one session, with labels for all
+controller-visible traffic, which InSDN does not provide.
+
+\input{live_section}
+
+\section{Discussion and Limitations}\label{sec:discussion}
+\textbf{Single testbed.} All InSDN results come from one ONOS/OVS deployment with 44 controller captures; class
+counts are small for exploit, web, brute force and botnet. Confidence intervals reflect fold and initialisation
+variability, not new testbeds.
+
+\textbf{Forwarding-application dependence.} The observability gap follows from ONOS reactive forwarding as
+configured in InSDN. An application installing 5-tuple entries would expose finer counters at higher flow-table cost,
+and the PacketIn stream would then be sparser. Our pipeline measures the gap for any capture; the numbers are
+specific to this configuration.
+
+\textbf{Labels.} Strict labels leave brute force, exploit, web and DDoS with few attack windows because the CSV
+omits much of their traffic (for DDoS, most of the spoofed flood). An alternative rule that also counts IPs seen only
+in attack flows labels more windows but overlaps with the IP-count features, so we report it as a sensitivity
+analysis. Under that broader rule overall BAcc is lower (MLP 0.881, logistic regression 0.847, best threshold 0.748 at
+1\,s; MLP 0.887, best threshold 0.769 at 5\,s) and within-session macro BAcc is 0.855 (0.782 at 5\,s). The ranking
+against thresholds is unchanged, and at 1\,s the MLP is ahead of the best threshold on flood, web and brute force,
+level on probe (0.812 vs.\ 0.794, within the interval) and behind on exploit and botnet. Transfer from Metasploitable-2 to OVS no longer
+beats the best threshold (0.678 vs.\ 0.678), while OVS to Metasploitable-2 remains strong (0.977 vs.\ 0.924).
+
+\textbf{Baselines and deployment.} No tree-ensemble baseline; detection is run offline on recorded control channels,
+not inline in a live controller, and we do not measure controller-side latency or mitigation effects. The forwarding
+study (\S\ref{sec:live}) uses benign traffic and one switch; it measures visibility, not detection, and a
+cross-testbed detection experiment with labelled attacks is future work.
+
+\section{Conclusion}
+InSDN's own controller never installed or reported the 5-tuple flow entries InSDN labels: its flow entries are MAC
+pairs or EtherType rules, and its view of traffic is a PacketIn stream. Restricted to that view, small models separate InSDN's attack
+captures from its benign captures on unseen captures, withheld families and a second deployment, where the usual
+PacketIn-rate heuristic does not (BAcc 0.946 vs.\ 0.616 on unseen captures). We could not show that this reflects
+attack detection rather than session recognition and label coverage: within sessions a trivial IP-PacketIn rule
+matches or beats the model under strict labels, and our probes lack clean attack-free windows. We therefore present
+controller-observable evaluation on InSDN as feasible but unproven, and recommend datasets that interleave benign and
+attack traffic. A benign-traffic Mininet/Ryu study shows that forwarding-application choices (entry granularity, idle
+timeout) change what the controller can observe. The pipeline, capture hashes and result files accompany this paper.
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+\end{document}

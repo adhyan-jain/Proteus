@@ -1,0 +1,136 @@
+{
+ "summary": {
+  "fivetuple": {
+   "packet_in_per_s": {
+    "mean": 3.7586206896551726,
+    "ci95": NaN,
+    "n": 1
+   },
+   "flow_mods": {
+    "mean": 62.0,
+    "ci95": NaN,
+    "n": 1
+   },
+   "entry_obs_per_reply": {
+    "mean": 15.862068965517242,
+    "ci95": NaN,
+    "n": 1
+   },
+   "match_structures_seen": [
+    "",
+    "in_port|eth_src|eth_dst",
+    "in_port|eth_type|ipv4_src|ipv4_dst|ip_proto|tcp_src|tcp_dst"
+   ]
+  },
+  "fivetuple_short": {
+   "packet_in_per_s": {
+    "mean": 3.7586206896551726,
+    "ci95": NaN,
+    "n": 1
+   },
+   "flow_mods": {
+    "mean": 62.0,
+    "ci95": NaN,
+    "n": 1
+   },
+   "entry_obs_per_reply": {
+    "mean": 9.689655172413794,
+    "ci95": NaN,
+    "n": 1
+   },
+   "match_structures_seen": [
+    "",
+    "in_port|eth_src|eth_dst",
+    "in_port|eth_type|ipv4_src|ipv4_dst|ip_proto|tcp_src|tcp_dst"
+   ]
+  },
+  "mac": {
+   "packet_in_per_s": {
+    "mean": 1.9310344827586208,
+    "ci95": NaN,
+    "n": 1
+   },
+   "flow_mods": {
+    "mean": 11.0,
+    "ci95": NaN,
+    "n": 1
+   },
+   "entry_obs_per_reply": {
+    "mean": 9.571428571428571,
+    "ci95": NaN,
+    "n": 1
+   },
+   "match_structures_seen": [
+    "",
+    "in_port|eth_src|eth_dst"
+   ]
+  }
+ },
+ "runs": {
+  "fivetuple": [
+   {
+    "file": "fivetuple_s0.pcap",
+    "seconds": 29,
+    "packet_in_per_s": 3.7586206896551726,
+    "flow_mods": 62,
+    "stats_replies": 29,
+    "entry_observations": 460,
+    "entry_obs_per_reply": 15.862068965517242,
+    "match_sets": {
+     "": 29,
+     "in_port|eth_src|eth_dst": 232,
+     "in_port|eth_type|ipv4_src|ipv4_dst|ip_proto|tcp_src|tcp_dst": 199
+    },
+    "parser": {
+     "messages": 312,
+     "desyncs": 0,
+     "dropped_bytes": 0,
+     "dup_segments": 312
+    }
+   }
+  ],
+  "fivetuple_short": [
+   {
+    "file": "fivetuple_short_s0.pcap",
+    "seconds": 29,
+    "packet_in_per_s": 3.7586206896551726,
+    "flow_mods": 62,
+    "stats_replies": 29,
+    "entry_observations": 281,
+    "entry_obs_per_reply": 9.689655172413794,
+    "match_sets": {
+     "": 29,
+     "in_port|eth_src|eth_dst": 210,
+     "in_port|eth_type|ipv4_src|ipv4_dst|ip_proto|tcp_src|tcp_dst": 42
+    },
+    "parser": {
+     "messages": 309,
+     "desyncs": 0,
+     "dropped_bytes": 0,
+     "dup_segments": 309
+    }
+   }
+  ],
+  "mac": [
+   {
+    "file": "mac_s0.pcap",
+    "seconds": 29,
+    "packet_in_per_s": 1.9310344827586208,
+    "flow_mods": 11,
+    "stats_replies": 28,
+    "entry_observations": 268,
+    "entry_obs_per_reply": 9.571428571428571,
+    "match_sets": {
+     "": 28,
+     "in_port|eth_src|eth_dst": 240
+    },
+    "parser": {
+     "messages": 152,
+     "desyncs": 0,
+     "dropped_bytes": 0,
+     "dup_segments": 152
+    }
+   }
+  ]
+ }
+}

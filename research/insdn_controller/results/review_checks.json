@@ -1,0 +1,104 @@
+{
+ "within_session_W1_strict": {
+  "any_ip_packet_in": {
+   "bacc_pooled": 0.9953125,
+   "bacc_macro_captures": 1.0,
+   "positives": 2589,
+   "negatives": 320,
+   "captures_with_both_classes": 16
+  },
+  "any_packet_in": {
+   "bacc_pooled": 0.5,
+   "bacc_macro_captures": 0.5,
+   "positives": 2589,
+   "negatives": 320,
+   "captures_with_both_classes": 16
+  },
+  "attack_capture_negatives_nonempty": {
+   "total": 320,
+   "with_zero_ip_packet_in": 317
+  }
+ },
+ "within_session_W1_iprule": {
+  "any_ip_packet_in": {
+   "bacc_pooled": 0.74051593323217,
+   "bacc_macro_captures": 0.6996904135254175,
+   "positives": 6299,
+   "negatives": 659,
+   "captures_with_both_classes": 30
+  },
+  "any_packet_in": {
+   "bacc_pooled": 0.5,
+   "bacc_macro_captures": 0.5,
+   "positives": 6299,
+   "negatives": 659,
+   "captures_with_both_classes": 30
+  },
+  "attack_capture_negatives_nonempty": {
+   "total": 659,
+   "with_zero_ip_packet_in": 317
+  }
+ },
+ "within_session_W5_strict": {
+  "any_ip_packet_in": {
+   "bacc_pooled": 1.0,
+   "bacc_macro_captures": 1.0,
+   "positives": 616,
+   "negatives": 22,
+   "captures_with_both_classes": 9
+  },
+  "any_packet_in": {
+   "bacc_pooled": 0.5,
+   "bacc_macro_captures": 0.5,
+   "positives": 616,
+   "negatives": 22,
+   "captures_with_both_classes": 9
+  },
+  "attack_capture_negatives_nonempty": {
+   "total": 22,
+   "with_zero_ip_packet_in": 22
+  }
+ },
+ "within_session_W5_iprule": {
+  "any_ip_packet_in": {
+   "bacc_pooled": 0.6527777777777778,
+   "bacc_macro_captures": 0.6682506887052341,
+   "positives": 1620,
+   "negatives": 72,
+   "captures_with_both_classes": 22
+  },
+  "any_packet_in": {
+   "bacc_pooled": 0.5,
+   "bacc_macro_captures": 0.5,
+   "positives": 1620,
+   "negatives": 72,
+   "captures_with_both_classes": 22
+  },
+  "attack_capture_negatives_nonempty": {
+   "total": 72,
+   "with_zero_ip_packet_in": 22
+  }
+ },
+ "probe_cells_W1_strict": {
+  "D1_attack_windows": 518,
+  "D1_attack_windows_with_unmatched_ip": 424,
+  "D1_normal_windows": 14693,
+  "D2_attack_free_windows": 6,
+  "D2_normal_windows": 14693,
+  "captures_contributing": {
+   "D1_attack": 23,
+   "D2_attack_free": 2
+  }
+ },
+ "probe_cells_W5_strict": {
+  "D1_attack_windows": 428,
+  "D1_attack_windows_with_unmatched_ip": 294,
+  "D1_normal_windows": 6243,
+  "D2_attack_free_windows": 2,
+  "D2_normal_windows": 6243,
+  "captures_contributing": {
+   "D1_attack": 28,
+   "D2_attack_free": 2
+  }
+ }
+}

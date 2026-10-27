@@ -1,0 +1,134 @@
+{
+ "total_by_match_structure": {
+  "in_port|eth_dst|eth_src": 3811,
+  "eth_type": 16
+ },
+ "flowmods": 3827,
+ "ip_or_transport_fields_in_any_flowmod": false,
+ "per_capture": {
+  "Metsplotable-2_Group/metasploitable-2_brute-force-attack/ONOS_-BRF_tomcat_apache.pcap": {
+   "in_port|eth_dst|eth_src": 3
+  },
+  "Metsplotable-2_Group/metasploitable-2_brute-force-attack/ONOS_BRF_telnet.pcap": {
+   "in_port|eth_dst|eth_src": 5
+  },
+  "Metsplotable-2_Group/metasploitable-2_ddos/ONOS_DDoS_ICMP.pcap": {
+   "in_port|eth_dst|eth_src": 5
+  },
+  "Metsplotable-2_Group/metasploitable-2_ddos/ONOS_DDoS_SYN.pcapng": {},
+  "Metsplotable-2_Group/metasploitable-2_ddos/ONOS_DDoS_TCP.pcap": {},
+  "Metsplotable-2_Group/metasploitable-2_dos/ONOS_DoS-SYN.pcapng": {
+   "in_port|eth_dst|eth_src": 43,
+   "eth_type": 4
+  },
+  "Metsplotable-2_Group/metasploitable-2_dos/ONOS_DoS_slowloris.pcap": {
+   "in_port|eth_dst|eth_src": 142
+  },
+  "Metsplotable-2_Group/metasploitable-2_exploit/ONOS_VSFTPD_exploit.pcap": {
+   "in_port|eth_dst|eth_src": 4
+  },
+  "Metsplotable-2_Group/metasploitable-2_exploit/ONOS_distcc_exploit.pcap": {
+   "in_port|eth_dst|eth_src": 3
+  },
+  "Metsplotable-2_Group/metasploitable-2_exploit/ONOS_irc_exploit.pcap": {
+   "in_port|eth_dst|eth_src": 2
+  },
+  "Metsplotable-2_Group/metasploitable-2_exploit/ONOS_samba_exploit.pcap": {
+   "in_port|eth_dst|eth_src": 1
+  },
+  "Metsplotable-2_Group/metasploitable-2_probe/ONOS_Scan_probe_wmap_scan.pcap": {
+   "in_port|eth_dst|eth_src": 27
+  },
+  "Metsplotable-2_Group/metasploitable-2_probe/ONOS__probe_msf__scan.pcap": {
+   "in_port|eth_dst|eth_src": 119
+  },
+  "Normal_Group/Normal_1/Normal-ONOS_1.pcap": {
+   "in_port|eth_dst|eth_src": 12
+  },
+  "Normal_Group/Normal_10/Normal-ONOS_11.pcap": {
+   "in_port|eth_dst|eth_src": 86
+  },
+  "Normal_Group/Normal_11/Normal-ONOS_12.pcap": {
+   "in_port|eth_dst|eth_src": 1047
+  },
+  "Normal_Group/Normal_2/Normal-ONOS_2.pcap": {
+   "in_port|eth_dst|eth_src": 22,
+   "eth_type": 12
+  },
+  "Normal_Group/Normal_3/Normal-ONOS_3.pcap": {
+   "in_port|eth_dst|eth_src": 15
+  },
+  "Normal_Group/Normal_4/Normal-ONOS_4.pcap": {
+   "in_port|eth_dst|eth_src": 8
+  },
+  "Normal_Group/Normal_5/Normal-ONOS_5.pcap": {
+   "in_port|eth_dst|eth_src": 24
+  },
+  "Normal_Group/Normal_6/Normal-ONOS_6.pcap": {
+   "in_port|eth_dst|eth_src": 24
+  },
+  "Normal_Group/Normal_7/Normal-ONOS_8.pcap": {
+   "in_port|eth_dst|eth_src": 3
+  },
+  "Normal_Group/Normal_8/Normal-ONOS_9.pcap": {
+   "in_port|eth_dst|eth_src": 3
+  },
+  "Normal_Group/Normal_9/Normal_ONOS.gz_10.pcap": {
+   "in_port|eth_dst|eth_src": 3
+  },
+  "OVS_Group/Botnet/ONOS_Botnet.pcap": {
+   "in_port|eth_dst|eth_src": 9
+  },
+  "OVS_Group/DDoS/ONOS-DDoS-ICMP.pcap": {
+   "in_port|eth_dst|eth_src": 17
+  },
+  "OVS_Group/DDoS/ONOS-DDoS-SYN.pcap": {
+   "in_port|eth_dst|eth_src": 54
+  },
+  "OVS_Group/DDoS/ONOS-DDoS-UDP.pcap": {
+   "in_port|eth_dst|eth_src": 1762
+  },
+  "OVS_Group/Probe/ONOS_Probe-Docker.pcap": {
+   "in_port|eth_dst|eth_src": 46
+  },
+  "OVS_Group/Probe/ONOS_Probe-Vhosts.pcap": {
+   "in_port|eth_dst|eth_src": 190
+  },
+  "OVS_Group/brute-force-attack/ONOS_brute-force-attack-brup-suite.pcap": {
+   "in_port|eth_dst|eth_src": 18
+  },
+  "OVS_Group/brute-force-attack/ONOS_brute-force-attack-hydra.pcap": {
+   "in_port|eth_dst|eth_src": 1
+  },
+  "OVS_Group/dos/Application_DoS/ONOS_Dos-hulk.pcap": {
+   "in_port|eth_dst|eth_src": 2
+  },
+  "OVS_Group/dos/Application_DoS/ONOS_Slowloris.pcap": {
+   "in_port|eth_dst|eth_src": 4
+  },
+  "OVS_Group/dos/Application_DoS/ONOS_Slowloris_Apache killer.pcap": {
+   "in_port|eth_dst|eth_src": 4
+  },
+  "OVS_Group/dos/Application_DoS/ONOS_Slowloris_R-U-Dead-Yet or Rudy.pcap": {
+   "in_port|eth_dst|eth_src": 4
+  },
+  "OVS_Group/dos/Application_DoS/ONOS_Slowloris_Slow Read.pcap": {
+   "in_port|eth_dst|eth_src": 4
+  },
+  "OVS_Group/dos/Application_DoS/ONOS_torshhummer.pcap": {
+   "in_port|eth_dst|eth_src": 26
+  },
+  "OVS_Group/dos/Network_DoS/ONOS-HTTP-flood.pcap": {
+   "in_port|eth_dst|eth_src": 20
+  },
+  "OVS_Group/dos/Network_DoS/ONOS-TCP-flood.pcap": {
+   "in_port|eth_dst|eth_src": 4
+  },
+  "OVS_Group/dos/Network_DoS/ONOS-UDP-flood.pcap": {
+   "in_port|eth_dst|eth_src": 45
+  },
+  "OVS_Group/web_attack/ONOS-interface_XSS_Burp.pcap": {},
+  "OVS_Group/web_attack/ONOS_SQL-Injection.pcap": {},
+  "OVS_Group/web_attack/ONOS_reverse-shell.pcap": {}
+ }
+}

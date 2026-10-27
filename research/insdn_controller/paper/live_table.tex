@@ -1,0 +1,14 @@
+\begin{table*}[t]
+\caption{Forwarding application vs.\ what the controller observes: benign traffic from the same generator and seeds (5 hosts $\rightarrow$ 1 HTTP server, plus pings), 1-switch Mininet/Ryu testbed, $\sim$99\,s capture per run, 5 runs per mode, mean{\scriptsize$\pm$}95\% CI. Entries = flow entries returned per flow-statistics reply (1\,s polling). Corrected application (IP traffic receives only IP-specific entries; ARP only an ARP entry).}
+\label{tab:live}
+\centering\small
+\begin{tabular}{lccccc}
+\toprule
+Mode & TCP PacketIns & All PacketIns & FlowMods & MAC-pair entries & IP-specific entries \\
+\midrule
+MAC-pair (as ONOS in InSDN) & 11.6{\scriptsize$\pm$4.2} & 76.2{\scriptsize$\pm$3.0} & 18.8{\scriptsize$\pm$2.8} & 9.5{\scriptsize$\pm$0.1} & 0.0{\scriptsize$\pm$0.0} \\
+5-tuple, 10\,s idle & 10350.0{\scriptsize$\pm$439.9} & 10422.2{\scriptsize$\pm$448.3} & 10371.6{\scriptsize$\pm$438.2} & 0.0{\scriptsize$\pm$0.0} & 151.9{\scriptsize$\pm$1.8} \\
+5-tuple, 2\,s idle & 10233.0{\scriptsize$\pm$415.5} & 10446.4{\scriptsize$\pm$440.9} & 10396.2{\scriptsize$\pm$422.9} & 0.0{\scriptsize$\pm$0.0} & 36.8{\scriptsize$\pm$0.4} \\
+\bottomrule
+\end{tabular}
+\end{table*}
