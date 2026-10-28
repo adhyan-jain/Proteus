@@ -22,6 +22,19 @@ async function get<T>(path: string): Promise<T> {
   return res.json();
 }
 
+export type Ci = { mean: number; ci95: number; n: number };
+export type ControllerTelemetry =
+  | {
+      available: true;
+      source_files: string[];
+      window_s: number;
+      label_scheme: string;
+      grouped_cv: Record<string, { bacc?: Ci; recall?: Ci; fpr?: Ci; precision?: Ci }>;
+      within_session_trivial_any_ip_packet_in: { bacc_pooled: number; bacc_macro_captures: number; positives: number; negatives: number };
+      live_modes: Record<string, Record<string, Ci>>;
+    }
+  | NotAvailable;
+
 export type ExperimentLatest =
   | ({ available: true } & {
       data_source: string;
@@ -155,6 +168,7 @@ export const api = {
   gateLog: () => get<GateLog>("/api/gate/log"),
   adaptationEvents: () => get<AdaptationEvents>("/api/adaptation/events"),
   metricsFinal: () => get<MetricsFinal>("/api/metrics/final"),
+  controllerTelemetry: () => get<ControllerTelemetry>("/api/controller-telemetry"),
   topology: () => get<NotAvailable>("/api/topology"),
   datasetsSummary: () => get<DatasetSummary>("/api/datasets/summary"),
   models: () => get<ModelsInfo>("/api/models"),
