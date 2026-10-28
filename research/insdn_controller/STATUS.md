@@ -1,7 +1,7 @@
 # Status: controller-observable telemetry on InSDN (2026-10-28)
 
 ## What exists
-- `paper/main.pdf` (6 pages, IEEE conference format; source `paper/main.tex`, generated `paper/tables.tex`, `paper/live_table.tex`).
+- `paper/main.pdf` (7 pages, IEEE journal format; source `paper/main.tex`, generated `paper/tables.tex`, `paper/live_table.tex`).
 - `DEFENSE.md`: 10-slide talk with speaker notes and Q&A (Markdown, no artifacts).
 - Pipeline: `ofgap/` (OpenFlow parser, features, experiments, table generator, review checks); live testbed in `live/`.
 - Results: `results/` (every number in the paper comes from these files); capture hashes: `capture_hashes.sha256`.

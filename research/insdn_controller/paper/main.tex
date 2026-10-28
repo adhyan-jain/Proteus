@@ -1,4 +1,4 @@
-\documentclass[conference]{IEEEtran}
+\documentclass[journal]{IEEEtran}
 \usepackage{amsmath,booktabs,multirow,graphicx,url}
 \usepackage[hidelinks]{hyperref}
 
@@ -32,7 +32,8 @@ application sets what the controller observes: per-flow forwarding produced abou
 about 12 for MAC-pair forwarding (at least 665$\times$ in every paired run, for both timeouts; at least 391$\times$ on three switches), and a 2\,s idle timeout reduced the
 IP-specific entries a 1\,s poller sees from $153.1\pm2.4$ to $36.9\pm0.5$ per reply. A first campaign with a flawed
 application, in which ping and ARP entries shadowed TCP, understated the PacketIn effect by more than two orders of
-magnitude; we report both.
+magnitude; we report both. Ryu's unmodified \texttt{simple\_switch\_13} application, run as a second controller in five
+captures, also installed only MAC-pair entries (86 of 91 FlowMods; none with IP or transport fields).
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -95,9 +96,28 @@ what an SDN controller can observe.
 \textbf{Controller-side detection and control-plane data.} PacketIn and flow-table signals have long been used to
 detect flooding at the controller~\cite{braga2010lightweight,mousavi2015early} and to protect it~\cite{shin2013avantguard,wang2015floodguard,dhawan2015sphinx}.
 Arévalo-Herrera et al.~\cite{lansdnnids2026} release a dataset that pairs traffic features with control-plane
-metrics (PacketIn and FlowMod counts) collected on an OpenDaylight testbed. Our work is complementary: we do not
+metrics (PacketIn and FlowMod counts) collected on an OpenDaylight testbed. Their ablation reports that removing the OpenFlow features lowers link-fabrication F1 from 0.97 to 0.19 on
+that dataset, which supports the premise that control-plane telemetry carries signal for SDN-specific attacks; our results neither
+confirm nor contradict it, because we study volumetric and scan traffic on a different testbed. The UKMDDoSDN
+dataset~\cite{ukmddosdn2025} (Ryu, DDoS) ships PCAPs, but the two we fetched (SYN and UDP flood, 310\,k packets in total) contain no
+OpenFlow packets at all (Appendix~\ref{app:ukm}), so they cannot support a control-channel analysis. Our work is complementary: we do not
 introduce a new dataset, but characterise and use the controller-side captures already shipped with InSDN, so
 results remain comparable with the large body of InSDN work.
+
+\section{Threat Model and Scope}\label{sec:threat}
+\textbf{Defender.} The detector runs at (or beside) an SDN controller and may read only what the OpenFlow~1.3 control
+channel carries: PacketIn, PacketOut, FlowMod, FlowRemoved and flow-statistics messages. It has no tap on host links and
+no packet captures from the data plane. We assume the controller's forwarding application is fixed and known.
+
+\textbf{Attacker.} The attacker is an end host that sends volumetric (DoS/DDoS), scanning, brute-force, exploit, web or
+botnet traffic through the switch. We do not consider an attacker who attacks the controller or the control channel
+itself (e.g.\ spoofed PacketIn floods aimed at saturating it), who knows the detector, or who adapts traffic to mimic
+benign PacketIn statistics; the evaluation is therefore a measurement of what is observable and separable in recorded
+benchmark traffic, not a robustness claim.
+
+\textbf{Out of scope.} Inline operation, mitigation, latency, encrypted-payload effects, and attacks on switches.
+The paper makes claims about (i) what two forwarding applications install, (ii) separability within InSDN's
+captures, and (iii) validity of that separability as detection evidence.
 
 \section{What the Controller Sees in InSDN}\label{sec:gap}
 \textbf{Data.} InSDN~\cite{elsayed2020insdn} was generated with Mininet hosts and an Open vSwitch switch controlled by
@@ -161,9 +181,8 @@ removes exactly the hard negatives of attack sessions.
 \textbf{Detectors and baselines.} A two-layer MLP (64--32 units, dropout, class-weighted cross-entropy, 40 epochs)
 trained on an NVIDIA RTX 4060 GPU; a logistic-regression model on the same inputs; a single-window MLP; ablations to
 PacketIn-derived or flow-statistics-derived features; and four single-feature thresholds fitted on the training
-folds (PacketIn rate, a causal per-capture-normalised burst rate, source-IP entropy, destination-port entropy). We did
-not obtain a gradient-boosted-tree baseline: the package could not be installed in this environment, and training is
-restricted to the GPU.
+folds (PacketIn rate, a causal per-capture-normalised burst rate, source-IP entropy, destination-port entropy). A gradient-boosted-tree baseline (XGBoost, trained on the GPU) uses the same inputs, and a host-side baseline uses InSDN's
+own flow-CSV features (below).
 
 \textbf{Protocol.} No capture appears in both training and test. (A)~5-fold cross-validation grouped by capture file
 and stratified by class; (B)~leave-one-attack-family-out, with DoS and DDoS withheld together as ``flood''; (C)~cross-deployment,
@@ -203,6 +222,13 @@ Metasploitable-2 sessions gives 0.990 (best threshold 0.947); the reverse gives 
 (logistic regression 0.961, single window 0.944) and the PacketIn-rate threshold at 0.527. Flow-statistics features
 alone improve to 0.918, since a longer window usually spans a counter poll. Cross-deployment gives 0.978 (OVS
 $\rightarrow$ Metasploitable-2; best threshold 0.910) and 0.895 (reverse; 0.860).
+
+\textbf{Host-side baseline.} For contrast, the usual flow-CSV protocol applied to InSDN's own CICFlowMeter features
+(343\,889 flows, 78 numeric features, benign vs.\ any attack, XGBoost on the GPU, 10 seeds of stratified 70/30 row splits)
+reaches BAcc $0.9998\pm0.00003$. This is not a comparison on the same traffic or the same units: rows are flows, not windows;
+rows of one session fall on both sides of the split; and these features are not available to a controller. It shows that
+the usual benchmark protocol is far easier than capture-grouped evaluation of the controller view; it should not be read as
+the controller-side detector being 5 points worse.
 
 \input{tables}
 
@@ -265,6 +291,18 @@ not inline in a live controller, and we do not measure controller-side latency o
 study (\S\ref{sec:live}) uses benign traffic and at most three switches; it measures visibility, not detection, and a
 cross-testbed detection experiment with labelled attacks is future work.
 
+\textbf{Deployment.} A controller-side detector of this kind would run beside the control channel, reading a port mirror or the
+controller's message log, and would need the forwarding application's granularity to be stable: switching from MAC-pair to per-flow
+forwarding changed TCP PacketIn volume by two to three orders of magnitude in our testbed, so any threshold or model tied to PacketIn
+rates must be retrained, or at least recalibrated, after a forwarding change. The idle timeout also changes what a poller sees
+(about a quarter as many per-flow entries at 2\,s as at 10\,s). Per-flow forwarding exposes finer counters at a controller-load and
+flow-table cost that we did not measure. Missing before deployment can be argued: interleaved benign and attack traffic in one session,
+a second controller family beyond Ryu applications (OpenDaylight, ONOS under other applications), and online latency.
+
+\textbf{What we could not do.} We did not re-implement a published controller-side detector from its paper, so the comparison
+is to threshold heuristics and our own models only. The two public candidates we examined as second sources
+(Appendix~\ref{app:ukm}) could not be used.
+
 \section{Conclusion}
 InSDN's own controller never installed or reported the 5-tuple flow entries InSDN labels: its flow entries are MAC
 pairs or EtherType rules, and its view of traffic is a PacketIn stream. Restricted to that view, small models separate InSDN's attack
@@ -275,6 +313,17 @@ matches or beats the model under strict labels, and our probes lack clean attack
 controller-observable evaluation on InSDN as feasible but unproven, and recommend datasets that interleave benign and
 attack traffic. A benign-traffic Mininet/Ryu study shows that forwarding-application choices (entry granularity, idle
 timeout) change what the controller can observe. The pipeline, capture hashes and result files accompany this paper.
+
+\appendices
+\section{Candidate Second Datasets Examined}\label{app:ukm}
+UKMDDoSDN~\cite{ukmddosdn2025}: we downloaded \texttt{syn\_flood\_combined.pcap} (18\,922\,240\,B; 199\,273 packets) and
+\texttt{udp\_flood\_combined.pcap} (15\,420\,748\,B; 110\,518 packets) from the authors' repository, parsed them (pcapng, Linux cooked v2) and found no
+packet on TCP port 6633 or 6653: they are data-plane captures from many per-host interfaces. The CSV files the dataset page
+describes were not in the repository listing and the Mendeley file list could not be read, so we make no claim about them. The
+dataset page states CC BY 4.0 while the repository is MIT-licensed; we did not resolve this. LAN-SDN-NIDS~\cite{lansdnnids2026}: we
+read its Crossref record (the publisher page refused automated access), which describes a flow-level dataset of 1\,125\,059 records with
+11 control-plane metrics; we could not verify whether raw OpenFlow captures are released, and flow-level counts of PacketIn and FlowMod
+would not expose FlowMod match fields. Neither was used as data. Hashes are in \texttt{data/MANIFEST.md}.
 
 \bibliographystyle{IEEEtran}
 \bibliography{references}

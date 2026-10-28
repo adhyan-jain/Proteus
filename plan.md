@@ -109,3 +109,9 @@ Not novel: control-plane telemetry for SDN IDS (LAN-SDN-NIDS exists), the detect
 
 ### Prompt to paste in the new session
 > Read /home/adhyan/Desktop/Proteus/plan.md (especially "Progress log") and CLAUDE.md, then continue from "Next steps in order". Check `git log --oneline` and `git status` first. Do the work you can do without the user's attack traffic: verify the Phase 3 candidate datasets (never substitute generated data), then Phase 4 remainder, then Phase 6 writing (journal-length draft, related work, limitations, number re-verification against results/*.json). Keep every number traceable to a result JSON, commit in small logical units with one-line messages and no attribution lines, never push, and report what you did and what is blocked on me.
+
+
+### Update 2026-10-28 (later session)
+- Phase 3 closed as far as possible: UKMDDoSDN PCAPs (2 files, 309,791 packets) contain 0 OpenFlow packets; LAN-SDN-NIDS data not reachable (MDPI 403), metadata via Crossref only; both recorded in `data/MANIFEST.md`, neither used. Second controller done locally instead: Ryu stock `simple_switch_13`, 5 runs, 91 FlowMods, 86 MAC-pair + 5 table-miss, none with IP/transport fields (`results/stock_ryu_flowmods.json`). ODL/ONOS not tested.
+- Phase 4: host-side CSV baseline done (`results/hostside_xgb.json`, BAcc 0.9998, row-level split, not the same traffic). Published-detector re-implementation NOT done.
+- Phase 6: `paper/main.tex` now IEEEtran journal class, 7 pages (threat model, extended related work, deployment, appendix on candidate datasets); `paper/verify_numbers.py` re-checks 19 headline numbers against results/*.json (all OK). Not padded to 10-14 pages. 4th hostile review, STATUS/DEFENSE/GUIDE refresh still open.

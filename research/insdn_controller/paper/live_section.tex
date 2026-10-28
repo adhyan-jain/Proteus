@@ -49,6 +49,13 @@ paired run), and the per-flow entries a 1\,s poller sees per reply fall from $11
 
 \input{live_table_linear3}
 
+\textbf{A stock Ryu application.} To check that the MAC-pair behaviour is not an artefact of our own application, we ran Ryu's
+unmodified \texttt{simple\_switch\_13} on the same one-switch topology (5 runs of 60\,s; 2\,982 requests, none failed). Of 91 FlowMods, 86
+match \texttt{(in\_port, eth\_dst, eth\_src)} and 5 are the table-miss rule; none matches IP or transport fields. The controller
+received 71, 69, 76, 76 and 76 PacketIns per run (mean 73.6, all protocols). Like ONOS's \texttt{fwd}, this application installs MAC-pair
+entries; this follows from the application's code, and it does not test OpenDaylight, ONOS under other applications, or any production
+deployment.
+
 \textbf{Scope.} This is a testbed with at most three switches with one forwarding application and benign traffic only; we run no
 attacks or detectors in it. The mode contrast does not transfer to InSDN's ONOS, which punted about one packet per
 target packet even with MAC-pair entries (\S\ref{sec:gap}), and no claim is made about detection accuracy under any
