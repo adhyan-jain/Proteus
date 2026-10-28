@@ -26,6 +26,7 @@ from mininet.topo import Topo
 
 HERE = Path(__file__).resolve().parent
 RYU = HERE.parent.parent.parent / ".venv-ryu" / "bin" / "ryu-manager"
+STOCK_APP = HERE.parent.parent.parent / ".venv-ryu/lib/python3.8/site-packages/ryu/app/simple_switch_13.py"
 
 
 class OneSwitch(Topo):
@@ -108,7 +109,8 @@ def one_run(mode, seed, duration, out_dir, topo="one"):
     for i in range(4):
         (www / f"f{i}.bin").write_bytes(os.urandom(2 ** (14 + 2 * i)))
     env = dict(os.environ, FWD_MODE=mode, POLL_S="1.0")
-    ryu = subprocess.Popen([str(RYU), str(HERE / "ryu_fwd.py"), "--ofp-tcp-listen-port", "6653"], env=env,
+    app = STOCK_APP if mode == "stock" else HERE / "ryu_fwd.py"  # "stock": Ryu's bundled simple_switch_13, unmodified
+    ryu = subprocess.Popen([str(RYU), str(app), "--ofp-tcp-listen-port", "6653"], env=env,
                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     time.sleep(4)
     sniff = Sniffer(str(pcap))

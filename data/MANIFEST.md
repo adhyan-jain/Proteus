@@ -118,3 +118,23 @@ archive.
 - Extracted to `data/raw/insdn_pcaps/ex/` (gitignored, not committed).
 - Used only by `research/insdn_controller/` (controller-native detection study); the paper-grade
   `proteus/*_full` pipeline still uses the CSVs above.
+
+## Phase 3 candidates evaluated and NOT used (2026-10-28)
+
+Neither candidate is used as a data source; nothing was substituted for them.
+
+- **UKMDDoSDN** (Mendeley DOI 10.17632/43nfv26gpk.2, Ryu; author repo `github.com/nqmn/ukmddosdn`).
+  Fetched `dataset/syn_flood_combined.pcap` (18,922,240 B, SHA-256 `8ec9ed49...ed172`),
+  `dataset/udp_flood_combined.pcap` (15,420,748 B, SHA-256 `9ed46340...c262` prefix `9ed46340418291e6`) and
+  `combine_datasets.log` into `data/raw/ukmddosdn/` (gitignored; full hashes in `SHA256SUMS` there).
+  Parsed with dpkt (pcapng, Linux SLL2): 199,273 and 110,518 packets, captured on ~hundreds of per-host
+  interfaces, IP traffic is TCP/80, UDP/53 etc.; **0 packets on TCP 6633/6653**, so these PCAPs are data-plane
+  only and cannot support a PacketIn/FlowMod granularity measurement. The CSVs described on the Mendeley page
+  (`flow_features.csv`: "flow-level features from SDN controller") were not in the repo listing and the Mendeley
+  file list could not be rendered; unverified. Licence conflict unresolved (Mendeley CC BY 4.0, repo MIT).
+- **LAN-SDN-NIDS** (Data 2026, 11(8), 195, DOI 10.3390/data11080195, CC BY 4.0; Containernet/OpenDaylight,
+  1,125,059 flow records, 29 traffic + 11 control-plane features incl. Packet-In/Flow-Mod counts). Metadata
+  read from the Crossref record; the MDPI page returns HTTP 403 to automated fetch, so the data repository,
+  file formats and whether raw OpenFlow captures exist are **unverified**. A flow-level CSV with Packet-In/Flow-Mod
+  *counts* would not expose FlowMod match fields, so it cannot replace the granularity measurement either.
+  Treated as related work only.

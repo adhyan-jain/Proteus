@@ -1,0 +1,53 @@
+{
+ "runs": 5,
+ "flowmods": 91,
+ "total_by_match_structure": {
+  "(table-miss)": 5,
+  "in_port|eth_dst|eth_src": 86
+ },
+ "ip_or_transport_fields_in_any_flowmod": false,
+ "packet_in_per_run": [
+  71,
+  69,
+  76,
+  76,
+  76
+ ],
+ "per_capture": {
+  "stock_s0.pcap": {
+   "flowmods_by_match": {
+    "(table-miss)": 1,
+    "in_port|eth_dst|eth_src": 16
+   },
+   "packet_in": 71
+  },
+  "stock_s1.pcap": {
+   "flowmods_by_match": {
+    "(table-miss)": 1,
+    "in_port|eth_dst|eth_src": 14
+   },
+   "packet_in": 69
+  },
+  "stock_s2.pcap": {
+   "flowmods_by_match": {
+    "(table-miss)": 1,
+    "in_port|eth_dst|eth_src": 20
+   },
+   "packet_in": 76
+  },
+  "stock_s3.pcap": {
+   "flowmods_by_match": {
+    "(table-miss)": 1,
+    "in_port|eth_dst|eth_src": 18
+   },
+   "packet_in": 76
+  },
+  "stock_s4.pcap": {
+   "flowmods_by_match": {
+    "(table-miss)": 1,
+    "in_port|eth_dst|eth_src": 18
+   },
+   "packet_in": 76
+  }
+ }
+}
