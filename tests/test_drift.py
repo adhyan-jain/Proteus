@@ -1,7 +1,7 @@
-"""Behavioral tests for the KS-test drift detector (proteus/drift.py)."""
+"""Behavioral tests for the KS-test drift detector (backend/drift.py)."""
 import numpy as np
 
-from proteus.drift import detect_drift
+from backend.drift import detect_drift
 
 
 def test_no_drift_when_distributions_match():

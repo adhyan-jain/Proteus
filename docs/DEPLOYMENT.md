@@ -41,7 +41,7 @@ Proteus cleanly separates **offline research, training, and benchmarking** from 
 ## 2. Model Artifact Management & Release Versioning
 
 > [!NOTE]
-> **Deployment Artifact Scope**: The default release bundle (`v001`, `models/releases/v001/`) is a lightweight 5-class reference model (`NSL-KDD-Schema-Reference`, 52 features) designed for low-latency live API inference, container healthchecks, and frontend dashboard telemetry. The full-scale 25-class Stage 7 research experiments (`CICIDS2017`, 78 features, 1.2M flows) operate via `proteus.closed_loop_full` in the offline research benchmarking pipeline, writing its metrics to `results/`.
+> **Deployment Artifact Scope**: The default release bundle (`v001`, `models/releases/v001/`) is a lightweight 5-class reference model (`NSL-KDD-Schema-Reference`, 52 features) designed for low-latency live API inference, container healthchecks, and frontend dashboard telemetry. The full-scale 25-class Stage 7 research experiments (`CICIDS2017`, 78 features, 1.2M flows) operate via `backend.closed_loop_full` in the offline research benchmarking pipeline, writing its metrics to `results/`.
 
 Model artifacts are managed under `models/releases/` as immutable, versioned bundles with cryptographic SHA256 checksums, with `models/active_release.json` maintaining the active production pointer:
 
@@ -159,7 +159,7 @@ curl -X POST http://localhost:8000/predict \
 
 ## 5. Autonomous Closed-Loop Drift Daemon & Hot-Swapping
 
-Proteus integrates an in-process, non-blocking autonomous closed-loop lifecycle (`proteus/drift_daemon.py`, `proteus/model_manager.py`, `proteus/release_manager.py`):
+Proteus integrates an in-process, non-blocking autonomous closed-loop lifecycle (`backend/drift_daemon.py`, `backend/model_manager.py`, `backend/release_manager.py`):
 
 ```
 +-----------------------------------------------------------------------------------------+

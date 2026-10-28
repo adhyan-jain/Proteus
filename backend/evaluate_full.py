@@ -4,7 +4,7 @@ against an identical real drift schedule, at full scale.
 **Scope honesty, read before trusting a number from this module**: the ground rules for this
 project call for a minimum of 5 random seeds with confidence intervals, evaluated against live
 Mininet/Ryu traffic. Neither is what a single call to `run_stage7(n_seeds=1)` gives you --
-- Traffic source is `proteus.closed_loop_full.RealDataReplaySource` (real CICIDS2017 data, real
+- Traffic source is `backend.closed_loop_full.RealDataReplaySource` (real CICIDS2017 data, real
   Mon-Thu vs. Friday temporal drift), not live Mininet traffic -- see that module's own
   docstring for why (Mininet needs root, not available in this environment).
 - A full-scale closed-loop run retrains a 100-tree Random Forest on up to ~1.5M+ rows at every
@@ -20,12 +20,12 @@ import logging
 import time
 from pathlib import Path
 
-import proteus.config  # noqa: F401 -- must import before numpy/sklearn to cap BLAS/OMP threads
+import backend.config  # noqa: F401 -- must import before numpy/sklearn to cap BLAS/OMP threads
 
 import numpy as np
 
-from proteus.baseline_full import train_and_evaluate, build_static_augmented_set
-from proteus.closed_loop_full import ClosedLoopOrchestrator, RealDataReplaySource
+from backend.baseline_full import train_and_evaluate, build_static_augmented_set
+from backend.closed_loop_full import ClosedLoopOrchestrator, RealDataReplaySource
 from sklearn.metrics import f1_score, classification_report
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
@@ -44,7 +44,7 @@ def _load_day_split_data():
     import gc
     import pandas as pd
     from sklearn.preprocessing import LabelEncoder
-    from proteus.data_full import load_cicids2017_raw, clean_and_unify_cicids2017, \
+    from backend.data_full import load_cicids2017_raw, clean_and_unify_cicids2017, \
         get_feature_schema
 
     raw = load_cicids2017_raw()

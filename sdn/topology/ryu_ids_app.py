@@ -26,7 +26,7 @@ replies arriving -- that needs the repo owner's sudo session, see ARCHITECTURE.m
 a trained classifier into. It is called once per (datapath, flow) per poll interval with the
 best-effort unified-schema dict from feature_mapper. Right now it just logs. Stage 6's job is to
 replace/extend this with: reindex schema_row against
-`proteus.data_full.get_feature_schema()['feature_columns']` (filling columns this mapper can't
+`backend.data_full.get_feature_schema()['feature_columns']` (filling columns this mapper can't
 populate with whatever missing-value convention the trained model expects), run inference, and
 route drift-detector-flagged samples onward -- deliberately not done here per the Stage 5 scope
 in the brief.

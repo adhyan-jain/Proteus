@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import SGDClassifier
-from proteus.closed_loop_full import BoundedBufferClassifier
+from backend.closed_loop_full import BoundedBufferClassifier
 
 
 def test_bounded_buffer_size_invariant():

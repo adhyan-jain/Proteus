@@ -7,8 +7,8 @@ import numpy as np
 import pytest
 from sklearn.ensemble import RandomForestClassifier
 
-from proteus.model_manager import ModelManager
-from proteus.release_manager import package_release
+from backend.model_manager import ModelManager
+from backend.release_manager import package_release
 
 
 @pytest.fixture

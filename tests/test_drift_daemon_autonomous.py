@@ -5,13 +5,13 @@ import numpy as np
 import pytest
 from sklearn.ensemble import RandomForestClassifier
 
-from proteus.drift_daemon import (
+from backend.drift_daemon import (
     AutonomousDriftWorker,
     CandidateValidationGate,
     LiveSampleBuffer,
 )
-from proteus.model_manager import ModelManager
-from proteus.release_manager import package_release
+from backend.model_manager import ModelManager
+from backend.release_manager import package_release
 
 
 def test_live_sample_buffer():

@@ -1,5 +1,5 @@
 """Maps live OpenFlow 1.3 flow-stats entries onto Stage 1's unified feature schema
-(`proteus/data_full.py`'s `get_feature_schema()` / column-naming convention).
+(`backend/data_full.py`'s `get_feature_schema()` / column-naming convention).
 
 Deliberately stdlib-only (no `ryu` import) so it can be unit-tested under the main `.venv`
 (Python 3.12) as well as `.venv-ryu` (Python 3.8), and so the mapping logic is testable in
@@ -146,7 +146,7 @@ def map_flow_stat_to_schema(raw: RawFlowStat) -> dict:
     `POPULATED_COLUMNS`) -- every other unified-schema column is simply absent from the result,
     never filled with a fabricated 0.0/None-as-zero. Callers that need every schema column
     present (e.g. to build a fixed-width feature vector for a classifier) should reindex against
-    `proteus.data_full.get_feature_schema()`'s `feature_columns` and fill the gaps with an
+    `backend.data_full.get_feature_schema()`'s `feature_columns` and fill the gaps with an
     explicit missing-value sentinel appropriate to that use, not this module's job.
     """
     duration_sec = raw.get("duration_sec", 0) or 0
@@ -175,7 +175,7 @@ def map_flow_stat_to_schema(raw: RawFlowStat) -> dict:
     else:
         # A just-installed flow entry can report duration_sec == 0 on the very first poll.
         # CICFlowMeter would never emit a rate feature for a zero-duration flow either (this is
-        # exactly the +/-inf case proteus/data_full.py's cleaning step already guards against
+        # exactly the +/-inf case backend/data_full.py's cleaning step already guards against
         # for the offline dataset) -- so we leave these absent here rather than divide by zero
         # or fabricate a rate.
         pass

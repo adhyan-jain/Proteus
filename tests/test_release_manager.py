@@ -1,4 +1,4 @@
-"""Unit & integration tests for proteus.release_manager."""
+"""Unit & integration tests for backend.release_manager."""
 import json
 import shutil
 from pathlib import Path
@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 from sklearn.ensemble import RandomForestClassifier
 
-from proteus.release_manager import (
+from backend.release_manager import (
     compute_sha256,
     get_next_version,
     package_release,

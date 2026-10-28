@@ -1,7 +1,7 @@
 """Full-scale unified data pipeline (Stage 1 of the paper-grade scale-up).
 
 Loads the corrected CICIDS2017 (WTMC-2021) dataset at full scale. Does NOT touch or replace
-`proteus/data.py`, which remains the demo UI's data source.
+`backend/data.py`, which remains the demo UI's data source.
 
 InSDN support is scaffolded (`load_insdn`, `UNIFIED_SCHEMA` is dataset-agnostic) but not yet
 implemented -- InSDN acquisition is blocked pending Kaggle API credentials. Calling
@@ -10,7 +10,7 @@ implemented -- InSDN acquisition is blocked pending Kaggle API credentials. Call
 import logging
 from pathlib import Path
 
-import proteus.config  # noqa: F401 -- must import before numpy/pandas/sklearn to cap BLAS/OMP threads
+import backend.config  # noqa: F401 -- must import before numpy/pandas/sklearn to cap BLAS/OMP threads
 
 import numpy as np
 import pandas as pd
@@ -202,7 +202,7 @@ def class_distribution_report(df: pd.DataFrame) -> pd.DataFrame:
 def load_data_full(test_size=0.15, val_size=0.15, random_state=42):
     """Full CICIDS2017 pipeline: load -> clean/unify -> stratified train/val/test split.
 
-    Returns a dict mirroring the shape of proteus.data.load_data()'s return value, but at
+    Returns a dict mirroring the shape of backend.data.load_data()'s return value, but at
     full scale and with the real (uncollapsed) CICIDS2017 label taxonomy, plus a `val` split.
     """
     raw = load_cicids2017_raw()

@@ -32,7 +32,7 @@ sha256(data/raw/dataset.zip) = 4d535da19795d85376ae1397d161329e3b06fc47d9a5a68cd
 Total: 2,100,814 data rows (2,100,819 lines incl. 5 headers) across 5 daily CSVs, 84 columns
 each (83 CICFlowMeter features + `Label`).
 
-## Post-cleaning result (via `proteus/data_full.py::load_data_full`)
+## Post-cleaning result (via `backend/data_full.py::load_data_full`)
 
 - 984 individual `inf` values (CICFlowMeter rate-feature artifact on near-zero-duration
   flows) replaced with NaN.
@@ -44,7 +44,7 @@ each (83 CICFlowMeter features + `Label`).
   `clean_and_unify_cicids2017`/`_clean_label`).
 - Class distribution ranges from BENIGN (78.9%, 1,657,069 rows) down to
   `SSH-Patator - Attempted` (8 rows). Full table is logged by
-  `proteus/data_full.py::class_distribution_report` on every run.
+  `backend/data_full.py::class_distribution_report` on every run.
 - Stratified 70/15/15 train/val/test split: 1,470,014 / 315,003 / 315,004 rows.
 
 ## InSDN
@@ -64,7 +64,7 @@ Access, vol. 8, pp. 165263–165284, 2020.
 
 An earlier version of this pipeline used a Kaggle community re-upload
 (`badcodebuilder/insdn-dataset`) before this official source was located — that copy has been
-superseded and is no longer referenced by `proteus/data_full.py`. Row-for-row content is
+superseded and is no longer referenced by `backend/data_full.py`. Row-for-row content is
 identical (verified by matching row counts across all three files), but the official UCD
 source is now the source of record.
 
@@ -83,7 +83,7 @@ the corrected CICIDS2017 files use the unabbreviated convention (e.g. `Total Fwd
 are the same 84 CICFlowMeter features in the same emission order — verified by a positional
 diff of the two raw header rows, which lines up 1:1 across all 84 columns, including one real
 naming quirk (InSDN's `CWE Flag Count` is CICIDS2017's `CWR Flag Count`, same feature/position).
-`proteus/data_full.py::INSDN_TO_CICIDS2017_COLS` encodes this verified positional mapping (not a
+`backend/data_full.py::INSDN_TO_CICIDS2017_COLS` encodes this verified positional mapping (not a
 fuzzy abbreviation-expansion heuristic), so InSDN rows are renamed onto CICIDS2017's column
 convention and then run through the same cleaning path (`clean_and_unify_cicids2017`).
 
@@ -92,7 +92,7 @@ attack labels (`DDoS`, `DoS`, `Probe`, `BFA`, `Web-Attack`, `BOTNET`, `U2R`) hav
 equivalent for `BFA`/`Web-Attack`/`BOTNET`/`U2R` and are kept as their own classes rather than
 force-mapped onto an unrelated CICIDS2017 label.
 
-### Post-cleaning result (via `proteus/data_full.py::load_insdn`)
+### Post-cleaning result (via `backend/data_full.py::load_insdn`)
 
 - 0 inf values, 0 rows dropped for missing/invalid features (InSDN's CSVs are clean going in).
 - **343,889 rows retained**, 80 numeric/one-hot feature columns, **8 label classes**: BENIGN
@@ -117,7 +117,7 @@ archive.
   `data/raw/`).
 - Extracted to `data/raw/insdn_pcaps/ex/` (gitignored, not committed).
 - Used only by `research/insdn_controller/` (controller-native detection study); the paper-grade
-  `proteus/*_full` pipeline still uses the CSVs above.
+  `backend/*_full` pipeline still uses the CSVs above.
 
 ## Phase 3 candidates evaluated and NOT used (2026-10-28)
 

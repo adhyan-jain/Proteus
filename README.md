@@ -44,7 +44,7 @@ Dataset sources and SHA-256 hashes: [`data/MANIFEST.md`](data/MANIFEST.md).
 
 | Path | Contents |
 |---|---|
-| `proteus/` | Backend: demo (`data`, `baseline`, `gan`, `stream`, `pipeline`), full scale (`data_full`, `baseline_full`, `gan_full`, `closed_loop_full`, `evaluate_full`, `validate_full`), runtime (`drift_daemon`, `model_manager`, `release_manager`), shared (`drift`, `fidelity`, `config`) |
+| `backend/` | Backend: demo (`data`, `baseline`, `gan`, `stream`, `pipeline`), full scale (`data_full`, `baseline_full`, `gan_full`, `closed_loop_full`, `evaluate_full`, `validate_full`), runtime (`drift_daemon`, `model_manager`, `release_manager`), shared (`drift`, `fidelity`, `config`) |
 | `api/` | Read-only FastAPI layer + inference/hot-swap endpoints |
 | `frontend/` | Next.js console (10 screens) |
 | `sdn/` | Ryu app, Mininet topology, OpenFlow-to-schema feature mapper |

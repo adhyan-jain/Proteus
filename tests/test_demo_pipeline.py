@@ -1,6 +1,6 @@
-"""Unit tests for proteus/pipeline.py demo pipeline orchestration and evaluation."""
+"""Unit tests for backend/pipeline.py demo pipeline orchestration and evaluation."""
 import numpy as np
-from proteus.pipeline import _split_eval_fit, run_pipeline
+from backend.pipeline import _split_eval_fit, run_pipeline
 
 
 def test_split_eval_fit_disjoint_and_proportions():

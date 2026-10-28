@@ -24,7 +24,7 @@ broken or unverified) before changing anything.
    downloaded from verified, institutional sources (see `data/MANIFEST.md` for exact URLs and
    SHA-256 hashes) — never substitute generated data if a download fails; stop and report
    instead. The one exception, which is NOT a violation of this rule: the small Streamlit demo
-   (`app.py` / `proteus/data.py`) intentionally has a synthetic-data fallback for a
+   (`app.py` / `backend/data.py`) intentionally has a synthetic-data fallback for a
    time-boxed live-demo use case — that's a separate, explicitly-scoped tool, not the paper-grade
    pipeline. Don't conflate the two.
 3. **The WGAN-GP generating synthetic attack samples is the method, not a workaround.** Don't
@@ -38,7 +38,7 @@ broken or unverified) before changing anything.
    plausible-looking made-up number.
 6. **Statistical rigor for any final reported result**: a minimum of 5 random seeds, mean +
    95% confidence interval, not a single run presented as "the" result — this applies to the
-   full-scale evaluation pipeline (`proteus/evaluate_full.py`), not
+   full-scale evaluation pipeline (`backend/evaluate_full.py`), not
    necessarily to every intermediate diagnostic.
 7. **Do not modify `app.py`** (the Streamlit demo) or anything under `frontend/`/`api/` (the
    Next.js mission-control UI + its data API) unless a backend change makes one of them
@@ -82,7 +82,7 @@ broken or unverified) before changing anything.
 
 ## Where things are
 
-See the layout table in `README.md`. In short: `proteus/` backend (the `*_full` modules are
+See the layout table in `README.md`. In short: `backend/` Python package (the `*_full` modules are
 the paper-grade, full-scale path where new backend work happens; the others are the frozen
 demo), `api/` read-only FastAPI layer, `frontend/` Next.js console, `sdn/` Ryu/Mininet,
 `models/` release bundles, `data/MANIFEST.md` dataset provenance (update it whenever a dataset

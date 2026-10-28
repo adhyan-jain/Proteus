@@ -23,10 +23,10 @@ import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import f1_score
 
-from proteus import drift as drift_mod, fidelity as fidelity_mod
-from proteus.closed_loop_full import BoundedBufferClassifier
-from proteus.model_manager import ModelManager
-from proteus.release_manager import (
+from backend import drift as drift_mod, fidelity as fidelity_mod
+from backend.closed_loop_full import BoundedBufferClassifier
+from backend.model_manager import ModelManager
+from backend.release_manager import (
     DEFAULT_MODELS_DIR,
     get_active_release,
     package_release,

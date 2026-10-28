@@ -10,12 +10,12 @@ traffic ──> RandomForest ──> max-prob confidence ──> KS test vs refe
 
 | Stage | Module | Notes |
 |---|---|---|
-| Drift detector | `proteus/drift.py` | `ks_2samp` on confidence; alpha 0.05 (loop), 0.01 (daemon) |
-| Fidelity gate | `proteus/fidelity.py` | Gaussian-kernel MMD, threshold 0.25, median-heuristic bandwidth |
-| Generator | `proteus/gan_full.py` | Conditional WGAN-GP, 3-layer G/critic (LayerNorm critic), GPU only; classes selected by "rare AND modelable" rules |
-| Adaptive classifier | `proteus/closed_loop_full.py` | `BoundedBufferClassifier` (20k reference reservoir + 5k recent), `ClosedLoopOrchestrator`; fixed 30% eval/fit split per window so scores are on rows never trained on |
-| Runtime lifecycle | `proteus/drift_daemon.py` | Ring buffer, KS monitor, off-path adaptation, validation gate, release packaging, hot-swap, canary + rollback |
-| Releases | `proteus/release_manager.py`, `model_manager.py` | SHA-256 manifests under `models/releases/vNNN`, double-buffered in-memory swap |
+| Drift detector | `backend/drift.py` | `ks_2samp` on confidence; alpha 0.05 (loop), 0.01 (daemon) |
+| Fidelity gate | `backend/fidelity.py` | Gaussian-kernel MMD, threshold 0.25, median-heuristic bandwidth |
+| Generator | `backend/gan_full.py` | Conditional WGAN-GP, 3-layer G/critic (LayerNorm critic), GPU only; classes selected by "rare AND modelable" rules |
+| Adaptive classifier | `backend/closed_loop_full.py` | `BoundedBufferClassifier` (20k reference reservoir + 5k recent), `ClosedLoopOrchestrator`; fixed 30% eval/fit split per window so scores are on rows never trained on |
+| Runtime lifecycle | `backend/drift_daemon.py` | Ring buffer, KS monitor, off-path adaptation, validation gate, release packaging, hot-swap, canary + rollback |
+| Releases | `backend/release_manager.py`, `model_manager.py` | SHA-256 manifests under `models/releases/vNNN`, double-buffered in-memory swap |
 | API | `api/server.py` | `/predict`, hot-swap/rollback, telemetry; serves `results/results.pkl` and `api/cache/datasets_summary.json` |
 | Console | `frontend/` | Next.js 16 / TypeScript / Tailwind; 10 screens; explicit "not available" states, no fabricated numbers |
 | SDN | `sdn/` | Ryu 4.34 app (`ryu_ids_app.py`), Mininet topology, `feature_mapper.py` (OpenFlow flow stats -> unified schema) |
@@ -37,7 +37,7 @@ traffic ──> RandomForest ──> max-prob confidence ──> KS test vs refe
 - `.venv-ryu` (Python 3.8): Ryu only; rebuild with `sdn/setup_ryu_venv.sh`.
 - `frontend/node_modules`: Next.js app.
 
-`proteus/config.py` must be the first import in any module doing numeric work: it caps BLAS/OpenMP
+`backend/config.py` must be the first import in any module doing numeric work: it caps BLAS/OpenMP
 threads before numpy/torch/sklearn initialise (otherwise 4 joblib workers x 16 BLAS threads each).
 
 ## Known limits (verified against the code, 2026-10-17)

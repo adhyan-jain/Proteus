@@ -22,9 +22,9 @@ from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from proteus.drift_daemon import AutonomousDriftWorker, LiveSampleBuffer
-from proteus.model_manager import ModelBundle, ModelManager
-from proteus.release_manager import rollback_release
+from backend.drift_daemon import AutonomousDriftWorker, LiveSampleBuffer
+from backend.model_manager import ModelBundle, ModelManager
+from backend.release_manager import rollback_release
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger("proteus.api")

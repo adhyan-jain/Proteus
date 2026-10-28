@@ -1,7 +1,7 @@
 """Stage 4: drift detector + fidelity gate, validated at real scale against CICIDS2017's actual
 temporal and class structure -- not synthetic sanity-check batches.
 
-Reuses `proteus.drift.detect_drift` and `proteus.fidelity.compute_mmd`/`admit` as-is (both are
+Reuses `backend.drift.detect_drift` and `backend.fidelity.compute_mmd`/`admit` as-is (both are
 already dataset-agnostic pure functions -- no need to fork or rewrite them for full scale).
 
 ## Drift detector validation: a real temporal split, not injected drift
@@ -24,13 +24,13 @@ import logging
 import time
 from pathlib import Path
 
-from proteus.config import DEFAULT_N_JOBS  # noqa: F401 -- must import before numpy/torch/sklearn to cap BLAS/OMP threads
+from backend.config import DEFAULT_N_JOBS  # noqa: F401 -- must import before numpy/torch/sklearn to cap BLAS/OMP threads
 
 import numpy as np
 import torch
 from sklearn.ensemble import RandomForestClassifier
 
-from proteus import drift as drift_mod, fidelity as fidelity_mod
+from backend import drift as drift_mod, fidelity as fidelity_mod
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 log = logging.getLogger("proteus.validate_full")
@@ -47,7 +47,7 @@ def _confidence(clf, X):
 
 
 def validate_drift_detector():
-    from proteus.data_full import (
+    from backend.data_full import (
         load_cicids2017_raw, clean_and_unify_cicids2017, get_feature_schema)
     from sklearn.preprocessing import LabelEncoder
     import pandas as pd
@@ -117,8 +117,8 @@ def validate_drift_detector():
 
 
 def validate_fidelity_gate():
-    from proteus.data_full import load_data_full
-    from proteus.gan_full import WGANGPFull, GAN_ADMIT_CLASSES
+    from backend.data_full import load_data_full
+    from backend.gan_full import WGANGPFull, GAN_ADMIT_CLASSES
 
     log.info("Loading full CICIDS2017 data for fidelity gate validation...")
     d = load_data_full()
@@ -134,7 +134,7 @@ def validate_fidelity_gate():
     gan.G.load_state_dict(ckpt["generator"])
     gan.D.load_state_dict(ckpt["critic"])
 
-    threshold = 0.25  # same threshold used in the demo (proteus/pipeline.py), kept consistent
+    threshold = 0.25  # same threshold used in the demo (backend/pipeline.py), kept consistent
     entries = []
     for cname in GAN_ADMIT_CLASSES:
         c = name_to_idx[cname]

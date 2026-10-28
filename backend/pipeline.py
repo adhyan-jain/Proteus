@@ -1,7 +1,7 @@
 """Orchestrates the three-condition evaluation: baseline / static-aug / closed-loop."""
 import time
 
-import proteus.config  # noqa: F401 -- must import before numpy/sklearn to cap BLAS/OMP threads
+import backend.config  # noqa: F401 -- must import before numpy/sklearn to cap BLAS/OMP threads
 
 import numpy as np
 from sklearn.metrics import f1_score, classification_report
@@ -21,7 +21,7 @@ def _split_eval_fit(X, y, fraction, rng):
     fired-drift retrain would fit the classifier on (train + X) and then score f1_after on that
     same X -- in-sample training accuracy, not a fair post-adaptation number, and not comparable
     to the baseline/static-augmentation conditions, which are always scored on batches they
-    never trained on. Mirrors proteus/closed_loop_full.py's ClosedLoopOrchestrator.split_eval_fit
+    never trained on. Mirrors backend/closed_loop_full.py's ClosedLoopOrchestrator.split_eval_fit
     (the full-scale backend) -- same bug, same fix, kept separate since the two pipelines are
     intentionally independent implementations at different scales."""
     n_eval = max(1, int(len(X) * fraction))
@@ -126,7 +126,7 @@ def run_pipeline(progress_cb=None):
     ref_confidences = baseline.confidence_distribution(clf_baseline, X_test)
 
     # ---- run 3 conditions over identical stream ----
-    from proteus.closed_loop_full import BoundedBufferClassifier
+    from backend.closed_loop_full import BoundedBufferClassifier
 
     closed_loop_clf = BoundedBufferClassifier(
         lambda: baseline.train_classifier(X_train, y_train),

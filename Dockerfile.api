@@ -20,7 +20,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application source code and models
 COPY api/ ./api/
-COPY proteus/ ./proteus/
+COPY backend/ ./backend/
 COPY models/ ./models/
 COPY results/ ./results/
 

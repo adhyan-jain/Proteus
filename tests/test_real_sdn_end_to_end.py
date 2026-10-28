@@ -46,7 +46,7 @@ from sdn.topology.feature_mapper import (
     generate_feature_coverage_report,
 )
 from scripts.export_deployment_artifact import export_artifacts
-from proteus.release_manager import get_active_release, rollback_release
+from backend.release_manager import get_active_release, rollback_release
 
 
 def test_real_sdn_telemetry_feature_pipeline():

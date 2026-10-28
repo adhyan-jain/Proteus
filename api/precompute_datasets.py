@@ -9,7 +9,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from proteus import data_full  # noqa: E402
+from backend import data_full  # noqa: E402
 
 CACHE_DIR = Path(__file__).resolve().parent / "cache"
 CACHE_DIR.mkdir(exist_ok=True)

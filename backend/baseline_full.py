@@ -1,25 +1,25 @@
 """Full-scale baseline + static-augmentation classifiers (remainder of Stage 3).
 
-Two conditions, both Random Forest on the real CICIDS2017 data from `proteus/data_full.py`:
+Two conditions, both Random Forest on the real CICIDS2017 data from `backend/data_full.py`:
 
 - **Baseline**: trained on the raw, imbalanced data, no augmentation. The control condition
   everything else has to beat.
 - **Static augmentation**: the literature-representative comparison condition -- the trained
-  WGAN-GP (`proteus/gan_full.py`) generates a fixed batch of synthetic samples for each
+  WGAN-GP (`backend/gan_full.py`) generates a fixed batch of synthetic samples for each
   GAN-admitted class (see `gan_full.GAN_ADMIT_CLASSES` -- excludes the 3 classes flagged
   `likely_overdispersed` in the Stage 3 diagnostics, a documented decision, not a silent one),
   added once to the training set, then the classifier is trained once and frozen. This mirrors
   prior work's "augment once, train once" approach, as distinct from Proteus's own closed-loop
   drift-triggered retraining (not built in this module -- that's Stage 6).
 
-Neither condition touches `proteus/baseline.py` or `proteus/gan.py` (the demo's small versions).
+Neither condition touches `backend/baseline.py` or `backend/gan.py` (the demo's small versions).
 """
 import json
 import logging
 import time
 from pathlib import Path
 
-from proteus.config import DEFAULT_N_JOBS  # noqa: F401 -- must import before numpy/torch/sklearn to cap BLAS/OMP threads
+from backend.config import DEFAULT_N_JOBS  # noqa: F401 -- must import before numpy/torch/sklearn to cap BLAS/OMP threads
 
 import numpy as np
 import torch
@@ -75,7 +75,7 @@ def train_and_evaluate(clf, X_train, y_train, X_test, y_test, class_names, n_est
 
 
 def build_static_augmented_set(X_train, y_train, class_names, device="cuda"):
-    from proteus.gan_full import WGANGPFull, GAN_ADMIT_CLASSES
+    from backend.gan_full import WGANGPFull, GAN_ADMIT_CLASSES
 
     name_to_idx = {c: i for i, c in enumerate(class_names)}
     admit_idx = [name_to_idx[c] for c in GAN_ADMIT_CLASSES if c in name_to_idx]
@@ -123,7 +123,7 @@ def run_stage3_classifiers():
             "CUDA not available -- this repo's absolute rule is GPU-only training (CLAUDE.md "
             "rule 1). Fix the torch install before running this.")
 
-    from proteus.data_full import load_data_full
+    from backend.data_full import load_data_full
     log.info("Loading full CICIDS2017 data (Stage 1)...")
     d = load_data_full()
     X_train, y_train = d["X_train"], d["y_train"]

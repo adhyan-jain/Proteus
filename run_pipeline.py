@@ -5,7 +5,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from proteus.pipeline import run_pipeline
+from backend.pipeline import run_pipeline
 
 
 def main():

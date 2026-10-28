@@ -21,8 +21,8 @@ import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import LabelEncoder
-from proteus.data import _generate_synthetic
-from proteus.release_manager import (
+from backend.data import _generate_synthetic
+from backend.release_manager import (
     DEFAULT_MODELS_DIR,
     get_next_version,
     package_release,

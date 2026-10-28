@@ -4,9 +4,9 @@ import numpy as np
 import pytest
 from sklearn.ensemble import RandomForestClassifier
 
-from proteus.drift_daemon import AutonomousDriftWorker, LiveSampleBuffer
-from proteus.model_manager import ModelManager
-from proteus.release_manager import get_active_release, package_release
+from backend.drift_daemon import AutonomousDriftWorker, LiveSampleBuffer
+from backend.model_manager import ModelManager
+from backend.release_manager import get_active_release, package_release
 
 
 def test_canary_failure_triggers_automatic_rollback(tmp_path):

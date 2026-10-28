@@ -3,7 +3,7 @@
 drift detected -> WGAN-GP resumed (not from scratch) on the recent window -> fidelity gate
 checks the new synthetic batch -> admitted samples added to the training set -> classifier
 retrained -> redeployed. Reuses the already-validated Stage 3/4 components
-(`proteus.baseline_full`, `proteus.gan_full`, `proteus.drift`, `proteus.fidelity`) rather than
+(`backend.baseline_full`, `backend.gan_full`, `backend.drift`, `backend.fidelity`) rather than
 reimplementing any of them.
 
 ## Honesty note on what this module can and cannot claim (read before running/reporting)
@@ -36,14 +36,14 @@ import logging
 from abc import ABC, abstractmethod
 from pathlib import Path
 
-from proteus.config import DEFAULT_N_JOBS  # noqa: F401 -- must import before numpy/torch/sklearn to cap BLAS/OMP threads
+from backend.config import DEFAULT_N_JOBS  # noqa: F401 -- must import before numpy/torch/sklearn to cap BLAS/OMP threads
 
 import numpy as np
 import torch
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import f1_score
 
-from proteus import drift as drift_mod, fidelity as fidelity_mod
+from backend import drift as drift_mod, fidelity as fidelity_mod
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 log = logging.getLogger("proteus.closed_loop_full")
@@ -82,7 +82,7 @@ class RealDataReplaySource(TrafficSource):
     transition: windows before `drift_at_window` are drawn from the Mon-Thu training-day pool
     (IID with what the classifier trained on); windows at/after `drift_at_window` are drawn from
     the Friday holdout (contains real attack families absent from Mon-Thu, per the Stage 4
-    validation in proteus/validate_full.py)."""
+    validation in backend/validate_full.py)."""
 
     def __init__(self, X_stable, y_stable, X_drifted, y_drifted, n_windows=20,
                  window_size=2000, drift_at_window=8, seed=0):
@@ -203,7 +203,7 @@ class ClosedLoopOrchestrator:
         self.ref_confidence = self.clf.predict_proba(
             X_train_init[:min(50000, len(X_train_init))]).max(axis=1)
 
-        from proteus.gan_full import WGANGPFull, GAN_ADMIT_CLASSES
+        from backend.gan_full import WGANGPFull, GAN_ADMIT_CLASSES
         self.gan_admit_classes = GAN_ADMIT_CLASSES
         self.admit_idx = [self.name_to_idx[c] for c in GAN_ADMIT_CLASSES
                            if c in self.name_to_idx]

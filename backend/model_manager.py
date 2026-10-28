@@ -17,7 +17,7 @@ from typing import Dict, List, Optional, Tuple, Any
 import joblib
 import numpy as np
 
-from proteus.release_manager import (
+from backend.release_manager import (
     DEFAULT_MODELS_DIR,
     get_active_release,
     set_active_release,

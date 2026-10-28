@@ -4,15 +4,15 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-import proteus.config  # noqa: F401 -- must import before numpy/pandas to cap BLAS/OMP threads
+import backend.config  # noqa: F401 -- must import before numpy/pandas to cap BLAS/OMP threads
 
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-from proteus import data as data_mod, drift as drift_mod
-from proteus.pipeline import run_pipeline
+from backend import data as data_mod, drift as drift_mod
+from backend.pipeline import run_pipeline
 
 RESULTS_PATH = Path(__file__).parent / "results" / "results.pkl"
 
@@ -249,7 +249,7 @@ st.caption(
 )
 if st.button("⚡ Inject drift now and test detector"):
     d = data_mod.load_data()
-    from proteus import baseline as baseline_mod
+    from backend import baseline as baseline_mod
     clf = baseline_mod.train_classifier(d["X_train"], d["y_train"], n_estimators=50)
     ref_conf = baseline_mod.confidence_distribution(clf, d["X_test"])
 

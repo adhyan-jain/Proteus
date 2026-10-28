@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from proteus.release_manager import (
+from backend.release_manager import (
     DEFAULT_MODELS_DIR,
     get_active_release,
     list_releases,

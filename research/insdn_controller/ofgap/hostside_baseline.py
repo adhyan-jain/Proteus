@@ -12,7 +12,7 @@ from sklearn.metrics import balanced_accuracy_score
 from sklearn.model_selection import train_test_split
 
 sys.path.insert(0, ".")
-from proteus.data_full import clean_and_unify_cicids2017, load_insdn_raw  # noqa: E402
+from backend.data_full import clean_and_unify_cicids2017, load_insdn_raw  # noqa: E402
 
 assert torch.cuda.is_available(), "GPU required (CLAUDE.md rule 1)"
 df = clean_and_unify_cicids2017(load_insdn_raw())

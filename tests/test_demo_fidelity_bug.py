@@ -1,6 +1,6 @@
 """Regression unit tests for class-conditional reference selection in fidelity gate checking."""
 import numpy as np
-from proteus.pipeline import run_pipeline
+from backend.pipeline import run_pipeline
 
 
 def test_fidelity_gate_reference_selection_is_class_conditional():

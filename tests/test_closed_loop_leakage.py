@@ -5,7 +5,7 @@ accuracy reported as a post-adaptation metric. Fixed via ClosedLoopOrchestrator.
 which this test verifies directly (no GPU/GAN checkpoint needed -- it's a pure numpy split)."""
 import numpy as np
 
-from proteus.closed_loop_full import ClosedLoopOrchestrator
+from backend.closed_loop_full import ClosedLoopOrchestrator
 
 
 def test_eval_and_fit_partitions_are_disjoint_and_cover_the_window():

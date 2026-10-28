@@ -1,8 +1,8 @@
-"""Real behavioral tests for the MMD fidelity gate (proteus/fidelity.py), shared by the demo
+"""Real behavioral tests for the MMD fidelity gate (backend/fidelity.py), shared by the demo
 and full-scale backends. No dataset needed -- these test the mechanism, not a research claim."""
 import numpy as np
 
-from proteus.fidelity import compute_mmd, admit, FidelityGateLog
+from backend.fidelity import compute_mmd, admit, FidelityGateLog
 
 
 def test_mmd_zero_for_identical_distribution():
