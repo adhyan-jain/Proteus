@@ -62,7 +62,7 @@ controller observed, or that evaluates detection restricted to that view (our se
 2026; they are evidence, not proof, of absence).
 
 InSDN's authors also captured the ONOS~\cite{berde2014onos} controller interface during every scenario. We analyse
-these captures and make five contributions:
+these captures and make six contributions:
 \begin{enumerate}
 \item \textbf{A measured observability gap (\S\ref{sec:gap}).} Across all flow-statistics replies, only two match
 structures occur and none involves IP or transport fields (also true of all 3\,827 FlowMods); in 9 of 12 scenarios the
@@ -78,6 +78,9 @@ can and cannot show.
 \item \textbf{A forwarding-application case study (\S\ref{sec:live}).} In a Mininet/Ryu testbed with benign traffic,
 per-flow forwarding produces about 10\,400 TCP PacketIns per run against about 12 for MAC-pair forwarding, and the
 idle timeout sets how many entries a poller sees; a first campaign with a flawed application understated this effect.
+\item \textbf{A second-controller check and a reproducibility package (\S\ref{sec:live} and Data and Code Availability).} Ryu's unmodified
+learning-switch application also installs only MAC-pair entries, and every result file, table and quoted number can be
+regenerated and compared automatically from hashed raw captures.
 \end{enumerate}
 
 \section{Background and Related Work}
@@ -326,6 +329,18 @@ dataset page states CC BY 4.0 while the repository is MIT-licensed; we did not r
 read its Crossref record (the publisher page refused automated access), which describes a flow-level dataset of 1\,125\,059 records with
 11 control-plane metrics; we could not verify whether raw OpenFlow captures are released, and flow-level counts of PacketIn and FlowMod
 would not expose FlowMod match fields. Neither was used as data. Hashes are in \texttt{data/MANIFEST.md}.
+
+\section*{Data and Code Availability}\label{sec:avail}
+The InSDN CSVs and PCAPs are public (sources and SHA-256 hashes in \texttt{data/MANIFEST.md}). Our parser, feature extraction,
+experiments, forwarding-study applications, result files and table generators are in the project repository; the script
+\texttt{research/insdn\_controller/reproduce.sh} rebuilds the features from the raw ONOS captures, re-runs every experiment, and
+compares each result file with the stored one (tolerance $10^{-6}$), and \texttt{paper/verify\_numbers.py} checks the numbers quoted in the
+text against the result files. Hashes of every capture we recorded are in \texttt{capture\_hashes.sha256}. Re-recording the live
+captures needs root privileges and will not reproduce packet timing exactly. The first, flawed campaign's captures were not retained;
+only its summary file is.
+
+\section*{Acknowledgment}
+All three authors contributed equally to the data analysis, experiments and writing.
 
 \bibliographystyle{IEEEtran}
 \bibliography{references}

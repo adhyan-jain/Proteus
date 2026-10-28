@@ -40,3 +40,4 @@ research/insdn_controller/**/__pycache__/
 research/insdn_controller/live/out_linear3/
 research/insdn_controller/live/out_smoke_l3/
 research/insdn_controller/live/campaign2/*_s[5-9].pcap
+research/insdn_controller/repro_out/

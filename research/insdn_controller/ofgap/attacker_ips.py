@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pandas as pd
 
-CSV = "/home/adhyan/Desktop/Proteus/data/raw/insdn_official/extracted/InSDN_DatasetCSV/*.csv"
+CSV = str(Path(__file__).resolve().parents[3] / "data/raw/insdn_official/extracted/InSDN_DatasetCSV/*.csv")
 df = pd.concat([pd.read_csv(f, usecols=["Src IP", "Dst IP", "Label"]) for f in sorted(glob.glob(CSV))])
 nor = df[df.Label == "Normal"]
 att = df[df.Label != "Normal"]

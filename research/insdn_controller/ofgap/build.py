@@ -19,7 +19,7 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).parent))
 from ofsim import flow_id, simulate  # noqa: E402
 
-CSV_DIR = Path("/home/adhyan/Desktop/Proteus/data/raw/insdn_official/extracted/InSDN_DatasetCSV")
+CSV_DIR = Path(__file__).resolve().parents[3] / "data/raw/insdn_official/extracted/InSDN_DatasetCSV"
 
 
 def load_labels():
