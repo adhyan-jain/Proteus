@@ -35,6 +35,19 @@ class OneSwitch(Topo):
             self.addLink(self.addHost(f"h{i}"), s1, cls=TCLink, bw=50)
 
 
+class Linear3(Topo):
+    """s1 - s2 - s3 (loop-free). h1,h2 on s1; h3,h4 on s2; h5,h6 on s3 (server h6 is two hops from h1/h2)."""
+    def build(self, n=6):
+        sw = [self.addSwitch(f"s{i}", protocols="OpenFlow13") for i in (1, 2, 3)]
+        self.addLink(sw[0], sw[1], cls=TCLink, bw=50)
+        self.addLink(sw[1], sw[2], cls=TCLink, bw=50)
+        for i in range(1, n + 1):
+            self.addLink(self.addHost(f"h{i}"), sw[(i - 1) // 2], cls=TCLink, bw=50)
+
+
+TOPOS = {"one": OneSwitch, "linear3": Linear3}
+
+
 class Sniffer(threading.Thread):
     """Write TCP port-6653 frames seen on loopback to a pcap (Ethernet linktype)."""
 
@@ -70,7 +83,7 @@ class Sniffer(threading.Thread):
 CLIENT = '''import random, subprocess, sys, time, urllib.request
 host, seed, duration, log = sys.argv[1], int(sys.argv[2]), float(sys.argv[3]), sys.argv[4]
 random.seed(seed)
-end, ok, fail = time.time() + duration, 0, 0
+end, ok, fail, why = time.time() + duration, 0, 0, {}
 while time.time() < end:
     try:
         if random.random() < 0.8:
@@ -78,14 +91,16 @@ while time.time() < end:
         else:
             subprocess.run(["ping", "-c", "1", "-W", "1", host], stdout=subprocess.DEVNULL, check=True)
         ok += 1
-    except Exception:
+    except Exception as e:
         fail += 1
+        k = "%s:%s" % (type(e).__name__, str(e)[:40])
+        why[k] = why.get(k, 0) + 1
     time.sleep(random.uniform(0.05, 0.8))
-open(log, "w").write("ok=%d fail=%d\\n" % (ok, fail))
+open(log, "w").write("ok=%d fail=%d why=%r\\n" % (ok, fail, why))
 '''
 
 
-def one_run(mode, seed, duration, out_dir):
+def one_run(mode, seed, duration, out_dir, topo="one"):
     out_dir.mkdir(parents=True, exist_ok=True)
     pcap = out_dir / f"{mode}_s{seed}.pcap"
     www = out_dir / "www"
@@ -98,7 +113,7 @@ def one_run(mode, seed, duration, out_dir):
     time.sleep(4)
     sniff = Sniffer(str(pcap))
     sniff.start()
-    net = Mininet(topo=OneSwitch(), switch=OVSKernelSwitch, controller=None, autoSetMacs=True)
+    net = Mininet(topo=TOPOS[topo](), switch=OVSKernelSwitch, controller=None, autoSetMacs=True)
     net.addController("c0", controller=RemoteController, ip="127.0.0.1", port=6653)
     net.start()
     try:
@@ -132,15 +147,17 @@ def main():
     ap.add_argument("--modes", nargs="+", default=["mac", "fivetuple", "fivetuple_short"])
     ap.add_argument("--repeats", type=int, default=3)
     ap.add_argument("--duration", type=int, default=90)
+    ap.add_argument("--topo", choices=sorted(TOPOS), default="one")
+    ap.add_argument("--seed-start", type=int, default=0)
     a = ap.parse_args()
     if os.geteuid() != 0:
         raise SystemExit("run with sudo")
     setLogLevel("warning")
     random.seed(0)
-    for seed in range(a.repeats):
+    for seed in range(a.seed_start, a.seed_start + a.repeats):
         for mode in a.modes:
             print("run", mode, seed, flush=True)
-            print("  ->", one_run(mode, seed, a.duration, a.out), flush=True)
+            print("  ->", one_run(mode, seed, a.duration, a.out, a.topo), flush=True)
 
 
 if __name__ == "__main__":

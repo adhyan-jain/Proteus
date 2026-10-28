@@ -37,3 +37,5 @@ research/insdn_controller/live/campaign/
 research/insdn_controller/live/_client.py
 research/insdn_controller/live/__pycache__/
 research/insdn_controller/**/__pycache__/
+research/insdn_controller/live/out_linear3/
+research/insdn_controller/live/out_smoke_l3/
