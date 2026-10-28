@@ -631,7 +631,7 @@ CTRL_RESULTS = ROOT / "research" / "insdn_controller" / "results"
 def controller_telemetry():
     """Read-only summary of the InSDN controller-telemetry study (research/insdn_controller/results/*.json)."""
     _metrics["total_requests"] += 1
-    need = ("v4_strict_W5.json", "v4_strict_W5_xgb.json", "live_modes_v3.json", "review_checks.json")
+    need = ("v4_strict_W5.json", "v4_strict_W5_xgb.json", "live_modes_v4_one10.json", "live_modes_v4_linear3.json", "review_checks.json")
     missing = [n for n in need if not (CTRL_RESULTS / n).exists()]
     if missing:
         return _not_available(f"Missing result files in {CTRL_RESULTS}: {', '.join(missing)}")
@@ -643,7 +643,8 @@ def controller_telemetry():
     models["xgb_all_history"] = cv_x["xgb_all_history"]
     return {"available": True, "source_files": list(need), "window_s": 5, "label_scheme": "strict",
             "grouped_cv": models,
-            "within_session_trivial_any_ip_packet_in": load("review_checks.json")["within_session_W5_strict"]["any_ip_packet_in"], "live_modes": load("live_modes_v3.json")["summary"]}
+            "within_session_trivial_any_ip_packet_in": load("review_checks.json")["within_session_W5_strict"]["any_ip_packet_in"], "live_modes": load("live_modes_v4_one10.json")["summary"],
+            "live_modes_linear3": load("live_modes_v4_linear3.json")["summary"]}
 
 
 @app.get("/api/datasets/summary")

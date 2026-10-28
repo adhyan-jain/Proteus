@@ -32,6 +32,7 @@ export type ControllerTelemetry =
       grouped_cv: Record<string, { bacc?: Ci; recall?: Ci; fpr?: Ci; precision?: Ci }>;
       within_session_trivial_any_ip_packet_in: { bacc_pooled: number; bacc_macro_captures: number; positives: number; negatives: number };
       live_modes: Record<string, Record<string, Ci>>;
+      live_modes_linear3: Record<string, Record<string, Ci>>;
     }
   | NotAvailable;
 

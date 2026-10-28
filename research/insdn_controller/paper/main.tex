@@ -27,10 +27,10 @@ single-feature threshold 0.70--0.97); logistic regression matches the neural net
 benign and attack traffic in separate sessions and its labels cover only part of the controller-visible traffic, so
 within attack sessions a trivial ``any IP PacketIn'' rule scores 0.995 under strict labels, and our session probes
 cannot separate session identity from unlisted attack traffic. We report this as a validity threat for controller-side
-evaluation on InSDN. Finally, a benign-traffic Mininet/Ryu case study (5 runs per mode) shows that the forwarding
-application sets what the controller observes: per-flow forwarding produced about 10\,300 TCP PacketIns per run against
-about 12 for MAC-pair forwarding (at least 675$\times$ in every paired run, for both timeouts), and a 2\,s idle timeout reduced the
-IP-specific entries a 1\,s poller sees from $151.9\pm1.8$ to $36.8\pm0.4$ per reply. A first campaign with a flawed
+evaluation on InSDN. Finally, a benign-traffic Mininet/Ryu case study (10 runs per mode on one switch, 10 on a three-switch chain) shows that the forwarding
+application sets what the controller observes: per-flow forwarding produced about 10\,400 TCP PacketIns per run against
+about 12 for MAC-pair forwarding (at least 665$\times$ in every paired run, for both timeouts; at least 391$\times$ on three switches), and a 2\,s idle timeout reduced the
+IP-specific entries a 1\,s poller sees from $153.1\pm2.4$ to $36.9\pm0.5$ per reply. A first campaign with a flawed
 application, in which ping and ARP entries shadowed TCP, understated the PacketIn effect by more than two orders of
 magnitude; we report both.
 \end{abstract}
@@ -73,7 +73,7 @@ simpler models, over 10 seeds.
 separated from session recognition and label coverage; we quantify what a trivial rule achieves and what our probes
 can and cannot show.
 \item \textbf{A forwarding-application case study (\S\ref{sec:live}).} In a Mininet/Ryu testbed with benign traffic,
-per-flow forwarding produces about 10\,300 TCP PacketIns per run against about 12 for MAC-pair forwarding, and the
+per-flow forwarding produces about 10\,400 TCP PacketIns per run against about 12 for MAC-pair forwarding, and the
 idle timeout sets how many entries a poller sees; a first campaign with a flawed application understated this effect.
 \end{enumerate}
 
@@ -260,9 +260,9 @@ against thresholds is unchanged, and at 1\,s the MLP is ahead of the best thresh
 level on probe (0.812 vs.\ 0.794, within the interval) and behind on exploit and botnet. Transfer from Metasploitable-2 to OVS no longer
 beats the best threshold (0.678 vs.\ 0.678), while OVS to Metasploitable-2 remains strong (0.977 vs.\ 0.924).
 
-\textbf{Baselines and deployment.} No tree-ensemble baseline; detection is run offline on recorded control channels,
+\textbf{Baselines and deployment.} A GPU gradient-boosted tree baseline (XGBoost, BAcc $0.952\pm0.013$ at 5\,s, strict labels, 10 seeds) does not beat the linear ($0.961\pm0.011$) or MLP ($0.958\pm0.012$) models; detection is run offline on recorded control channels,
 not inline in a live controller, and we do not measure controller-side latency or mitigation effects. The forwarding
-study (\S\ref{sec:live}) uses benign traffic and one switch; it measures visibility, not detection, and a
+study (\S\ref{sec:live}) uses benign traffic and at most three switches; it measures visibility, not detection, and a
 cross-testbed detection experiment with labelled attacks is future work.
 
 \section{Conclusion}

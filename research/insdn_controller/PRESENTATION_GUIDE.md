@@ -35,7 +35,7 @@ what InSDN can and cannot support."
 1. "The 0.946 is capture-grouped, so it is optimistic. Variants of one scenario can sit on both sides of a fold."
 2. "Within sessions, a trivial 'any IP PacketIn' rule scores 0.995 under my strict labels. So I do not claim detection accuracy."
 3. "My first Ryu run showed only a 4× PacketIn difference because my learning switch shadowed TCP with ping/ARP entries.
-   I fixed the app and reran: per-flow forwarding sends ~10,350 TCP PacketIns per run vs ~12 for MAC-pair, in every paired run.
+   I fixed the app and reran: per-flow forwarding sends ~10,400 TCP PacketIns per run vs ~12 for MAC-pair, in every paired run (10 of 10; also on a 3-switch chain).
    One run had 41 failed requests, probably controller overload."
 4. "Novelty is narrow: inside InSDN, controller-observable only. LAN-SDN-NIDS (2026) already builds a control-plane dataset."
 
@@ -63,7 +63,7 @@ what InSDN can and cannot support."
 - [x] Live rerun with the corrected app is done (`results/live_modes_v3.json`); the paper and slides use it.
 - [ ] Open `paper/main.pdf` and `DEFENSE.md` side by side; know where Tables cv, family, cross and confound are.
 - [ ] Re-read slide 8 twice. It is the one you will be questioned on.
-- [ ] Know these numbers cold: 44 captures, 3,827 FlowMods, 0.946, 0.616, 0.995, 6 windows from 2 captures, 10,350 vs 11.6, 151.9 → 36.8.
+- [ ] Know these numbers cold: 44 captures, 3,827 FlowMods, 0.946, 0.616, 0.995, 6 windows from 2 captures, 10,422 vs 12.3, 153.1 → 36.9, 3-switch 10,881 vs 18.0.
 - [ ] Have `STATUS.md` ready to answer "what is not done".
 - [ ] Nothing is committed to git yet; decide with the professor whether `research/` should live in the repo.
 
@@ -91,7 +91,7 @@ All paths below are relative to the repo root `/home/adhyan/Desktop/Proteus`.
 | 7 | Validity checks | window counts | `ofgap/review_checks.py` | trivial rules ("any PacketIn", "any IP PacketIn") scored within attack sessions | `results/review_checks.json` |
 | 8 | Granularity gap | the same 44 pcaps | `ofgap/gap_measure.py`, `flowmod_check.py`, `ofsim.py` | which match fields FLOW_MODs and flow-stats replies carry (0 of 3,827 FlowMods have IP/transport match fields); simulated per-flow table sizes | `results/gap_attack_v2.json`, `results/flowmod_matches.json` |
 | 9 | Live forwarding study | **nothing from InSDN.** Ryu app `live/ryu_fwd.py` in 3 modes + Mininet (1 OVS switch, h1–h5 clients, h6 HTTP server); benign HTTP downloads and pings only | `live/run_benign.py` (needs root), sniffer on loopback port 6653 | one control-channel pcap per run, client logs | `live/out*/` and `live/campaign2/` (raw pcaps gitignored; hashes in `capture_hashes.sha256`) |
-| 10 | Live analysis | those pcaps | `live/analyze_modes.py` | per-mode PACKET_IN counts, FLOW_MOD counts, entries per 1 s stats reply, mean ± 95% CI over 5 runs | `results/live_modes_v3.json` |
+| 10 | Live analysis | those pcaps | `live/live_table.py` | per-mode TCP PACKET_IN counts, FLOW_MOD counts, entries per 1 s stats reply, mean ± 95% CI over 10 runs, for one switch and for a 3-switch chain | `results/live_modes_v4_one10.json`, `results/live_modes_v4_linear3.json`, tables `paper/live_table*.tex` |
 | 11 | Paper and UI | the result JSONs | `ofgap/make_tables.py`, `live/live_table.py`; `api/server.py` `/api/controller-telemetry`; `frontend/src/app/controller-telemetry/page.tsx` | LaTeX tables and the UI page, both read directly from the JSONs | `paper/tables.tex`, `paper/live_table.tex`, `paper/main.pdf`; UI at route `/controller-telemetry` |
 
 ## "What exactly is the input to the model? What comes out?"
@@ -117,7 +117,7 @@ All paths below are relative to the repo root `/home/adhyan/Desktop/Proteus`.
 | "Folds by capture, not scenario" | Already covered by experiment B (leave-one-attack-family-out) in `results/v4_strict_W5.json`; cite that instead of building a new split. |
 | Frontend did not show the study | Fixed: `/controller-telemetry` page reads `/api/controller-telemetry`, which reads the result JSONs only. |
 | Source-side labelling for a future interleaved testbed | Built and syntax-checked, **not yet run on data**: `live/flowlog.py`, `ofgap/label_windows.py`, `LAB_SPEC.md`. |
-| Multi-switch topology, ≥10 runs per mode, cause of the 41 failed requests | **Not done.** Needs `sudo` for Mininet; the user must run `live/run_benign.py` as root. |
+| Multi-switch topology, ≥10 runs per mode, cause of the 41 failed requests | Multi-switch (3-switch chain) and 10 runs per mode: **Done** (`--topo linear3`, 30 + 15 new runs). The 41-failure run did not reproduce (0 failures in 59 later runs); cause not established. |
 | Second dataset or controller | **Not done.** Candidates found but unverified: UKMDDoSDN (Mendeley DOI 10.17632/43nfv26gpk.2, Ryu; raw PCAPs claimed, but not shown to contain the OpenFlow channel; Mendeley says CC BY 4.0, GitHub README says MIT) and LAN-SDN-NIDS (flow-level CSV with control-plane metrics, ODL; no raw channel captures confirmed). Nothing was downloaded. |
 | Detector beating the trivial baseline in one session | **Not done.** Needs interleaved benign + attack traffic from the user's lab. |
 | InSDN session-identity confound | Cannot be fixed (property of the benchmark); stated in the paper. |

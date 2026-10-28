@@ -1,0 +1,613 @@
+{
+ "summary": {
+  "fivetuple": {
+   "packet_in_tcp": {
+    "mean": 10881.3,
+    "ci95": 793.8215769601828,
+    "n": 10
+   },
+   "packet_in_total": {
+    "mean": 11159.9,
+    "ci95": 795.4117205369625,
+    "n": 10
+   },
+   "flow_mods": {
+    "mean": 10928.3,
+    "ci95": 791.7561596014681,
+    "n": 10
+   },
+   "macpair_entries_per_reply": {
+    "mean": 0.0,
+    "ci95": 0.0,
+    "n": 10
+   },
+   "fivetuple_entries_per_reply": {
+    "mean": 112.44662268947984,
+    "ci95": 2.2649586160038084,
+    "n": 10
+   }
+  },
+  "fivetuple_short": {
+   "packet_in_tcp": {
+    "mean": 10675.5,
+    "ci95": 803.912876139168,
+    "n": 10
+   },
+   "packet_in_total": {
+    "mean": 11275.8,
+    "ci95": 814.7417792477652,
+    "n": 10
+   },
+   "flow_mods": {
+    "mean": 11040.4,
+    "ci95": 805.9438204515591,
+    "n": 10
+   },
+   "macpair_entries_per_reply": {
+    "mean": 0.0,
+    "ci95": 0.0,
+    "n": 10
+   },
+   "fivetuple_entries_per_reply": {
+    "mean": 27.01199752628324,
+    "ci95": 0.42007538692993857,
+    "n": 10
+   }
+  },
+  "mac": {
+   "packet_in_tcp": {
+    "mean": 18.0,
+    "ci95": 5.024501780679305,
+    "n": 10
+   },
+   "packet_in_total": {
+    "mean": 267.8,
+    "ci95": 18.20314324754607,
+    "n": 10
+   },
+   "flow_mods": {
+    "mean": 33.9,
+    "ci95": 3.8219374188162165,
+    "n": 10
+   },
+   "macpair_entries_per_reply": {
+    "mean": 7.019803476946334,
+    "ci95": 0.021430362640769217,
+    "n": 10
+   },
+   "fivetuple_entries_per_reply": {
+    "mean": 0.0,
+    "ci95": 0.0,
+    "n": 10
+   }
+  }
+ },
+ "runs": {
+  "fivetuple": [
+   {
+    "file": "fivetuple_s0.pcap",
+    "seconds": 99,
+    "match_sets": {
+     "": 294,
+     "in_port|eth_src|eth_dst|eth_type": 110,
+     "in_port|eth_type|ipv4_src|ipv4_dst|ip_proto": 1950,
+     "in_port|eth_type|ipv4_src|ipv4_dst|ip_proto|tcp_src|tcp_dst": 30417
+    },
+    "packet_in_total": 9061,
+    "packet_in_tcp": 8783,
+    "flow_mods": 8835,
+    "stats_replies": 294,
+    "fivetuple_entries_per_reply": 110.09183673469387,
+    "macpair_entries_per_reply": 0.0,
+    "parser_desyncs": 0,
+    "parser_dropped_bytes": 0
+   },
+   {
+    "file": "fivetuple_s1.pcap",
+    "seconds": 99,
+    "match_sets": {
+     "": 297,
+     "in_port|eth_src|eth_dst|eth_type": 121,
+     "in_port|eth_type|ipv4_src|ipv4_dst|ip_proto|tcp_src|tcp_dst": 30562,
+     "in_port|eth_type|ipv4_src|ipv4_dst|ip_proto": 2002
+    },
+    "packet_in_total": 9173,
+    "packet_in_tcp": 8914,
+    "flow_mods": 8964,
+    "stats_replies": 297,
+    "fivetuple_entries_per_reply": 109.64309764309765,
+    "macpair_entries_per_reply": 0.0,
+    "parser_desyncs": 0,
+    "parser_dropped_bytes": 0
+   },
+   {
+    "file": "fivetuple_s2.pcap",
+    "seconds": 99,
+    "match_sets": {
+     "": 294,
+     "in_port|eth_src|eth_dst|eth_type": 110,
+     "in_port|eth_type|ipv4_src|ipv4_dst|ip_proto|tcp_src|tcp_dst": 30792,
+     "in_port|eth_type|ipv4_src|ipv4_dst|ip_proto": 1932
+    },
+    "packet_in_total": 11490,
+    "packet_in_tcp": 11247,
+    "flow_mods": 11289,
+    "stats_replies": 294,
+    "fivetuple_entries_per_reply": 111.3061224489796,
+    "macpair_entries_per_reply": 0.0,
+    "parser_desyncs": 0,
+    "parser_dropped_bytes": 0
+   },
+   {
+    "file": "fivetuple_s3.pcap",
+    "seconds": 99,
+    "match_sets": {
+     "": 294,
+     "in_port|eth_src|eth_dst|eth_type": 110,
+     "in_port|eth_type|ipv4_src|ipv4_dst|ip_proto": 2048,
+     "in_port|eth_type|ipv4_src|ipv4_dst|ip_proto|tcp_src|tcp_dst": 31290
+    },
+    "packet_in_total": 11920,
+    "packet_in_tcp": 11671,
+    "flow_mods": 11711,
+    "stats_replies": 294,
+    "fivetuple_entries_per_reply": 113.39455782312925,
+    "macpair_entries_per_reply": 0.0,
+    "parser_desyncs": 0,
+    "parser_dropped_bytes": 0
+   },
+   {
+    "file": "fivetuple_s4.pcap",
+    "seconds": 99,
+    "match_sets": {
+     "": 294,
+     "in_port|eth_src|eth_dst|eth_type": 110,
+     "in_port|eth_type|ipv4_src|ipv4_dst|ip_proto": 1994,
+     "in_port|eth_type|ipv4_src|ipv4_dst|ip_proto|tcp_src|tcp_dst": 30870
+    },
+    "packet_in_total": 11489,
+    "packet_in_tcp": 11181,
+    "flow_mods": 11235,
+    "stats_replies": 294,
+    "fivetuple_entries_per_reply": 111.78231292517007,
+    "macpair_entries_per_reply": 0.0,
+    "parser_desyncs": 0,
+    "parser_dropped_bytes": 0
+   },
+   {
+    "file": "fivetuple_s5.pcap",
+    "seconds": 99,
+    "match_sets": {
+     "": 294,
+     "in_port|eth_src|eth_dst|eth_type": 110,
+     "in_port|eth_type|ipv4_src|ipv4_dst|ip_proto|tcp_src|tcp_dst": 30607,
+     "in_port|eth_type|ipv4_src|ipv4_dst|ip_proto": 2008
+    },
+    "packet_in_total": 11897,
+    "packet_in_tcp": 11584,
+    "flow_mods": 11620,
+    "stats_replies": 294,
+    "fivetuple_entries_per_reply": 110.93537414965986,
+    "macpair_entries_per_reply": 0.0,
+    "parser_desyncs": 0,
+    "parser_dropped_bytes": 0
+   },
+   {
+    "file": "fivetuple_s6.pcap",
+    "seconds": 99,
+    "match_sets": {
+     "": 294,
+     "in_port|eth_src|eth_dst|eth_type": 110,
+     "in_port|eth_type|ipv4_src|ipv4_dst|ip_proto|tcp_src|tcp_dst": 32325,
+     "in_port|eth_type|ipv4_src|ipv4_dst|ip_proto": 1946
+    },
+    "packet_in_total": 11664,
+    "packet_in_tcp": 11347,
+    "flow_mods": 11391,
+    "stats_replies": 294,
+    "fivetuple_entries_per_reply": 116.56802721088435,
+    "macpair_entries_per_reply": 0.0,
+    "parser_desyncs": 0,
+    "parser_dropped_bytes": 0
+   },
+   {
+    "file": "fivetuple_s7.pcap",
+    "seconds": 99,
+    "match_sets": {
+     "": 294,
+     "in_port|eth_src|eth_dst|eth_type": 110,
+     "in_port|eth_type|ipv4_src|ipv4_dst|ip_proto|tcp_src|tcp_dst": 29702,
+     "in_port|eth_type|ipv4_src|ipv4_dst|ip_proto": 2036
+    },
+    "packet_in_total": 11140,
+    "packet_in_tcp": 10846,
+    "flow_mods": 10894,
+    "stats_replies": 294,
+    "fivetuple_entries_per_reply": 107.95238095238095,
+    "macpair_entries_per_reply": 0.0,
+    "parser_desyncs": 0,
+    "parser_dropped_bytes": 0
+   },
+   {
+    "file": "fivetuple_s8.pcap",
+    "seconds": 99,
+    "match_sets": {
+     "": 294,
+     "in_port|eth_src|eth_dst|eth_type": 110,
+     "in_port|eth_type|ipv4_src|ipv4_dst|ip_proto|tcp_src|tcp_dst": 32590,
+     "in_port|eth_type|ipv4_src|ipv4_dst|ip_proto": 2020
+    },
+    "packet_in_total": 12144,
+    "packet_in_tcp": 11902,
+    "flow_mods": 11944,
+    "stats_replies": 294,
+    "fivetuple_entries_per_reply": 117.72108843537416,
+    "macpair_entries_per_reply": 0.0,
+    "parser_desyncs": 0,
+    "parser_dropped_bytes": 0
+   },
+   {
+    "file": "fivetuple_s9.pcap",
+    "seconds": 99,
+    "match_sets": {
+     "": 294,
+     "in_port|eth_src|eth_dst|eth_type": 110,
+     "in_port|eth_type|ipv4_src|ipv4_dst|ip_proto": 1892,
+     "in_port|eth_type|ipv4_src|ipv4_dst|ip_proto|tcp_src|tcp_dst": 31939
+    },
+    "packet_in_total": 11621,
+    "packet_in_tcp": 11338,
+    "flow_mods": 11400,
+    "stats_replies": 294,
+    "fivetuple_entries_per_reply": 115.07142857142857,
+    "macpair_entries_per_reply": 0.0,
+    "parser_desyncs": 0,
+    "parser_dropped_bytes": 0
+   }
+  ],
+  "fivetuple_short": [
+   {
+    "file": "fivetuple_short_s0.pcap",
+    "seconds": 99,
+    "match_sets": {
+     "": 297,
+     "in_port|eth_src|eth_dst|eth_type": 22,
+     "in_port|eth_type|ipv4_src|ipv4_dst|ip_proto": 1261,
+     "in_port|eth_type|ipv4_src|ipv4_dst|ip_proto|tcp_src|tcp_dst": 6731
+    },
+    "packet_in_total": 9173,
+    "packet_in_tcp": 8604,
+    "flow_mods": 8952,
+    "stats_replies": 297,
+    "fivetuple_entries_per_reply": 26.90909090909091,
+    "macpair_entries_per_reply": 0.0,
+    "parser_desyncs": 0,
+    "parser_dropped_bytes": 0
+   },
+   {
+    "file": "fivetuple_short_s1.pcap",
+    "seconds": 99,
+    "match_sets": {
+     "": 294,
+     "in_port|eth_src|eth_dst|eth_type": 22,
+     "in_port|eth_type|ipv4_src|ipv4_dst|ip_proto|tcp_src|tcp_dst": 6714,
+     "in_port|eth_type|ipv4_src|ipv4_dst|ip_proto": 1184
+    },
+    "packet_in_total": 9652,
+    "packet_in_tcp": 9055,
+    "flow_mods": 9439,
+    "stats_replies": 294,
+    "fivetuple_entries_per_reply": 26.86394557823129,
+    "macpair_entries_per_reply": 0.0,
+    "parser_desyncs": 0,
+    "parser_dropped_bytes": 0
+   },
+   {
+    "file": "fivetuple_short_s2.pcap",
+    "seconds": 99,
+    "match_sets": {
+     "": 294,
+     "in_port|eth_src|eth_dst|eth_type": 22,
+     "in_port|eth_type|ipv4_src|ipv4_dst|ip_proto|tcp_src|tcp_dst": 6673,
+     "in_port|eth_type|ipv4_src|ipv4_dst|ip_proto": 1164
+    },
+    "packet_in_total": 11892,
+    "packet_in_tcp": 11335,
+    "flow_mods": 11671,
+    "stats_replies": 294,
+    "fivetuple_entries_per_reply": 26.656462585034014,
+    "macpair_entries_per_reply": 0.0,
+    "parser_desyncs": 0,
+    "parser_dropped_bytes": 0
+   },
+   {
+    "file": "fivetuple_short_s3.pcap",
+    "seconds": 99,
+    "match_sets": {
+     "": 294,
+     "in_port|eth_src|eth_dst|eth_type": 22,
+     "in_port|eth_type|ipv4_src|ipv4_dst|ip_proto": 1178,
+     "in_port|eth_type|ipv4_src|ipv4_dst|ip_proto|tcp_src|tcp_dst": 6764
+    },
+    "packet_in_total": 12424,
+    "packet_in_tcp": 11829,
+    "flow_mods": 12201,
+    "stats_replies": 294,
+    "fivetuple_entries_per_reply": 27.01360544217687,
+    "macpair_entries_per_reply": 0.0,
+    "parser_desyncs": 0,
+    "parser_dropped_bytes": 0
+   },
+   {
+    "file": "fivetuple_short_s4.pcap",
+    "seconds": 99,
+    "match_sets": {
+     "": 294,
+     "in_port|eth_src|eth_dst|eth_type": 22,
+     "in_port|eth_type|ipv4_src|ipv4_dst|ip_proto": 1154,
+     "in_port|eth_type|ipv4_src|ipv4_dst|ip_proto|tcp_src|tcp_dst": 6750
+    },
+    "packet_in_total": 10336,
+    "packet_in_tcp": 9768,
+    "flow_mods": 10110,
+    "stats_replies": 294,
+    "fivetuple_entries_per_reply": 26.8843537414966,
+    "macpair_entries_per_reply": 0.0,
+    "parser_desyncs": 0,
+    "parser_dropped_bytes": 0
+   },
+   {
+    "file": "fivetuple_short_s5.pcap",
+    "seconds": 99,
+    "match_sets": {
+     "": 294,
+     "in_port|eth_src|eth_dst|eth_type": 22,
+     "in_port|eth_type|ipv4_src|ipv4_dst|ip_proto|tcp_src|tcp_dst": 6635,
+     "in_port|eth_type|ipv4_src|ipv4_dst|ip_proto": 1261
+    },
+    "packet_in_total": 11821,
+    "packet_in_tcp": 11194,
+    "flow_mods": 11584,
+    "stats_replies": 294,
+    "fivetuple_entries_per_reply": 26.857142857142858,
+    "macpair_entries_per_reply": 0.0,
+    "parser_desyncs": 0,
+    "parser_dropped_bytes": 0
+   },
+   {
+    "file": "fivetuple_short_s6.pcap",
+    "seconds": 99,
+    "match_sets": {
+     "": 294,
+     "in_port|eth_src|eth_dst|eth_type": 22,
+     "in_port|eth_type|ipv4_src|ipv4_dst|ip_proto|tcp_src|tcp_dst": 7094,
+     "in_port|eth_type|ipv4_src|ipv4_dst|ip_proto": 1010
+    },
+    "packet_in_total": 11974,
+    "packet_in_tcp": 11390,
+    "flow_mods": 11730,
+    "stats_replies": 294,
+    "fivetuple_entries_per_reply": 27.564625850340136,
+    "macpair_entries_per_reply": 0.0,
+    "parser_desyncs": 0,
+    "parser_dropped_bytes": 0
+   },
+   {
+    "file": "fivetuple_short_s7.pcap",
+    "seconds": 99,
+    "match_sets": {
+     "": 294,
+     "in_port|eth_src|eth_dst|eth_type": 22,
+     "in_port|eth_type|ipv4_src|ipv4_dst|ip_proto|tcp_src|tcp_dst": 6412,
+     "in_port|eth_type|ipv4_src|ipv4_dst|ip_proto": 1243
+    },
+    "packet_in_total": 11397,
+    "packet_in_tcp": 10794,
+    "flow_mods": 11171,
+    "stats_replies": 294,
+    "fivetuple_entries_per_reply": 26.037414965986393,
+    "macpair_entries_per_reply": 0.0,
+    "parser_desyncs": 0,
+    "parser_dropped_bytes": 0
+   },
+   {
+    "file": "fivetuple_short_s8.pcap",
+    "seconds": 99,
+    "match_sets": {
+     "": 294,
+     "in_port|eth_src|eth_dst|eth_type": 22,
+     "in_port|eth_type|ipv4_src|ipv4_dst|ip_proto|tcp_src|tcp_dst": 7078,
+     "in_port|eth_type|ipv4_src|ipv4_dst|ip_proto": 1241
+    },
+    "packet_in_total": 11881,
+    "packet_in_tcp": 11257,
+    "flow_mods": 11659,
+    "stats_replies": 294,
+    "fivetuple_entries_per_reply": 28.29591836734694,
+    "macpair_entries_per_reply": 0.0,
+    "parser_desyncs": 0,
+    "parser_dropped_bytes": 0
+   },
+   {
+    "file": "fivetuple_short_s9.pcap",
+    "seconds": 99,
+    "match_sets": {
+     "": 294,
+     "in_port|eth_src|eth_dst|eth_type": 22,
+     "in_port|eth_type|ipv4_src|ipv4_dst|ip_proto|tcp_src|tcp_dst": 6891,
+     "in_port|eth_type|ipv4_src|ipv4_dst|ip_proto": 1058
+    },
+    "packet_in_total": 12208,
+    "packet_in_tcp": 11529,
+    "flow_mods": 11887,
+    "stats_replies": 294,
+    "fivetuple_entries_per_reply": 27.037414965986393,
+    "macpair_entries_per_reply": 0.0,
+    "parser_desyncs": 0,
+    "parser_dropped_bytes": 0
+   }
+  ],
+  "mac": [
+   {
+    "file": "mac_s0.pcap",
+    "seconds": 99,
+    "match_sets": {
+     "": 297,
+     "in_port|eth_src|eth_dst": 2068
+    },
+    "packet_in_total": 241,
+    "packet_in_tcp": 14,
+    "flow_mods": 31,
+    "stats_replies": 297,
+    "fivetuple_entries_per_reply": 0.0,
+    "macpair_entries_per_reply": 6.962962962962963,
+    "parser_desyncs": 0,
+    "parser_dropped_bytes": 0
+   },
+   {
+    "file": "mac_s1.pcap",
+    "seconds": 99,
+    "match_sets": {
+     "": 297,
+     "in_port|eth_src|eth_dst": 2068
+    },
+    "packet_in_total": 237,
+    "packet_in_tcp": 6,
+    "flow_mods": 25,
+    "stats_replies": 297,
+    "fivetuple_entries_per_reply": 0.0,
+    "macpair_entries_per_reply": 6.962962962962963,
+    "parser_desyncs": 0,
+    "parser_dropped_bytes": 0
+   },
+   {
+    "file": "mac_s2.pcap",
+    "seconds": 99,
+    "match_sets": {
+     "": 294,
+     "in_port|eth_src|eth_dst": 2068
+    },
+    "packet_in_total": 257,
+    "packet_in_tcp": 24,
+    "flow_mods": 38,
+    "stats_replies": 294,
+    "fivetuple_entries_per_reply": 0.0,
+    "macpair_entries_per_reply": 7.034013605442177,
+    "parser_desyncs": 0,
+    "parser_dropped_bytes": 0
+   },
+   {
+    "file": "mac_s3.pcap",
+    "seconds": 99,
+    "match_sets": {
+     "": 294,
+     "in_port|eth_src|eth_dst": 2068
+    },
+    "packet_in_total": 271,
+    "packet_in_tcp": 17,
+    "flow_mods": 34,
+    "stats_replies": 294,
+    "fivetuple_entries_per_reply": 0.0,
+    "macpair_entries_per_reply": 7.034013605442177,
+    "parser_desyncs": 0,
+    "parser_dropped_bytes": 0
+   },
+   {
+    "file": "mac_s4.pcap",
+    "seconds": 99,
+    "match_sets": {
+     "": 294,
+     "in_port|eth_src|eth_dst": 2068
+    },
+    "packet_in_total": 298,
+    "packet_in_tcp": 12,
+    "flow_mods": 29,
+    "stats_replies": 294,
+    "fivetuple_entries_per_reply": 0.0,
+    "macpair_entries_per_reply": 7.034013605442177,
+    "parser_desyncs": 0,
+    "parser_dropped_bytes": 0
+   },
+   {
+    "file": "mac_s5.pcap",
+    "seconds": 99,
+    "match_sets": {
+     "": 294,
+     "in_port|eth_src|eth_dst": 2068
+    },
+    "packet_in_total": 264,
+    "packet_in_tcp": 24,
+    "flow_mods": 38,
+    "stats_replies": 294,
+    "fivetuple_entries_per_reply": 0.0,
+    "macpair_entries_per_reply": 7.034013605442177,
+    "parser_desyncs": 0,
+    "parser_dropped_bytes": 0
+   },
+   {
+    "file": "mac_s6.pcap",
+    "seconds": 99,
+    "match_sets": {
+     "": 294,
+     "in_port|eth_src|eth_dst": 2068
+    },
+    "packet_in_total": 299,
+    "packet_in_tcp": 29,
+    "flow_mods": 43,
+    "stats_replies": 294,
+    "fivetuple_entries_per_reply": 0.0,
+    "macpair_entries_per_reply": 7.034013605442177,
+    "parser_desyncs": 0,
+    "parser_dropped_bytes": 0
+   },
+   {
+    "file": "mac_s7.pcap",
+    "seconds": 99,
+    "match_sets": {
+     "": 294,
+     "in_port|eth_src|eth_dst": 2068
+    },
+    "packet_in_total": 307,
+    "packet_in_tcp": 15,
+    "flow_mods": 31,
+    "stats_replies": 294,
+    "fivetuple_entries_per_reply": 0.0,
+    "macpair_entries_per_reply": 7.034013605442177,
+    "parser_desyncs": 0,
+    "parser_dropped_bytes": 0
+   },
+   {
+    "file": "mac_s8.pcap",
+    "seconds": 99,
+    "match_sets": {
+     "": 294,
+     "in_port|eth_src|eth_dst": 2068
+    },
+    "packet_in_total": 259,
+    "packet_in_tcp": 24,
+    "flow_mods": 38,
+    "stats_replies": 294,
+    "fivetuple_entries_per_reply": 0.0,
+    "macpair_entries_per_reply": 7.034013605442177,
+    "parser_desyncs": 0,
+    "parser_dropped_bytes": 0
+   },
+   {
+    "file": "mac_s9.pcap",
+    "seconds": 99,
+    "match_sets": {
+     "": 294,
+     "in_port|eth_src|eth_dst": 2068
+    },
+    "packet_in_total": 245,
+    "packet_in_tcp": 15,
+    "flow_mods": 32,
+    "stats_replies": 294,
+    "fivetuple_entries_per_reply": 0.0,
+    "macpair_entries_per_reply": 7.034013605442177,
+    "parser_desyncs": 0,
+    "parser_dropped_bytes": 0
+   }
+  ]
+ }
+}

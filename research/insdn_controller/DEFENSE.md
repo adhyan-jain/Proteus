@@ -64,23 +64,23 @@ per-packet counts. The first parser lost up to ~90% of PacketIns on the DDoS cap
 
 ## 4. Forwarding application: what the controller observes (benign case study)
 
-| Per run (~99 s capture), Mininet + Ryu, benign traffic only, 5 runs per mode | MAC-pair | 5-tuple, 10 s idle | 5-tuple, 2 s idle |
+| Per run (~99 s capture), Mininet + Ryu, benign traffic only, one switch, 10 runs per mode | MAC-pair | 5-tuple, 10 s idle | 5-tuple, 2 s idle |
 |---|---:|---:|---:|
-| TCP PacketIns | 11.6 ± 4.2 | 10,350 ± 440 | 10,233 ± 415 |
-| FlowMods (they follow the PacketIns) | 18.8 ± 2.8 | 10,372 ± 438 | 10,396 ± 423 |
-| Per-flow (IP-specific) entries returned per stats reply | 0 | 151.9 ± 1.8 | 36.8 ± 0.4 |
+| TCP PacketIns | 12.3 ± 2.3 | 10,422 ± 202 | 10,392 ± 249 |
+| FlowMods (they follow the PacketIns) | 19.1 ± 1.8 | 10,443 ± 201 | 10,556 ± 252 |
+| Per-flow (IP-specific) entries returned per stats reply | 0 | 153.1 ± 2.4 | 36.9 ± 0.5 |
 
-- 5-tuple forwarding gave **675×–1,752×** (10 s idle) and **685×–1,780×** (2 s idle) more TCP PacketIns than MAC-pair in **every** paired run (5 of 5; the smallest
-  possible sign-test p at n = 5 is 0.0625, but the intervals are ~3 orders of magnitude apart).
-- 2 s vs 10 s idle: per-flow entries a 1 s poller sees drop to **0.239–0.246×** in all five pairs.
+- 5-tuple forwarding gave **665×–1,752×** (10 s idle) and **668×–1,780×** (2 s idle) more TCP PacketIns than MAC-pair in **every** paired run (10 of 10; sign-test p = 0.002).
+- Second topology (3-switch chain, 10 runs/mode, 0 failed requests): MAC-pair 18.0 ± 5.0 vs per-flow 10,881 ± 794 (10 s) and 10,676 ± 804 (2 s) TCP PacketIns; 391×–1,509× in every pair; entries per reply 112.4 ± 2.3 → 27.0 ± 0.4.
+- 2 s vs 10 s idle: per-flow entries a 1 s poller sees drop to **0.234–0.246×** in all ten pairs.
 - ≈11–12 TCP PacketIns per completed request: connections are punted repeatedly (likely packets arriving before the
   FlowMod takes effect; mechanism **not** isolated).
-- MAC-pair replicates the first campaign: 11.6 ± 4.2 vs 11.0 ± 4.1.
+- MAC-pair replicates the first campaign: 12.3 ± 2.3 (10 runs) vs 11.0 ± 4.1 (first campaign).
 
-13,366 requests completed, 41 failed (all in one run: 5-tuple 2 s idle, seed 4), 0 parser desyncs
-(`results/live_modes_v3.json`, `paper/live_table.tex`). Original flawed campaign: `results/live_modes_v2.json`.
+26,891 requests completed on one switch, 41 failed (all in one run: 5-tuple 2 s idle, seed 4; 29 other runs and all 30 three-switch runs had 0 failures; cause not established), 0 parser desyncs
+(`results/live_modes_v4_one10.json`, `results/live_modes_v4_linear3.json`, `paper/live_table.tex`). Original flawed campaign: `results/live_modes_v2.json`.
 
-**Say:** A visibility study, not a detection study: benign traffic, one switch, one app, no attacks, no detector.
+**Say:** A visibility study, not a detection study: benign traffic, one or three switches, one app, no attacks, no detector.
 Headline: forwarding granularity decides how much traffic reaches the controller, by about three orders of magnitude in
 this testbed, and the idle timeout decides how much of the flow table a poller can see. Own the first campaign: my
 original learning switch installed MAC-pair entries for ping and ARP in every mode; those also matched later TCP, so it
@@ -190,8 +190,8 @@ What survives: the scores show PacketIn-level features distinguish InSDN's attac
    reaches 0.616; simple models suffice. Not an attack-detection accuracy (see slide 8).
 4. **Validity analysis.** A trivial "any IP PacketIn" rule scores 0.995 within sessions under strict labels; our session
    probes cannot separate session identity from unlisted attack traffic. InSDN cannot settle this.
-5. **Forwarding-application case study.** Per-flow forwarding sends ~10,300 TCP PacketIns per run to the controller vs
-   ~12 for MAC-pair (675×–1,752× in every paired run); a 2 s idle timeout cuts the per-flow entries a 1 s poller sees to
+5. **Forwarding-application case study.** Per-flow forwarding sends ~10,400 TCP PacketIns per run to the controller vs
+   ~12 for MAC-pair (665×–1,752× in every paired run; ≥391× on a 3-switch chain); a 2 s idle timeout cuts the per-flow entries a 1 s poller sees to
    ~¼. A first, flawed campaign understated this and is reported.
 
 Novelty rests on "inside InSDN, controller-observable only". LAN-SDN-NIDS (2026) builds a new dataset instead.
@@ -212,12 +212,12 @@ Sarhan et al. 2022, Engelen et al. 2021, Pinto et al. 2025, Pekar and Jozsa 2024
 | Is it novel? | Within InSDN, controller-observable only: yes as far as searches show. Not first to use control-plane telemetry. |
 | Does it detect attacks? | Not proven. It separates InSDN's attack captures from its benign captures; within sessions a trivial rule beats it under strict labels. We say so and recommend interleaved datasets. |
 | One testbed only? | InSDN yes; plus a benign-only Mininet/Ryu study. Next: attack traffic with interleaved benign traffic, and detection under the other forwarding modes. |
-| What about the 4× in your first Ryu run? | A bug in my learning switch: MAC-pair entries for ping/ARP shadowed TCP. Corrected app, rerun: 675×–1,752×. Both reported. |
+| What about the 4× in your first Ryu run? | A bug in my learning switch: MAC-pair entries for ping/ARP shadowed TCP. Corrected app, rerun: 665×–1,752×. Both reported. |
 | Why so many PacketIns per connection? | Likely packets arriving before the FlowMod takes effect (no barrier, full-packet PacketIns); not isolated. One run also had 41 failed requests, probably controller overload. |
 | Folds are by capture file, not scenario? | Yes, so CV is optimistic; family-held-out and cross-deployment are the scenario-held-out tests. |
 
 **Limits:** one InSDN testbed · strict labels leave brute force, web and exploit with 6–12 attack windows · no tree baseline ·
-offline replay · live study is benign-only on one switch, so no cross-testbed detection yet.
+offline replay · live study is benign-only on at most three switches, so no cross-testbed detection yet.
 
 **Say:** Robustness, all computed: 5 s windows give 0.958 overall and 0.944 within attack sessions. Under the broader
 IP-based label rule the MLP drops to 0.881 (1 s) and 0.887 (5 s), still well above the best threshold (0.748 and 0.769).

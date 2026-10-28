@@ -78,8 +78,8 @@ export default async function ControllerTelemetryPage() {
 
       <Panel>
         <PanelHeader
-          title="Forwarding mode vs what the controller sees"
-          subtitle="Ryu + Mininet, 1 switch, benign traffic only, 5 runs per mode (mean ± 95% CI)"
+          title="Forwarding mode vs what the controller sees (1 switch)"
+          subtitle="Ryu + Mininet, benign traffic only, 10 runs per mode (mean ± 95% CI)"
         />
         <PanelBody>
           <table className="w-full text-[12px]">
@@ -93,6 +93,35 @@ export default async function ControllerTelemetryPage() {
             </thead>
             <tbody>
               {Object.entries(data.live_modes).map(([m, v]) => (
+                <tr key={m} className="border-t border-border-subtle text-text-primary">
+                  <td className="py-1">{MODE_LABELS[m] ?? m}</td>
+                  <td className="mono">{fmt(v.packet_in_tcp, 1)}</td>
+                  <td className="mono">{fmt(v.flow_mods, 1)}</td>
+                  <td className="mono">{fmt(v.fivetuple_entries_per_reply, 1)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </PanelBody>
+      </Panel>
+
+      <Panel>
+        <PanelHeader
+          title="Same study on a 3-switch chain"
+          subtitle="Ryu + Mininet, benign traffic only, 10 runs per mode (mean ± 95% CI)"
+        />
+        <PanelBody>
+          <table className="w-full text-[12px]">
+            <thead>
+              <tr className="text-left text-text-tertiary">
+                <th className="py-1">Mode</th>
+                <th>TCP PacketIns / run</th>
+                <th>FlowMods / run</th>
+                <th>5-tuple entries per 1 s poll reply</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Object.entries(data.live_modes_linear3).map(([m, v]) => (
                 <tr key={m} className="border-t border-border-subtle text-text-primary">
                   <td className="py-1">{MODE_LABELS[m] ?? m}</td>
                   <td className="mono">{fmt(v.packet_in_tcp, 1)}</td>
