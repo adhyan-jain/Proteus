@@ -70,3 +70,63 @@ what InSDN can and cannot support."
 ## If something goes wrong
 - A number is questioned: open `results/<file>.json` named under the slide; every number comes from one.
 - You don't know: say "I measured X but not Y; Y is future work." Never improvise a number.
+
+---
+
+# Part 2: Exactly what goes in, what comes out, where it is stored
+
+Answer order if the professor says "walk me through the data": **raw file → parser → windows → features → model → result file → paper table**.
+All paths below are relative to the repo root `/home/adhyan/Desktop/Proteus`.
+
+## Stage-by-stage table
+| # | Stage | Input (exactly) | Code | Output (exactly) | Stored at |
+|---|---|---|---|---|---|
+| 0 | Dataset | InSDN PCAP archives from UCD (`Metsplotable-2_Group.zip`, `OVS_Group.zip`, `Normal_Group.zip`); 44 of the files are `*ONOS*` captures of the **controller↔switch OpenFlow 1.3 channel** (TCP 6653), 11 benign + 33 attack | download, `unzip -t`, SHA-256 | the extracted `.pcap`/`.pcapng` files | `data/raw/insdn_pcaps/ex/` (gitignored); hashes `data/raw/insdn_pcaps/ONOS_CAPTURES.sha256`; provenance and URLs in `data/MANIFEST.md` |
+| 1 | OpenFlow parse | one pcap | `ofgap/ofparse.py` (`of_messages`): TCP reassembly per direction, dedup by sequence number, resync on corruption | a stream of `(timestamp, direction, type, body)` OpenFlow messages: PACKET_IN, PACKET_OUT, FLOW_MOD, FLOW_REMOVED, stats replies | in memory; parser error counts (messages, desyncs, dropped bytes) go into `feats_v4/meta.json` |
+| 2 | Labels | the InSDN CSV flow table (attack flows by Flow ID) plus the list of attack-only IPs | `ofgap/attacker_ips.py`, `ctrlfeat._label` | each PACKET_IN is tagged `att_csv` (matches a CSV attack flow), `att_ip` (attack-only IP, no CSV match), `norm_csv`, `unm_ip` (IP not in CSV), `nonip` (ARP/LLDP), `unparsed` | counts per window in `feats_v4/cNNN_W5_lab.npy` |
+| 3 | Windowing + features | the message stream, window length W (1 s or 5 s) | `ofgap/ctrlfeat.py` (`extract`) | per window **22 numbers**: counts of PACKET_IN/OUT, FLOW_MOD, FLOW_REMOVED, stats replies; distinct src/dst MAC and IP, destination ports; TCP/UDP/ICMP/ARP/SYN fractions; mean frame length; entropy of src IP and dst port; flow-stats entry count and packet/byte deltas | `feats_v4/cNNN_W5.npy` (shape windows×22), `..._lab.npy` (windows×6 label counts), `..._bg.npy` (same features with attack-matched PACKET_INs removed, for the confound probe), `feats_v4/meta.json` (per-capture inventory). Directory is gitignored: regenerate with `ctrlfeat.py <pcap_root> <out_dir>` |
+| 4 | History | the 22-feature rows | `exp_ctrl.with_history` | each row becomes the current + 3 previous windows (H=4, log1p scaled) = 88 inputs, causal (no future windows) | in memory |
+| 5 | Models | 88-feature rows and window labels `y` (1 = at least one CSV-matched attack PACKET_IN; windows with unmatched attack-like IPs are dropped as ambiguous under "strict" labels) | `ofgap/exp_ctrl2.py`: MLP, logistic regression, XGBoost (GPU), single-feature thresholds | a 0/1 prediction per window; recall, FPR, balanced accuracy per fold and seed | in memory |
+| 6 | Evaluation | the predictions | `exp_ctrl2.py` | A) 5-fold CV **grouped by capture file** (a file is never in train and test); B) leave-one-attack-family-out; C) cross-deployment (Metasploitable↔OVS); D) session-confound probe; E) label-permutation control; 10 seeds, mean ± 95% CI, capture-cluster bootstrap | `results/v4_strict_W5.json`, `..._W1.json`, `v4_iprule_*.json`, `v4_strict_W5_xgb.json` |
+| 7 | Validity checks | window counts | `ofgap/review_checks.py` | trivial rules ("any PacketIn", "any IP PacketIn") scored within attack sessions | `results/review_checks.json` |
+| 8 | Granularity gap | the same 44 pcaps | `ofgap/gap_measure.py`, `flowmod_check.py`, `ofsim.py` | which match fields FLOW_MODs and flow-stats replies carry (0 of 3,827 FlowMods have IP/transport match fields); simulated per-flow table sizes | `results/gap_attack_v2.json`, `results/flowmod_matches.json` |
+| 9 | Live forwarding study | **nothing from InSDN.** Ryu app `live/ryu_fwd.py` in 3 modes + Mininet (1 OVS switch, h1–h5 clients, h6 HTTP server); benign HTTP downloads and pings only | `live/run_benign.py` (needs root), sniffer on loopback port 6653 | one control-channel pcap per run, client logs | `live/out*/` and `live/campaign2/` (raw pcaps gitignored; hashes in `capture_hashes.sha256`) |
+| 10 | Live analysis | those pcaps | `live/analyze_modes.py` | per-mode PACKET_IN counts, FLOW_MOD counts, entries per 1 s stats reply, mean ± 95% CI over 5 runs | `results/live_modes_v3.json` |
+| 11 | Paper and UI | the result JSONs | `ofgap/make_tables.py`, `live/live_table.py`; `api/server.py` `/api/controller-telemetry`; `frontend/src/app/controller-telemetry/page.tsx` | LaTeX tables and the UI page, both read directly from the JSONs | `paper/tables.tex`, `paper/live_table.tex`, `paper/main.pdf`; UI at route `/controller-telemetry` |
+
+## "What exactly is the input to the model? What comes out?"
+- **Input:** 88 numbers per 5-second window of control-channel traffic. They describe only what the controller receives (PacketIn headers, FlowMod/stats counts). No host-side flow features, no payloads, no CSV features.
+- **Output:** one decision per window, attack or not, plus recall, FPR and balanced accuracy with a 95% CI over 10 seeds.
+- **What is NOT done:** the model is never given a flow's 5-tuple record from the CSV; the CSVs are used only to label windows.
+
+## "Where is everything stored?"
+| What | Where | In git? |
+|---|---|---|
+| Raw captures and archives | `data/raw/insdn_pcaps/` | no (large; hashes are recorded) |
+| Window features | `research/insdn_controller/feats_v4/` | no (regenerable) |
+| Result numbers (source of every figure) | `research/insdn_controller/results/*.json` | yes |
+| Live-study raw pcaps | `research/insdn_controller/live/out*/`, `live/campaign2/` | partly (see `.gitignore`) |
+| Capture hashes | `research/insdn_controller/capture_hashes.sha256` | yes |
+| Paper source and PDF | `research/insdn_controller/paper/` | yes |
+| Training device | NVIDIA RTX 4060 (CUDA): MLP, logistic regression and XGBoost all use `device=cuda` | n/a |
+
+## Limitations that were fixed (and how), and those that were not
+| Limitation | Status |
+|---|---|
+| No tree-model baseline | Fixed: XGBoost on GPU, BAcc 0.952 ± 0.013 vs linear 0.961 ± 0.011 vs MLP 0.958 ± 0.012. Trees give no gain. |
+| "Folds by capture, not scenario" | Already covered by experiment B (leave-one-attack-family-out) in `results/v4_strict_W5.json`; cite that instead of building a new split. |
+| Frontend did not show the study | Fixed: `/controller-telemetry` page reads `/api/controller-telemetry`, which reads the result JSONs only. |
+| Source-side labelling for a future interleaved testbed | Built and syntax-checked, **not yet run on data**: `live/flowlog.py`, `ofgap/label_windows.py`, `LAB_SPEC.md`. |
+| Multi-switch topology, ≥10 runs per mode, cause of the 41 failed requests | **Not done.** Needs `sudo` for Mininet; the user must run `live/run_benign.py` as root. |
+| Second dataset or controller | **Not done.** Candidates found but unverified: UKMDDoSDN (Mendeley DOI 10.17632/43nfv26gpk.2, Ryu; raw PCAPs claimed, but not shown to contain the OpenFlow channel; Mendeley says CC BY 4.0, GitHub README says MIT) and LAN-SDN-NIDS (flow-level CSV with control-plane metrics, ODL; no raw channel captures confirmed). Nothing was downloaded. |
+| Detector beating the trivial baseline in one session | **Not done.** Needs interleaved benign + attack traffic from the user's lab. |
+| InSDN session-identity confound | Cannot be fixed (property of the benchmark); stated in the paper. |
+
+## Extra hard questions about the data
+| Question | Answer |
+|---|---|
+| "Is the 'trivial rule' 0.5 or 0.995?" | Two different rules. "Any PacketIn" is always true on non-empty windows, so 0.5. "Any IP PacketIn" scores 0.995 (1 s) and 1.000 (5 s) within attack sessions under strict labels (`results/review_checks.json`), because the strict mask removes ambiguous windows and the leftover attack-free windows are ARP/LLDP only. |
+| "Where do the labels come from, and are they trustworthy?" | From the InSDN CSV flow table, matched to the PACKET_IN's embedded frame. Coverage is partial, which is why windows with unmatched attack-like IPs are dropped under strict labels and counted as attack under the IP rule; both are reported. |
+| "Why 5 s windows?" | 1 s and 5 s are both run (`v4_strict_W1/W5.json`). 5 s has more PacketIns per window but fewer windows; conclusions do not change. |
+| "Did you train on a CPU?" | No. CUDA only (project rule); MLP and logistic regression are PyTorch on the RTX 4060, XGBoost uses `device="cuda"`. |
+| "Is any number made up?" | No. Every figure in the paper and in the UI is read from `results/*.json`; the UI shows an explicit "not available" if a file is missing. |
