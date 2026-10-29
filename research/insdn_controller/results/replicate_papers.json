@@ -1205,7 +1205,60 @@
    ]
   }
  },
- "paper2": {},
+ "paper2": {
+  "mlp_binary|random": {
+   "acc": {
+    "n": 5,
+    "mean": 0.9994009712408036,
+    "ci95": 9.501549402303072e-05,
+    "per_seed": [
+     0.9994911163453429,
+     0.9993602605484312,
+     0.9993021024164703,
+     0.9994620372793626,
+     0.9993893396144116
+    ]
+   },
+   "macro_f1": {
+    "n": 5,
+    "mean": 0.9990597595871182,
+    "ci95": 0.0001490643970407188,
+    "per_seed": [
+     0.9992011550625529,
+     0.9989959310734429,
+     0.998904712301951,
+     0.9991556925231746,
+     0.9990413069744695
+    ]
+   }
+  },
+  "mlp_binary|grouped": {
+   "acc": {
+    "n": 5,
+    "mean": 0.819676821619789,
+    "ci95": 0.2019412415449064,
+    "per_seed": [
+     0.6805765540501251,
+     0.7126563430613461,
+     0.999894899103139,
+     0.7105867174725093,
+     0.9946695944118256
+    ]
+   },
+   "macro_f1": {
+    "n": 5,
+    "mean": 0.7063804704263055,
+    "ci95": 0.2987934610822096,
+    "per_seed": [
+     0.44887985142043324,
+     0.5842297596137468,
+     0.999787660499639,
+     0.5754402025179784,
+     0.9235648780797299
+    ]
+   }
+  }
+ },
  "notes": [
   "Paper1 reported (arXiv 2604.20934): accuracy 99.98%, kappa 0.9998, 8-class, 80/20. Stratification/shuffle/grouping not stated; we use stratified random as the generous reading.",
   "Hyperparameters not fetched from the paper; sklearn defaults except: ExtraTrees 50 trees, MLP (32,) 10 iters early stopping, StackingClassifier cv=2 (all for speed under a hard time budget), LightGBM meta 100 trees with min_child_weight=1.0, reg_lambda=1.0 added: plain LightGBM defaults were numerically unstable on the near-deterministic stacked probabilities (multiclass accuracy fell to 57-92% on the random split in an aborted first run, 99.98% with these settings in a diagnostic on seed 0; chosen for stability on the paper-protocol condition a, not to create any gap; the paper reports no meta hyperparameters). DT default.",

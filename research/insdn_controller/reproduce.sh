@@ -43,6 +43,7 @@ echo "== 5. host-side flow-CSV baseline (GPU)"
 (cd "$ROOT" && "$PY" research/insdn_controller/ofgap/protocol_audit.py --dataset cicids2017 --out "$OUT/res/protocol_audit_cicids2017.json" > /dev/null)
 (cd "$ROOT" && "$PY" research/insdn_controller/ofgap/recipe_replication.py "$OUT/res/recipe_replication.json" > /dev/null)
 (cd "$ROOT" && "$PY" research/insdn_controller/ofgap/dedup_ladder.py "$OUT/res/dedup_ladder.json" > /dev/null)
+(cd "$ROOT" && "$PY" research/insdn_controller/ofgap/leave_one_host_out.py "$OUT/res/leave_one_host_out.json" > /dev/null)
 
 "$PY" -I ofgap/make_figures.py "$OUT" > /dev/null   # paper figures from results/*.json
 
