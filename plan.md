@@ -13,8 +13,8 @@ paper protocols. Live interleaved testbed still out of scope. So far: InSDN spli
 and the published-results check (`literature_check.json`).
 
 Paths in this file: `results/...` and `live/...` are relative to `research/insdn_controller/`. The slides are now
-`research/insdn_controller/PRESENTATION.pptx` (the guide is `research/insdn_controller/PRESENTATION_GUIDE.md`).
-Stale body references, checked 2026-10-29: `STATUS.md`, `DEFENSE.md`, `LAB_SPEC.md`, `live/flowlog.py`,
+`research/insdn_controller/deck/PRESENTATION.pptx`.
+Stale body references, checked 2026-10-29: `STATUS.md`, `LAB_SPEC.md`, `live/flowlog.py`,
 `ofgap/label_windows.py` and `results/v4_strict_W5.json` do not exist in the tree (`v4_strict_W5.json` was removed in
 18de9b3; its successor is `results/v4_strict_W5_xgb.json`). Treat body mentions of them as historical.
 
@@ -67,7 +67,7 @@ Owner: user runs the lab; Claude writes the logging spec and the evaluation.
 - [ ] Related work: systematic comparison with LAN-SDN-NIDS (Data 11(8):195, 2026) and other control-plane work; never claim "first".
 - [ ] Release artifact: code, capture hashes, result JSONs, scripts that regenerate every table.
 - [ ] Fourth hostile review pass; fix and re-verify every number against `results/*.json`.
-- [ ] Update `STATUS.md`, `DEFENSE.md`, `PRESENTATION_GUIDE.md` to the new numbers.
+- [ ] Keep `notes/DEFENSE.md` and the deck in step with the results.
 
 ## Decision gates
 - After Phase 1: if the detector does not beat the trivial baseline within a session, drop detection claims and submit the

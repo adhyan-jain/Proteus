@@ -85,7 +85,7 @@ outside the repository (`~/private_research/proteus_repo_snapshot_20261017.tar.g
 `af54da7b119085d290ac67b99c9a5f946e4acfc1b4bd526ec1373e426cf66a6c`) and removed from the tree.
 Numbers above come from stored result files in that archive, not estimates.
 
-The current study is separate from that programme. It examines what an SDN controller can observe
+The current study is separate from that programme. It examines how evaluation protocols affect reported SDN intrusion-detection accuracy (random vs held-out-host splits on InSDN and CICIDS2017) and what an SDN controller can observe
 from OpenFlow traffic (InSDN ONOS captures, plus Mininet/Ryu captures recorded on this machine) and lives
 in [`research/insdn_controller/`](research/insdn_controller/README.md), with its own paper, `reproduce.sh`
 and result files in `research/insdn_controller/results/`. Its numbers are cited there, not here.
