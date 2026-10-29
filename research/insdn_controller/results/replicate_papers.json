@@ -1,0 +1,1254 @@
+{
+ "rows": 343889,
+ "classes": [
+  "BENIGN",
+  "BFA",
+  "DDoS",
+  "DoS",
+  "Probe",
+  "Web-Attack",
+  "BOTNET",
+  "U2R"
+ ],
+ "nseeds": 5,
+ "paper1": {
+  "a_random_ids|train_only": {
+   "acc": {
+    "n": 5,
+    "mean": 0.9998982232690686,
+    "ci95": 4.602684692903531e-05,
+    "per_seed": [
+     0.9998691442030881,
+     0.999927302335049,
+     0.9999418418680392,
+     0.999854604670098,
+     0.9998982232690686
+    ]
+   },
+   "macro_f1": {
+    "n": 5,
+    "mean": 0.9921180007607656,
+    "ci95": 0.011687106356911284,
+    "per_seed": [
+     0.9971808723719635,
+     0.9816662044224087,
+     0.9997455790072536,
+     0.9999098685614976,
+     0.9820874794407048
+    ]
+   },
+   "kappa": {
+    "n": 5,
+    "mean": 0.9998603721949937,
+    "ci95": 6.314472083513928e-05,
+    "per_seed": [
+     0.9998204767548325,
+     0.9999002650393717,
+     0.9999202129865936,
+     0.9998005316968019,
+     0.9998603744973688
+    ]
+   },
+   "unseen_test_share": {
+    "n": 5,
+    "mean": 0.0,
+    "ci95": 0.0,
+    "per_seed": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "test_frac": {
+    "n": 5,
+    "mean": 0.20000058158301076,
+    "ci95": 3.8530916029980064e-17,
+    "per_seed": [
+     0.2000005815830108,
+     0.2000005815830108,
+     0.2000005815830108,
+     0.2000005815830108,
+     0.2000005815830108
+    ]
+   },
+   "feats": [
+    [
+     "Flow ID",
+     "Bwd Header Length",
+     "Dst Port",
+     "Src IP",
+     "Bwd Init Win Bytes",
+     "Src Port",
+     "Fwd Header Length",
+     "Bwd IAT Total",
+     "Dst IP",
+     "Bwd IAT Max",
+     "Bwd IAT Mean",
+     "Protocol",
+     "Subflow Fwd Packets",
+     "Total Fwd Packet",
+     "Bwd Packets/s"
+    ],
+    [
+     "Flow ID",
+     "Bwd Header Length",
+     "Dst Port",
+     "Src IP",
+     "Bwd Init Win Bytes",
+     "Src Port",
+     "Fwd Header Length",
+     "Dst IP",
+     "Bwd IAT Total",
+     "Bwd IAT Max",
+     "Protocol",
+     "Bwd IAT Mean",
+     "Subflow Fwd Packets",
+     "Total Fwd Packet",
+     "Flow Duration"
+    ],
+    [
+     "Flow ID",
+     "Bwd Header Length",
+     "Dst Port",
+     "Src IP",
+     "Bwd Init Win Bytes",
+     "Src Port",
+     "Fwd Header Length",
+     "Bwd IAT Total",
+     "Bwd IAT Max",
+     "Dst IP",
+     "Protocol",
+     "Bwd IAT Mean",
+     "Subflow Fwd Packets",
+     "Total Fwd Packet",
+     "Bwd Packets/s"
+    ],
+    [
+     "Flow ID",
+     "Bwd Header Length",
+     "Dst Port",
+     "Src IP",
+     "Bwd Init Win Bytes",
+     "Src Port",
+     "Fwd Header Length",
+     "Dst IP",
+     "Bwd IAT Total",
+     "Bwd IAT Max",
+     "Protocol",
+     "Bwd IAT Mean",
+     "Total Fwd Packet",
+     "Subflow Fwd Packets",
+     "Bwd Packets/s"
+    ],
+    [
+     "Flow ID",
+     "Bwd Header Length",
+     "Dst Port",
+     "Src IP",
+     "Bwd Init Win Bytes",
+     "Src Port",
+     "Fwd Header Length",
+     "Dst IP",
+     "Bwd IAT Total",
+     "Bwd IAT Max",
+     "Bwd IAT Mean",
+     "Protocol",
+     "Total Fwd Packet",
+     "Subflow Fwd Packets",
+     "Flow Packets/s"
+    ]
+   ]
+  },
+  "a_random_ids|all_rows": {
+   "acc": {
+    "n": 5,
+    "mean": 0.9999040390822647,
+    "ci95": 2.7379055633336276e-05,
+    "per_seed": [
+     0.9998691442030881,
+     0.999927302335049,
+     0.9998982232690686,
+     0.9999127628020588,
+     0.9999127628020588
+    ]
+   },
+   "macro_f1": {
+    "n": 5,
+    "mean": 0.9914166888646138,
+    "ci95": 0.01311358215150127,
+    "per_seed": [
+     0.9971808723719635,
+     0.9781428790670661,
+     0.9818659641679032,
+     0.9999459211368985,
+     0.9999478075792371
+    ]
+   },
+   "kappa": {
+    "n": 5,
+    "mean": 0.9998683507583254,
+    "ci95": 3.756203210683267e-05,
+    "per_seed": [
+     0.9998204767548325,
+     0.9999002647819952,
+     0.9998603729200605,
+     0.9998803190180812,
+     0.999880320316657
+    ]
+   },
+   "unseen_test_share": {
+    "n": 5,
+    "mean": 0.0,
+    "ci95": 0.0,
+    "per_seed": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "test_frac": {
+    "n": 5,
+    "mean": 0.20000058158301076,
+    "ci95": 3.8530916029980064e-17,
+    "per_seed": [
+     0.2000005815830108,
+     0.2000005815830108,
+     0.2000005815830108,
+     0.2000005815830108,
+     0.2000005815830108
+    ]
+   },
+   "feats": [
+    [
+     "Flow ID",
+     "Bwd Header Length",
+     "Dst Port",
+     "Src IP",
+     "Bwd Init Win Bytes",
+     "Src Port",
+     "Fwd Header Length",
+     "Bwd IAT Total",
+     "Dst IP",
+     "Bwd IAT Max",
+     "Bwd IAT Mean",
+     "Protocol",
+     "Total Fwd Packet",
+     "Subflow Fwd Packets",
+     "Bwd Packets/s"
+    ],
+    [
+     "Flow ID",
+     "Bwd Header Length",
+     "Dst Port",
+     "Src IP",
+     "Bwd Init Win Bytes",
+     "Src Port",
+     "Fwd Header Length",
+     "Bwd IAT Total",
+     "Dst IP",
+     "Bwd IAT Max",
+     "Bwd IAT Mean",
+     "Protocol",
+     "Total Fwd Packet",
+     "Subflow Fwd Packets",
+     "Bwd Packets/s"
+    ],
+    [
+     "Flow ID",
+     "Bwd Header Length",
+     "Dst Port",
+     "Src IP",
+     "Bwd Init Win Bytes",
+     "Src Port",
+     "Fwd Header Length",
+     "Bwd IAT Total",
+     "Dst IP",
+     "Bwd IAT Max",
+     "Bwd IAT Mean",
+     "Protocol",
+     "Total Fwd Packet",
+     "Subflow Fwd Packets",
+     "Bwd Packets/s"
+    ],
+    [
+     "Flow ID",
+     "Bwd Header Length",
+     "Dst Port",
+     "Src IP",
+     "Bwd Init Win Bytes",
+     "Src Port",
+     "Fwd Header Length",
+     "Bwd IAT Total",
+     "Dst IP",
+     "Bwd IAT Max",
+     "Bwd IAT Mean",
+     "Protocol",
+     "Total Fwd Packet",
+     "Subflow Fwd Packets",
+     "Bwd Packets/s"
+    ],
+    [
+     "Flow ID",
+     "Bwd Header Length",
+     "Dst Port",
+     "Src IP",
+     "Bwd Init Win Bytes",
+     "Src Port",
+     "Fwd Header Length",
+     "Bwd IAT Total",
+     "Dst IP",
+     "Bwd IAT Max",
+     "Bwd IAT Mean",
+     "Protocol",
+     "Total Fwd Packet",
+     "Subflow Fwd Packets",
+     "Bwd Packets/s"
+    ]
+   ]
+  },
+  "b_grouped_ids|train_only": {
+   "acc": {
+    "n": 5,
+    "mean": 0.7230388854455164,
+    "ci95": 0.38531913074755625,
+    "per_seed": [
+     0.23978746292958075,
+     0.7274270399047051,
+     1.0,
+     0.6588157638128385,
+     0.9891641605804573
+    ]
+   },
+   "macro_f1": {
+    "n": 5,
+    "mean": 0.3274783988723378,
+    "ci95": 0.12014310704465436,
+    "per_seed": [
+     0.1751873727314434,
+     0.3281269451175107,
+     0.375,
+     0.32218927870774494,
+     0.4368883978049901
+    ]
+   },
+   "kappa": {
+    "n": 5,
+    "mean": 0.6507372072085829,
+    "ci95": 0.43127525950740625,
+    "per_seed": [
+     0.16720688307802878,
+     0.5724802570736734,
+     1.0,
+     0.535552955154944,
+     0.9784459407362679
+    ]
+   },
+   "unseen_test_share": {
+    "n": 5,
+    "mean": 0.0,
+    "ci95": 0.0,
+    "per_seed": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "test_frac": {
+    "n": 5,
+    "mean": 0.21099017415503263,
+    "ci95": 0.14355256789038207,
+    "per_seed": [
+     0.4000593214671013,
+     0.19529557502566236,
+     0.08300352730096049,
+     0.19383870958361565,
+     0.18275373739782313
+    ]
+   },
+   "feats": [
+    [
+     "Flow ID",
+     "Src IP",
+     "Bwd Header Length",
+     "Dst IP",
+     "Src Port",
+     "Dst Port",
+     "Bwd IAT Max",
+     "Bwd IAT Mean",
+     "Bwd IAT Total",
+     "Bwd Packets/s",
+     "Flow IAT Max",
+     "Flow IAT Mean",
+     "Flow Packets/s",
+     "Flow Duration",
+     "Protocol"
+    ],
+    [
+     "Flow ID",
+     "Bwd Header Length",
+     "Dst Port",
+     "Src IP",
+     "Bwd Init Win Bytes",
+     "Src Port",
+     "Fwd Header Length",
+     "Bwd IAT Total",
+     "Dst IP",
+     "Bwd IAT Max",
+     "Protocol",
+     "Bwd IAT Mean",
+     "Subflow Fwd Packets",
+     "Total Fwd Packet",
+     "Flow Duration"
+    ],
+    [
+     "Flow ID",
+     "Bwd Header Length",
+     "Dst Port",
+     "Src IP",
+     "Bwd Init Win Bytes",
+     "Src Port",
+     "Fwd Header Length",
+     "Dst IP",
+     "Bwd IAT Total",
+     "Bwd IAT Max",
+     "Bwd IAT Mean",
+     "Protocol",
+     "Total Fwd Packet",
+     "Subflow Fwd Packets",
+     "Total Bwd packets"
+    ],
+    [
+     "Flow ID",
+     "Bwd Header Length",
+     "Dst Port",
+     "Src IP",
+     "Bwd Init Win Bytes",
+     "Src Port",
+     "Fwd Header Length",
+     "Bwd IAT Total",
+     "Bwd IAT Max",
+     "Dst IP",
+     "Protocol",
+     "Bwd IAT Mean",
+     "Subflow Fwd Packets",
+     "Total Fwd Packet",
+     "Flow Duration"
+    ],
+    [
+     "Flow ID",
+     "Bwd Header Length",
+     "Dst Port",
+     "Src IP",
+     "Bwd Init Win Bytes",
+     "Src Port",
+     "Fwd Header Length",
+     "Bwd IAT Total",
+     "Dst IP",
+     "Bwd IAT Max",
+     "Protocol",
+     "Bwd IAT Mean",
+     "Subflow Fwd Packets",
+     "Total Fwd Packet",
+     "Flow Duration"
+    ]
+   ]
+  },
+  "b_grouped_ids|all_rows": {
+   "acc": {
+    "n": 5,
+    "mean": 0.7840352415256929,
+    "ci95": 0.37575559226394717,
+    "per_seed": [
+     0.32590713496540097,
+     0.991512805241215,
+     1.0,
+     0.6195112437930362,
+     0.9832450236288128
+    ]
+   },
+   "macro_f1": {
+    "n": 5,
+    "mean": 0.3473297270181831,
+    "ci95": 0.14276435225654313,
+    "per_seed": [
+     0.20299771397921584,
+     0.4994722771720646,
+     0.375,
+     0.2683283336033623,
+     0.3908503103362729
+    ]
+   },
+   "kappa": {
+    "n": 5,
+    "mean": 0.7324875263591429,
+    "ci95": 0.44492619705874004,
+    "per_seed": [
+     0.21538223223971587,
+     0.9847760059698711,
+     1.0,
+     0.4955666325835427,
+     0.9667127610025847
+    ]
+   },
+   "unseen_test_share": {
+    "n": 5,
+    "mean": 0.0,
+    "ci95": 0.0,
+    "per_seed": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "test_frac": {
+    "n": 5,
+    "mean": 0.21099017415503263,
+    "ci95": 0.14355256789038207,
+    "per_seed": [
+     0.4000593214671013,
+     0.19529557502566236,
+     0.08300352730096049,
+     0.19383870958361565,
+     0.18275373739782313
+    ]
+   },
+   "feats": [
+    [
+     "Flow ID",
+     "Bwd Header Length",
+     "Dst Port",
+     "Src IP",
+     "Bwd Init Win Bytes",
+     "Src Port",
+     "Fwd Header Length",
+     "Bwd IAT Total",
+     "Dst IP",
+     "Bwd IAT Max",
+     "Bwd IAT Mean",
+     "Protocol",
+     "Total Fwd Packet",
+     "Subflow Fwd Packets",
+     "Bwd Packets/s"
+    ],
+    [
+     "Flow ID",
+     "Bwd Header Length",
+     "Dst Port",
+     "Src IP",
+     "Bwd Init Win Bytes",
+     "Src Port",
+     "Fwd Header Length",
+     "Bwd IAT Total",
+     "Dst IP",
+     "Bwd IAT Max",
+     "Bwd IAT Mean",
+     "Protocol",
+     "Total Fwd Packet",
+     "Subflow Fwd Packets",
+     "Bwd Packets/s"
+    ],
+    [
+     "Flow ID",
+     "Bwd Header Length",
+     "Dst Port",
+     "Src IP",
+     "Bwd Init Win Bytes",
+     "Src Port",
+     "Fwd Header Length",
+     "Bwd IAT Total",
+     "Dst IP",
+     "Bwd IAT Max",
+     "Bwd IAT Mean",
+     "Protocol",
+     "Total Fwd Packet",
+     "Subflow Fwd Packets",
+     "Bwd Packets/s"
+    ],
+    [
+     "Flow ID",
+     "Bwd Header Length",
+     "Dst Port",
+     "Src IP",
+     "Bwd Init Win Bytes",
+     "Src Port",
+     "Fwd Header Length",
+     "Bwd IAT Total",
+     "Dst IP",
+     "Bwd IAT Max",
+     "Bwd IAT Mean",
+     "Protocol",
+     "Total Fwd Packet",
+     "Subflow Fwd Packets",
+     "Bwd Packets/s"
+    ],
+    [
+     "Flow ID",
+     "Bwd Header Length",
+     "Dst Port",
+     "Src IP",
+     "Bwd Init Win Bytes",
+     "Src Port",
+     "Fwd Header Length",
+     "Bwd IAT Total",
+     "Dst IP",
+     "Bwd IAT Max",
+     "Bwd IAT Mean",
+     "Protocol",
+     "Total Fwd Packet",
+     "Subflow Fwd Packets",
+     "Bwd Packets/s"
+    ]
+   ]
+  },
+  "c_random_noids|train_only": {
+   "acc": {
+    "n": 5,
+    "mean": 0.997382884061764,
+    "ci95": 0.00047284260803445407,
+    "per_seed": [
+     0.997673674721568,
+     0.997528279391666,
+     0.9974992003256855,
+     0.9967140655442147,
+     0.9974992003256855
+    ]
+   },
+   "macro_f1": {
+    "n": 5,
+    "mean": 0.84271732673259,
+    "ci95": 0.07214773791895428,
+    "per_seed": [
+     0.8272969929555003,
+     0.9332700075931606,
+     0.8628068652528443,
+     0.7870343708190521,
+     0.8031783970423925
+    ]
+   },
+   "kappa": {
+    "n": 5,
+    "mean": 0.9964081213572026,
+    "ci95": 0.0006495999614497829,
+    "per_seed": [
+     0.9968072584711921,
+     0.9966083598647926,
+     0.9965678635198004,
+     0.9954892252132391,
+     0.9965678997169889
+    ]
+   },
+   "unseen_test_share": {
+    "n": 5,
+    "mean": 0.0,
+    "ci95": 0.0,
+    "per_seed": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "test_frac": {
+    "n": 5,
+    "mean": 0.20000058158301076,
+    "ci95": 3.8530916029980064e-17,
+    "per_seed": [
+     0.2000005815830108,
+     0.2000005815830108,
+     0.2000005815830108,
+     0.2000005815830108,
+     0.2000005815830108
+    ]
+   },
+   "feats": [
+    [
+     "Bwd Header Length",
+     "Bwd Init Win Bytes",
+     "Fwd Header Length",
+     "Bwd IAT Total",
+     "Bwd IAT Max",
+     "Bwd IAT Mean",
+     "Protocol",
+     "Total Fwd Packet",
+     "Subflow Fwd Packets",
+     "Flow Packets/s",
+     "Bwd Packets/s",
+     "Flow Duration",
+     "Flow IAT Mean",
+     "Flow IAT Max",
+     "Total Bwd packets"
+    ],
+    [
+     "Bwd Header Length",
+     "Bwd Init Win Bytes",
+     "Fwd Header Length",
+     "Bwd IAT Total",
+     "Bwd IAT Max",
+     "Protocol",
+     "Bwd IAT Mean",
+     "Subflow Fwd Packets",
+     "Total Fwd Packet",
+     "Flow Duration",
+     "Bwd Packets/s",
+     "Flow Packets/s",
+     "Flow IAT Max",
+     "Flow IAT Mean",
+     "Subflow Bwd Packets"
+    ],
+    [
+     "Bwd Header Length",
+     "Bwd Init Win Bytes",
+     "Fwd Header Length",
+     "Bwd IAT Total",
+     "Bwd IAT Max",
+     "Protocol",
+     "Bwd IAT Mean",
+     "Total Fwd Packet",
+     "Subflow Fwd Packets",
+     "Bwd Packets/s",
+     "Flow Duration",
+     "Flow Packets/s",
+     "Flow IAT Mean",
+     "Total Bwd packets",
+     "Subflow Bwd Packets"
+    ],
+    [
+     "Bwd Header Length",
+     "Bwd Init Win Bytes",
+     "Fwd Header Length",
+     "Bwd IAT Total",
+     "Bwd IAT Max",
+     "Protocol",
+     "Bwd IAT Mean",
+     "Total Fwd Packet",
+     "Subflow Fwd Packets",
+     "Bwd Packets/s",
+     "Flow Duration",
+     "Flow Packets/s",
+     "Subflow Bwd Packets",
+     "Total Bwd packets",
+     "Flow IAT Mean"
+    ],
+    [
+     "Bwd Header Length",
+     "Bwd Init Win Bytes",
+     "Fwd Header Length",
+     "Bwd IAT Total",
+     "Bwd IAT Max",
+     "Protocol",
+     "Bwd IAT Mean",
+     "Total Fwd Packet",
+     "Subflow Fwd Packets",
+     "Flow Packets/s",
+     "Bwd Packets/s",
+     "Flow Duration",
+     "Flow IAT Mean",
+     "Subflow Bwd Packets",
+     "Total Bwd packets"
+    ]
+   ]
+  },
+  "c_random_noids|all_rows": {
+   "acc": {
+    "n": 5,
+    "mean": 0.9974992003256855,
+    "ci95": 0.0005800956067048438,
+    "per_seed": [
+     0.9977027537875484,
+     0.9975864375236267,
+     0.996728605077205,
+     0.9974992003256855,
+     0.9979790049143622
+    ]
+   },
+   "macro_f1": {
+    "n": 5,
+    "mean": 0.8751299651182899,
+    "ci95": 0.05932781621903764,
+    "per_seed": [
+     0.830423597636824,
+     0.9278226824242357,
+     0.8969484263213909,
+     0.9016803342380536,
+     0.8187747849709451
+    ]
+   },
+   "kappa": {
+    "n": 5,
+    "mean": 0.9965679999075295,
+    "ci95": 0.0007966495667763967,
+    "per_seed": [
+     0.9968478974829101,
+     0.9966879541128602,
+     0.9955095974106164,
+     0.9965680324109129,
+     0.9972265181203481
+    ]
+   },
+   "unseen_test_share": {
+    "n": 5,
+    "mean": 0.0,
+    "ci95": 0.0,
+    "per_seed": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "test_frac": {
+    "n": 5,
+    "mean": 0.20000058158301076,
+    "ci95": 3.8530916029980064e-17,
+    "per_seed": [
+     0.2000005815830108,
+     0.2000005815830108,
+     0.2000005815830108,
+     0.2000005815830108,
+     0.2000005815830108
+    ]
+   },
+   "feats": [
+    [
+     "Bwd Header Length",
+     "Bwd Init Win Bytes",
+     "Fwd Header Length",
+     "Bwd IAT Total",
+     "Bwd IAT Max",
+     "Bwd IAT Mean",
+     "Protocol",
+     "Subflow Fwd Packets",
+     "Total Fwd Packet",
+     "Bwd Packets/s",
+     "Flow Packets/s",
+     "Flow Duration",
+     "Flow IAT Mean",
+     "Flow IAT Max",
+     "Total Bwd packets"
+    ],
+    [
+     "Bwd Header Length",
+     "Bwd Init Win Bytes",
+     "Fwd Header Length",
+     "Bwd IAT Total",
+     "Bwd IAT Max",
+     "Bwd IAT Mean",
+     "Protocol",
+     "Subflow Fwd Packets",
+     "Total Fwd Packet",
+     "Bwd Packets/s",
+     "Flow Packets/s",
+     "Flow Duration",
+     "Flow IAT Mean",
+     "Flow IAT Max",
+     "Total Bwd packets"
+    ],
+    [
+     "Bwd Header Length",
+     "Bwd Init Win Bytes",
+     "Fwd Header Length",
+     "Bwd IAT Total",
+     "Bwd IAT Max",
+     "Bwd IAT Mean",
+     "Protocol",
+     "Subflow Fwd Packets",
+     "Total Fwd Packet",
+     "Bwd Packets/s",
+     "Flow Packets/s",
+     "Flow Duration",
+     "Flow IAT Mean",
+     "Flow IAT Max",
+     "Total Bwd packets"
+    ],
+    [
+     "Bwd Header Length",
+     "Bwd Init Win Bytes",
+     "Fwd Header Length",
+     "Bwd IAT Total",
+     "Bwd IAT Max",
+     "Bwd IAT Mean",
+     "Protocol",
+     "Subflow Fwd Packets",
+     "Total Fwd Packet",
+     "Bwd Packets/s",
+     "Flow Packets/s",
+     "Flow Duration",
+     "Flow IAT Mean",
+     "Flow IAT Max",
+     "Total Bwd packets"
+    ],
+    [
+     "Bwd Header Length",
+     "Bwd Init Win Bytes",
+     "Fwd Header Length",
+     "Bwd IAT Total",
+     "Bwd IAT Max",
+     "Bwd IAT Mean",
+     "Protocol",
+     "Subflow Fwd Packets",
+     "Total Fwd Packet",
+     "Bwd Packets/s",
+     "Flow Packets/s",
+     "Flow Duration",
+     "Flow IAT Mean",
+     "Flow IAT Max",
+     "Total Bwd packets"
+    ]
+   ]
+  },
+  "d_grouped_noids|train_only": {
+   "acc": {
+    "n": 5,
+    "mean": 0.6301544658482534,
+    "ci95": 0.26281574873184943,
+    "per_seed": [
+     0.5269305692853404,
+     0.5802561048243002,
+     0.9990540919282511,
+     0.4644084069668012,
+     0.5801231562365745
+    ]
+   },
+   "macro_f1": {
+    "n": 5,
+    "mean": 0.3160204987686798,
+    "ci95": 0.05033706767877914,
+    "per_seed": [
+     0.2620605574124546,
+     0.331065026336233,
+     0.3731860344756124,
+     0.30776829869532873,
+     0.3060225769237706
+    ]
+   },
+   "kappa": {
+    "n": 5,
+    "mean": 0.5263806148609772,
+    "ci95": 0.3301399679279597,
+    "per_seed": [
+     0.37185836292800567,
+     0.46375534853042455,
+     0.9962218248384838,
+     0.3661022081508405,
+     0.43396532985713165
+    ]
+   },
+   "unseen_test_share": {
+    "n": 5,
+    "mean": 0.0,
+    "ci95": 0.0,
+    "per_seed": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "test_frac": {
+    "n": 5,
+    "mean": 0.21099017415503263,
+    "ci95": 0.14355256789038207,
+    "per_seed": [
+     0.4000593214671013,
+     0.19529557502566236,
+     0.08300352730096049,
+     0.19383870958361565,
+     0.18275373739782313
+    ]
+   },
+   "feats": [
+    [
+     "Bwd Header Length",
+     "Bwd IAT Max",
+     "Bwd IAT Total",
+     "Bwd IAT Mean",
+     "Bwd Packets/s",
+     "Flow IAT Max",
+     "Flow IAT Mean",
+     "Flow Packets/s",
+     "Flow Duration",
+     "Protocol",
+     "Fwd Header Length",
+     "Bwd Init Win Bytes",
+     "Packet Length Variance",
+     "Packet Length Std",
+     "Subflow Fwd Packets"
+    ],
+    [
+     "Bwd Header Length",
+     "Bwd Init Win Bytes",
+     "Fwd Header Length",
+     "Bwd IAT Total",
+     "Bwd IAT Max",
+     "Protocol",
+     "Bwd IAT Mean",
+     "Subflow Fwd Packets",
+     "Total Fwd Packet",
+     "Flow Duration",
+     "Flow Packets/s",
+     "Flow IAT Max",
+     "Bwd Packets/s",
+     "Subflow Bwd Packets",
+     "Total Bwd packets"
+    ],
+    [
+     "Bwd Header Length",
+     "Bwd Init Win Bytes",
+     "Fwd Header Length",
+     "Bwd IAT Total",
+     "Bwd IAT Max",
+     "Bwd IAT Mean",
+     "Protocol",
+     "Subflow Bwd Packets",
+     "Total Fwd Packet",
+     "Subflow Fwd Packets",
+     "Total Bwd packets",
+     "Flow Packets/s",
+     "Flow Duration",
+     "Bwd Packets/s",
+     "Flow IAT Mean"
+    ],
+    [
+     "Bwd Header Length",
+     "Bwd Init Win Bytes",
+     "Fwd Header Length",
+     "Bwd IAT Total",
+     "Bwd IAT Max",
+     "Protocol",
+     "Bwd IAT Mean",
+     "Total Fwd Packet",
+     "Subflow Fwd Packets",
+     "Flow Duration",
+     "Bwd Packets/s",
+     "Flow IAT Max",
+     "Flow Packets/s",
+     "Total Bwd packets",
+     "Subflow Bwd Packets"
+    ],
+    [
+     "Bwd Header Length",
+     "Bwd Init Win Bytes",
+     "Fwd Header Length",
+     "Bwd IAT Total",
+     "Bwd IAT Max",
+     "Protocol",
+     "Bwd IAT Mean",
+     "Total Fwd Packet",
+     "Subflow Fwd Packets",
+     "Flow Duration",
+     "Bwd Packets/s",
+     "Subflow Bwd Packets",
+     "Flow Packets/s",
+     "Total Bwd packets",
+     "Flow IAT Max"
+    ]
+   ]
+  },
+  "d_grouped_noids|all_rows": {
+   "acc": {
+    "n": 5,
+    "mean": 0.6422474243824595,
+    "ci95": 0.26310615364690454,
+    "per_seed": [
+     0.42277722858638134,
+     0.6085169743895176,
+     0.9961112668161435,
+     0.5943683523605214,
+     0.589463299759734
+    ]
+   },
+   "macro_f1": {
+    "n": 5,
+    "mean": 0.34275264878521455,
+    "ci95": 0.09231834781609076,
+    "per_seed": [
+     0.22023700730217252,
+     0.35331114237581934,
+     0.3726557296052918,
+     0.3468351416009692,
+     0.4207242230418199
+    ]
+   },
+   "kappa": {
+    "n": 5,
+    "mean": 0.5392887815192646,
+    "ci95": 0.3217331414146955,
+    "per_seed": [
+     0.3065876557768179,
+     0.4878310237274148,
+     0.9845552669486718,
+     0.4749136885224755,
+     0.442556272620943
+    ]
+   },
+   "unseen_test_share": {
+    "n": 5,
+    "mean": 0.0,
+    "ci95": 0.0,
+    "per_seed": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "test_frac": {
+    "n": 5,
+    "mean": 0.21099017415503263,
+    "ci95": 0.14355256789038207,
+    "per_seed": [
+     0.4000593214671013,
+     0.19529557502566236,
+     0.08300352730096049,
+     0.19383870958361565,
+     0.18275373739782313
+    ]
+   },
+   "feats": [
+    [
+     "Bwd Header Length",
+     "Bwd Init Win Bytes",
+     "Fwd Header Length",
+     "Bwd IAT Total",
+     "Bwd IAT Max",
+     "Bwd IAT Mean",
+     "Protocol",
+     "Subflow Fwd Packets",
+     "Total Fwd Packet",
+     "Bwd Packets/s",
+     "Flow Packets/s",
+     "Flow Duration",
+     "Flow IAT Mean",
+     "Flow IAT Max",
+     "Total Bwd packets"
+    ],
+    [
+     "Bwd Header Length",
+     "Bwd Init Win Bytes",
+     "Fwd Header Length",
+     "Bwd IAT Total",
+     "Bwd IAT Max",
+     "Bwd IAT Mean",
+     "Protocol",
+     "Subflow Fwd Packets",
+     "Total Fwd Packet",
+     "Bwd Packets/s",
+     "Flow Packets/s",
+     "Flow Duration",
+     "Flow IAT Mean",
+     "Flow IAT Max",
+     "Total Bwd packets"
+    ],
+    [
+     "Bwd Header Length",
+     "Bwd Init Win Bytes",
+     "Fwd Header Length",
+     "Bwd IAT Total",
+     "Bwd IAT Max",
+     "Bwd IAT Mean",
+     "Protocol",
+     "Subflow Fwd Packets",
+     "Total Fwd Packet",
+     "Bwd Packets/s",
+     "Flow Packets/s",
+     "Flow Duration",
+     "Flow IAT Mean",
+     "Flow IAT Max",
+     "Total Bwd packets"
+    ],
+    [
+     "Bwd Header Length",
+     "Bwd Init Win Bytes",
+     "Fwd Header Length",
+     "Bwd IAT Total",
+     "Bwd IAT Max",
+     "Bwd IAT Mean",
+     "Protocol",
+     "Subflow Fwd Packets",
+     "Total Fwd Packet",
+     "Bwd Packets/s",
+     "Flow Packets/s",
+     "Flow Duration",
+     "Flow IAT Mean",
+     "Flow IAT Max",
+     "Total Bwd packets"
+    ],
+    [
+     "Bwd Header Length",
+     "Bwd Init Win Bytes",
+     "Fwd Header Length",
+     "Bwd IAT Total",
+     "Bwd IAT Max",
+     "Bwd IAT Mean",
+     "Protocol",
+     "Subflow Fwd Packets",
+     "Total Fwd Packet",
+     "Bwd Packets/s",
+     "Flow Packets/s",
+     "Flow Duration",
+     "Flow IAT Mean",
+     "Flow IAT Max",
+     "Total Bwd packets"
+    ]
+   ]
+  }
+ },
+ "paper2": {},
+ "notes": [
+  "Paper1 reported (arXiv 2604.20934): accuracy 99.98%, kappa 0.9998, 8-class, 80/20. Stratification/shuffle/grouping not stated; we use stratified random as the generous reading.",
+  "Hyperparameters not fetched from the paper; sklearn defaults except: ExtraTrees 50 trees, MLP (32,) 10 iters early stopping, StackingClassifier cv=2 (all for speed under a hard time budget), LightGBM meta 100 trees with min_child_weight=1.0, reg_lambda=1.0 added: plain LightGBM defaults were numerically unstable on the near-deterministic stacked probabilities (multiclass accuracy fell to 57-92% on the random split in an aborted first run, 99.98% with these settings in a diagnostic on seed 0; chosen for stability on the paper-protocol condition a, not to create any gap; the paper reports no meta hyperparameters). DT default.",
+  "MI computed with mutual_info_classif on a 60k-row random sample (speed), 8-class labels, top-15. Identifier pool = numeric + factorised Flow ID/Src IP/Dst IP + Src/Dst Port (Timestamp excluded; paper's feature list includes Flow ID, Src IP, Dst IP, Src Port, Dst Port).",
+  "Identifier-dropped pool removes Flow ID, Src/Dst IP, Src/Dst Port, Timestamp.",
+  "MI selection 'train_only' fits selection on the training rows only; 'all_rows' selects on all rows before the split (selection leakage).",
+  "Grouped split = GroupShuffleSplit by Src IP, test 20% of hosts (row share varies); test classes absent from training count as errors for 8-class metrics; macro-F1 over all 8 classes with zero_division=0.",
+  "Paper2 reported (Sci Rep 2024, PMC11589109): Transformer 99.02% / CNN-LSTM 99.01% (8-class, 48 features); binary 6-feature CNN-LSTM 99.19%. Our proxy is a torch MLP (cuda) on binary labels using all numeric features (we cannot reproduce their exact 48), NOT their Transformer/CNN-LSTM; the paper states no split ratio, we use 80/20 shuffled.",
+  "No 5-fold CV / 1.0000 validation claim of paper 1 was replicated.",
+  "Single dataset load as in repo (343,889 rows)."
+ ],
+ "top15_all_rows_with_ids": [
+  "Flow ID",
+  "Bwd Header Length",
+  "Dst Port",
+  "Src IP",
+  "Bwd Init Win Bytes",
+  "Src Port",
+  "Fwd Header Length",
+  "Bwd IAT Total",
+  "Dst IP",
+  "Bwd IAT Max",
+  "Bwd IAT Mean",
+  "Protocol",
+  "Total Fwd Packet",
+  "Subflow Fwd Packets",
+  "Bwd Packets/s"
+ ],
+ "top15_all_rows_noid": [
+  "Bwd Header Length",
+  "Bwd Init Win Bytes",
+  "Fwd Header Length",
+  "Bwd IAT Total",
+  "Bwd IAT Max",
+  "Bwd IAT Mean",
+  "Protocol",
+  "Subflow Fwd Packets",
+  "Total Fwd Packet",
+  "Bwd Packets/s",
+  "Flow Packets/s",
+  "Flow Duration",
+  "Flow IAT Mean",
+  "Flow IAT Max",
+  "Total Bwd packets"
+ ]
+}

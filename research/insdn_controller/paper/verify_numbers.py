@@ -10,6 +10,7 @@ R = H.parent / "results"
 tex = "".join((H / f).read_text() for f in ("main.tex", "live_section.tex")).replace("\\,", "").replace("$", "")
 J = lambda n: json.load(open(R / n))  # noqa: E731
 fm, one, l3, xg = J("flowmod_matches.json"), J("live_modes_v4_one10.json"), J("live_modes_v4_linear3.json"), J("v4_strict_W5_xgb.json")
+DL, RP = J("dedup_ladder.json"), J("replicate_papers.json")
 st, hs, pi = J("stock_ryu_flowmods.json"), J("hostside_xgb.json"), J("protocol_inflation.json")
 ai, ac, lit = J("protocol_audit_insdn.json"), J("protocol_audit_cicids2017.json"), json.load(open(R.parent / "literature_check.json"))
 rr = J("recipe_replication.json")
@@ -49,6 +50,15 @@ checks = [
     ("audit InSDN B worst", round(min(ai["B_source_ip_grouped_split"]["per_seed"]), 2), "0.66"),
     ("audit InSDN C", round(ai["C_time_ordered_split"]["mean"], 4), "0.9997"),
     ("audit InSDN D >= 0.9999", round(ai["D_identifier_only_random_split"]["mean"], 4) >= 0.9999 and round(ac["D_identifier_only_random_split"]["mean"], 4) >= 0.9999, "0.9999"),
+    ("dedup random", round(DL["random|dedup"]["mean"], 4), "0.9998"),
+    ("dedup rows after", f"{DL['rows_after_dedup']:,}", "184,607"),
+    ("class-covered grouped src ip", round(DL["grouped_src_ip_class_covered|all_rows"]["result"]["mean"], 3), "0.939"),
+    ("class-covered grouped src ip dedup", round(DL["grouped_src_ip_class_covered|dedup"]["result"]["mean"], 3), "0.812"),
+    ("triple grouped", round(DL["grouped_src_dst_dport_triple_class_covered|all_rows"]["result"]["mean"], 3), "0.961"),
+    ("triple grouped dedup", round(DL["grouped_src_dst_dport_triple_class_covered|dedup"]["result"]["mean"], 3), "0.984"),
+    ("SDNGuardStack random", round(RP["paper1"]["a_random_ids|train_only"]["acc"]["mean"], 4), "0.9999"),
+    ("SDNGuardStack grouped lo", round(RP["paper1"]["b_grouped_ids|train_only"]["acc"]["mean"], 2), "0.72"),
+    ("SDNGuardStack grouped hi", round(RP["paper1"]["b_grouped_ids|all_rows"]["acc"]["mean"], 2), "0.78"),
     ("audit InSDN E pct", round(100 * ai["E_test_rows_duplicating_train_row_splitA"]["mean"], 1), "48.7"),
     ("audit InSDN rows", ai["rows"], "343889"),
     ("audit CICIDS A", round(ac["A_random_flow_split"]["mean"], 4), "0.9917"),
