@@ -38,6 +38,7 @@ cp results/live_modes_v2.json "$OUT/res/"
 
 echo "== 5. host-side flow-CSV baseline (GPU)"
 (cd "$ROOT" && "$PY" research/insdn_controller/ofgap/hostside_baseline.py "$OUT/res/hostside_xgb.json" > /dev/null)
+(cd "$ROOT" && "$PY" research/insdn_controller/ofgap/protocol_inflation.py "$OUT/res/protocol_inflation.json" > /dev/null)
 
 echo "== 6. tables and comparison"
 "$PY" -I ofgap/make_tables.py "$OUT/res/v4_strict_W1.json" "$OUT/res/gap_attack_v2.json" "$OUT/feats/meta.json" \

@@ -17,6 +17,7 @@ J = lambda f: json.loads((R / f).read_text().replace("NaN", "null"))  # noqa: E7
 fm, one, l3 = J("flowmod_matches.json"), J("live_modes_v4_one10.json")["summary"], J("live_modes_v4_linear3.json")["summary"]
 xg, rc, st, hs = J("v4_strict_W5_xgb.json")["A_grouped_cv"], J("review_checks.json"), J("stock_ryu_flowmods.json"), J("hostside_xgb.json")
 w1, v2 = J("v4_strict_W1.json")["A_grouped_cv"], J("live_modes_v2.json")["summary"]
+pi = J("protocol_inflation.json")
 triv1 = rc["within_session_W1_strict"]["any_ip_packet_in"]["bacc_pooled"]
 mp = fm["total_by_match_structure"]["in_port|eth_dst|eth_src"]
 pf, mc = one["fivetuple"]["packet_in_tcp"]["mean"], one["mac"]["packet_in_tcp"]["mean"]
@@ -181,8 +182,8 @@ lit = json.loads((Path(__file__).resolve().parent.parent / "literature_check.jso
 s = slide("How published InSDN results compare", "Four papers, one full text read")
 bullets(s, [p["paper"].split(" (")[0] + ":  " + p["reported"].split(" (")[0] for p in lit["papers"]], y=1.75, size=16)
 bullets(s, ["Towhid et al. (full text read): 9 packet-derived features, all flows split 70:30, no grouping by capture or session mentioned.",
-            f"Our host-side run on InSDN with a random row split: {hs['bacc_mean']:.4f}. Our controller view: {w1['mlp_all']['bacc']['mean']:.3f}.",
-            "Not claimed: that these papers are wrong. Claimed: the benchmark cannot support a controller-side claim."], y=4.4, size=16)
+            f"Our test, same classifier: random flow split {pi['A_random_flow_split']['mean']:.4f}; held-out source hosts {pi['B_source_ip_grouped_split']['mean']:.3f} ± {pi['B_source_ip_grouped_split']['ci95']:.3f}; IPs and ports alone {pi['D_identifier_only_random_split']['mean']:.3f}.",
+            "Claimed: a random split overstates the score for unseen hosts by about 9 points. Not claimed: their exact numbers are wrong."], y=4.4, size=16)
 
 # 7 novelty 4 + 5
 s = slide("Novelty 4 and 5 · A caught pitfall, a rerunnable package", "Method")
