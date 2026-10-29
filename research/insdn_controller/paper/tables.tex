@@ -136,6 +136,7 @@ Attack-free windows only (D2) & 0.950{\scriptsize$\pm$0.031} & 0.500 \\
 \caption{Evaluation-validity audit: balanced accuracy (benign vs.\ attack) of the same XGBoost (GPU) on the 77 numeric CICFlowMeter features, same pipeline on both datasets, 10 seeds (mean{\scriptsize$\pm$}95\% CI over seeds). A, B and C use no IPs, ports or timestamps; D uses only those. Rows: InSDN 343\,889, CICIDS2017 2\,100\,814. C is a single deterministic split.}
 \label{tab:audit}
 \centering\footnotesize\setlength{\tabcolsep}{3pt}
+\resizebox{\columnwidth}{!}{%
 \begin{tabular}{lcc}
 \toprule
 Protocol & InSDN & CICIDS2017 \\
@@ -146,13 +147,14 @@ C. Per-file time-ordered 70:30 (deterministic) & 0.9997 & 0.7187 \\
 D. IPs, ports and Flow ID only, random split & 1.0000 & 0.9999 \\
 E. Split-A test rows duplicating a train row (\%) & 48.7 & 20.3 \\
 \bottomrule
-\end{tabular}
+\end{tabular}}
 \end{table}
 
 \begin{table}[t]
 \caption{Feature-recipe replication on InSDN (one XGBoost classifier, GPU, 80:20, 10 seeds, mean{\scriptsize$\pm$}95\% CI): binary balanced accuracy and 8-class accuracy under a random flow split and a source-IP-grouped split. Recipes approximate feature choices described in published InSDN papers; they are not those papers' models or code. Grouping by source host also changes the attack-class mix between train and test, so grouped values are a stress test.}
 \label{tab:recipe}
 \centering\scriptsize\setlength{\tabcolsep}{2pt}
+\resizebox{\columnwidth}{!}{%
 \begin{tabular}{lcccc}
 \toprule
 Recipe & BAcc random & BAcc grouped & 8-cls random & 8-cls grouped \\
@@ -162,5 +164,5 @@ Numeric + ports & 0.9998{\scriptsize$\pm$0.0000} & 0.856{\scriptsize$\pm$0.151} 
 Numeric + identifier columns & 1.0000{\scriptsize$\pm$0.0000} & 0.941{\scriptsize$\pm$0.088} & 0.9999{\scriptsize$\pm$0.0000} & 0.804{\scriptsize$\pm$0.187} \\
 Top-15 by MI, selected before split & 1.0000{\scriptsize$\pm$0.0000} & 0.941{\scriptsize$\pm$0.088} & 0.9999{\scriptsize$\pm$0.0000} & 0.835{\scriptsize$\pm$0.175} \\
 \bottomrule
-\end{tabular}
+\end{tabular}}
 \end{table}

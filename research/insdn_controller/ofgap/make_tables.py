@@ -25,11 +25,11 @@ def v(d, nd=3):
 
 
 def table(label, caption, colspec, header, rows, size="\\footnotesize\\setlength{\\tabcolsep}{3pt}"):
-    out.append(f"\\begin{{table}}[t]\n\\caption{{{caption}}}\n\\label{{{label}}}\n\\centering{size}\n"
-               f"\\begin{{tabular}}{{{colspec}}}\n\\toprule\n{header} \\\\\n\\midrule")
+    out.append(f"\\begin{{table}}[t]\n\\caption{{{caption}}}\n\\label{{{label}}}\n\\centering{size}\n" +
+               (f"\\resizebox{{\\columnwidth}}{{!}}{{%\n" if label in ("tab:audit", "tab:recipe") else "") + f"\\begin{{tabular}}{{{colspec}}}\n\\toprule\n{header} \\\\\n\\midrule")
     for r in rows:
         out.append(r + " \\\\" if r != "\\midrule" else r)
-    out.append("\\bottomrule\n\\end{tabular}\n\\end{table}\n")
+    out.append("\\bottomrule\n\\end{tabular}" + ("}" if label in ("tab:audit", "tab:recipe") else "") + "\n\\end{table}\n")
 
 
 # ---- inventory
