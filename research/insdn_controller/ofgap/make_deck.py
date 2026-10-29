@@ -116,6 +116,22 @@ def chart(s, cats, vals, x, y, w, h, colors, fmt="#,##0.0"):
         pt.format.fill.fore_color.rgb = col
 
 
+def bullets(s, items, x=0.8, y=1.9, w=11.8, size=22):
+    tb = s.shapes.add_textbox(Inches(x), Inches(y), Inches(w), Inches(4.6))
+    tf = tb.text_frame
+    tf.word_wrap = True
+    for i, it in enumerate(items):
+        p = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
+        p.text = "•  " + it
+        p.font.size, p.font.color.rgb = Pt(size), FG
+        p.space_after = Pt(16)
+
+
+def big(s, number, caption, x, y, w=4.0, color=TEAL):
+    text(s, number, x, y, w, 1.2, 54, color, bold=True)
+    text(s, caption, x, y + 1.25, w, 1.2, 16, MUTED)
+
+
 # 1 title
 s = prs.slides.add_slide(prs.slide_layouts[6])
 s.background.fill.solid()
@@ -127,73 +143,44 @@ text(s, "Adhyan Jain · Atharva Sheersh Pandey · Kshitij Manikshete\nVIT Vellor
 
 # 2 problem
 s = slide("Detectors are scored on data the controller never sees", "The problem")
-box(s, 0.6, 2.0, 3.4, 1.4, "Benchmark CSV", "flow features computed at the victim host (CICFlowMeter)", AMBER)
-arrow(s, 4.05, 2.7, 5.0, 2.7, AMBER)
-box(s, 5.05, 2.0, 3.0, 1.4, "Detector scored", "99% accuracy reported", AMBER)
-arrow(s, 8.1, 2.7, 9.05, 2.7, AMBER)
-box(s, 9.1, 2.0, 3.6, 1.4, "Called \"controller-based\"", "global-view claim", AMBER)
-box(s, 0.6, 4.3, 3.4, 1.4, "What the controller receives", "PacketIn · FlowMod · flow statistics", TEAL)
-box(s, 5.05, 4.0, 3.0, 2.0, "Same thing?", "Nobody checked", RED, shape=MSO_SHAPE.DIAMOND)
-arrow(s, 4.05, 5.0, 5.0, 5.0, RED)
-arrow(s, 6.55, 3.45, 6.55, 3.95, RED)
-say(s, "InSDN also recorded its controller's OpenFlow traffic. We opened those recordings.")
+bullets(s, ["SDN papers say the controller has a global view, so build the detector there.",
+            "But they test on CSV features computed at the victim host, then call it controller-based.",
+            "Nobody checked what the controller actually receives.",
+            "InSDN also recorded its controller's OpenFlow traffic. We opened those recordings."])
 
-# 3 approach (branching)
-s = slide("What we did: one dataset, three questions", "Approach")
-box(s, 0.6, 3.0, 2.9, 1.6, "44 controller captures", "InSDN, ONOS, OpenFlow 1.3 · 11 benign, 33 attack", TEAL)
-for i, (t, sub, c) in enumerate([("Q1 Can it see the labelled flows?", "read every FlowMod", AMBER), ("Q2 Does the view depend on the forwarding app?", "Mininet + Ryu, 3 modes, 65 runs", TEAL), ("Q3 Is a high score proof of detection?", "controller-only models + trivial rule", PURPLE)]):
-    y = 1.9 + i * 1.75
-    box(s, 5.2, y, 4.2, 1.35, t, sub, c)
-    arrow(s, 3.55, 3.8, 5.15, y + 0.67, c)
-for i, (t, c) in enumerate([("No: 0 of %s FlowMods" % f"{fm['flowmods']:,}", AMBER), ("Yes: %dx more PacketIns" % round(pf / mc), TEAL), ("No: trivial rule %.3f" % triv1, PURPLE)]):
-    y = 1.9 + i * 1.75
-    arrow(s, 9.45, y + 0.67, 10.0, y + 0.67, c)
-    box(s, 10.05, y, 2.7, 1.35, t, "", c)
+# 3 approach
+s = slide("What we did: 44 recordings, three questions", "Approach")
+bullets(s, ["Q1  Can the controller see the flows the dataset labels?",
+            "Q2  Does what it sees depend on the forwarding app?  (Mininet + Ryu, 65 runs)",
+            "Q3  Is a high score on the controller's view proof of detection?"], size=24)
+text(s, "Data: 44 InSDN controller captures (11 benign, 33 attack) + our own Mininet/Ryu testbed", 0.8, 5.2, 12, 0.6, 16, MUTED)
 
 # 4 novelty 1
 s = slide("Novelty 1 · The controller never saw the labelled flows", "Gap in the benchmark")
-box(s, 0.6, 2.0, 5.2, 1.7, "Dataset labels", "source IP · destination IP · source port · destination port · protocol (5-tuple)", AMBER)
-box(s, 7.5, 2.0, 5.2, 1.7, "Controller's rules match", "in_port · eth_src · eth_dst (MAC pair), or EtherType", TEAL)
-arrow(s, 5.85, 2.85, 7.45, 2.85, RED)
-text(s, "✕ no overlap", 5.9, 2.4, 1.6, 0.4, 14, RED, bold=True, align=PP_ALIGN.CENTER)
-box(s, 0.6, 4.2, 3.9, 1.9, "0 of %s" % f"{fm['flowmods']:,}", "FlowMods carry IP or port fields", RED, tsize=30, ssize=14)
-box(s, 4.7, 4.2, 3.9, 1.9, f"{mp:,} + {fm['total_by_match_structure']['eth_type']}", "MAC-pair + EtherType rules", TEAL, tsize=30, ssize=14)
-box(s, 8.8, 4.2, 3.9, 1.9, f"{st['flowmods']} FlowMods", "Ryu stock app: same, none with IP/ports", TEAL, tsize=30, ssize=14)
-say(s, "So: CSV-trained detectors do not describe a deployable controller-side detector.")
+big(s, "0 of %s" % f"{fm['flowmods']:,}", "FlowMods carry IP addresses or ports", 0.8, 2.0, 6.0, RED)
+big(s, f"{st['flowmods']}", "FlowMods from Ryu's stock app: also MAC-pair only", 7.2, 2.0, 5.0, TEAL)
+bullets(s, ["The dataset labels 5-tuple flows; the controller's rules only matched MAC pairs or EtherType.",
+            "So CSV-trained detectors are not controller-side detectors."], y=4.6, size=20)
 
 # 5 novelty 2
 s = slide("Novelty 2 · The forwarding app decides what the controller sees", "Measured effect")
-box(s, 0.6, 2.6, 2.4, 1.3, "Same benign traffic", "10 runs per mode", MUTED)
-box(s, 3.7, 1.9, 2.6, 1.1, "Ryu MAC-pair rules", "", TEAL)
-box(s, 3.7, 3.5, 2.6, 1.1, "Ryu per-flow rules", "", AMBER)
-arrow(s, 3.05, 3.0, 3.65, 2.5, TEAL)
-arrow(s, 3.05, 3.5, 3.65, 4.05, AMBER)
-arrow(s, 6.35, 2.45, 7.0, 2.45, TEAL)
-arrow(s, 6.35, 4.05, 7.0, 4.05, AMBER)
-box(s, 7.05, 1.9, 2.1, 1.1, f"{mc:.1f}", "PacketIns / run", TEAL, tsize=26)
-box(s, 7.05, 3.5, 2.1, 1.1, f"{pf:,.0f}", "PacketIns / run", AMBER, tsize=26)
-chart(s, ["MAC-pair", "Per-flow"], [mc3, pf3], 9.5, 1.8, 3.4, 2.9, [TEAL, AMBER], "#,##0")
-text(s, "3-switch chain", 9.5, 4.65, 3.4, 0.3, 12, MUTED, align=PP_ALIGN.CENTER)
-box(s, 0.6, 5.3, 5.8, 1.1, "Idle timeout 10 s → 2 s", f"entries a 1 s poller sees: {one['fivetuple']['fivetuple_entries_per_reply']['mean']:.1f} → {one['fivetuple_short']['fivetuple_entries_per_reply']['mean']:.1f}", PURPLE)
-box(s, 6.7, 5.3, 6.0, 1.1, f"{pf / mc:,.0f}x more PacketIns", "665x to 1,752x in every paired run", AMBER, tsize=20)
+chart(s, ["MAC-pair", "Per-flow"], [mc, pf], 0.6, 1.8, 6.0, 4.6, [TEAL, AMBER], "#,##0")
+text(s, "TCP PacketIns per run (1 switch, 10 runs)", 0.6, 6.35, 6.0, 0.4, 13, MUTED, align=PP_ALIGN.CENTER)
+bullets(s, [f"Same traffic: {pf / mc:,.0f}x more PacketIns with per-flow rules.", "Holds on a 3-switch chain too.",
+            f"A 2 s idle timeout hides most per-flow entries from a 1 s poller ({one['fivetuple']['fivetuple_entries_per_reply']['mean']:.0f} to {one['fivetuple_short']['fivetuple_entries_per_reply']['mean']:.0f})."], x=7.0, y=2.1, w=5.8, size=20)
 
-# 6 novelty 3 (decision diamond)
+# 6 novelty 3
 s = slide("Novelty 3 · A high score is not proof of detection", "Validity")
-chain(s, 1.9, [("Controller messages", "PacketIn · FlowMod · stats"), ("1 s windows", "22 features, 3 past windows"), ("MLP / XGBoost / logistic", "unseen captures"), (f"BAcc {w1['mlp_all']['bacc']['mean']:.3f}", "looks strong")], w=2.5, gap=0.55)
-box(s, 0.6, 3.9, 3.6, 1.2, f"Trivial rule: any IP PacketIn", f"scores {triv1:.3f} inside attack sessions", RED)
-arrow(s, 4.25, 4.5, 5.2, 4.5, RED)
-box(s, 5.25, 3.7, 3.0, 1.6, "Is the score proof?", "", RED, shape=MSO_SHAPE.DIAMOND)
-arrow(s, 8.3, 4.5, 9.2, 4.5, RED, "NO")
-box(s, 9.25, 3.9, 3.5, 1.2, "Separate sessions", "benign and attack recorded apart: it may be recognising the session", AMBER)
-box(s, 0.6, 5.6, 12.1, 0.95, "Fix: benign and attack traffic mixed in one session, labels for all controller-visible traffic", "", TEAL)
-say(s, f"XGBoost {xg['xgb_all_history']['bacc']['mean']:.3f}, logistic {xg['linear_all_history']['bacc']['mean']:.3f}, MLP {xg['mlp_all']['bacc']['mean']:.3f} (5 s): no model gain. Host-side CSV {hs['bacc_mean']:.4f}: easy protocol.")
+chart(s, ["PacketIn-rate\nthreshold", "MLP", "Trivial rule:\nany IP PacketIn"], [w1["thr_packet_in_rate"]["bacc"]["mean"], w1["mlp_all"]["bacc"]["mean"], triv1], 0.6, 1.8, 6.6, 4.6, [AMBER, TEAL, RED], "0.000")
+text(s, "Balanced accuracy, unseen captures, 1 s windows", 0.6, 6.35, 6.6, 0.4, 13, MUTED, align=PP_ALIGN.CENTER)
+bullets(s, ["A one-line rule beats the model inside attack sessions.", "InSDN records benign and attack in separate sessions, so scores may reflect the session.",
+            "Fix: benign and attack traffic mixed in one session."], x=7.5, y=2.1, w=5.3, size=20)
 
 # 7 novelty 4 + 5
-s = slide("Novelty 4 and 5 · A caught pitfall, a rerunnable package", "Method and reproducibility")
-text(s, "Pitfall", 0.6, 1.8, 3, 0.4, 14, AMBER, bold=True)
-chain(s, 2.2, [("First test app", "ping/ARP MAC-pair rules"), ("Rules shadow TCP", "most connections skip the controller"), (f"Effect looks {flawed:.0f}x", "wide interval"), ("Fixed app", f"{pf / mc:,.0f}x, reported both")], w=2.6, gap=0.55, color=AMBER)
-text(s, "Reproducibility", 0.6, 4.1, 3, 0.4, 14, TEAL, bold=True)
-chain(s, 4.5, [("Hashed raw captures", "SHA-256"), ("reproduce.sh", "rebuilds every result"), ("compare_results.py", "tolerance 1e-6"), ("verify_numbers.py", "paper numbers vs JSON")], w=2.6, gap=0.55)
+s = slide("Novelty 4 and 5 · A caught pitfall, a rerunnable package", "Method")
+bullets(s, [f"Our first test app let ping/ARP rules hide TCP: the effect looked like {flawed:.0f}x instead of about {pf / mc:,.0f}x. We report both.",
+            "Overlapping coarse rules can understate controller load by two orders of magnitude.",
+            "One command rebuilds every result from hashed captures and checks the paper's numbers."], size=22)
 
 # 8 architecture
 s = slide("Study architecture: what goes in, what comes out", "Pipeline")
@@ -205,33 +192,26 @@ box(s, 0.6, 5.75, 12.1, 0.8, "Both end as results/*.json → tables in the paper
 
 # 9 scope
 s = slide("What is not new, what we did not do, what is next", "Honest scope")
-for i, (t, items, c) in enumerate([("Not new", ["Control-plane telemetry for SDN IDS (LAN-SDN-NIDS, SDNFLow)", "The detector itself", "Stock Ryu behaviour"], AMBER),
-                                   ("Not done", ["Benign + attack traffic in one session", "OpenDaylight / another dataset", "A re-implemented published detector"], RED),
-                                   ("Next", ["Interleave benign and attack in one session", "Gap on a second controller family", "In-fold oversampling for rare classes"], TEAL)]):
-    x = 0.6 + i * 4.15
-    box(s, x, 2.0, 3.9, 0.8, t, "", c, tsize=20)
-    for j, it in enumerate(items):
-        box(s, x, 3.1 + j * 1.15, 3.9, 0.95, it, "", c, tsize=13, fill=BG)
-        arrow(s, x + 1.95, 2.83 if j == 0 else 3.1 + (j - 1) * 1.15 + 0.95, x + 1.95, 3.1 + j * 1.15, c)
-say(s, "Venue: workshop / conference as is; lower-quartile journal after revision.")
+for i, (t, items, col) in enumerate([("Not new", ["Control-plane telemetry for SDN IDS (LAN-SDN-NIDS, SDNFLow)", "The detector itself", "Stock Ryu behaviour"], AMBER),
+                                     ("Not done", ["Benign + attack in one session", "OpenDaylight or another dataset", "A re-implemented published detector"], RED),
+                                     ("Next", ["Interleave benign and attack traffic", "Gap on a second controller family", "In-fold oversampling for rare classes"], TEAL)]):
+    x = 0.8 + i * 4.1
+    text(s, t, x, 1.9, 3.8, 0.6, 26, col, bold=True)
+    bullets(s, items, x=x, y=2.7, w=3.8, size=17)
+text(s, "Venue: workshop / conference as is; lower-quartile journal after revision.", 0.8, 6.5, 12, 0.5, 14, MUTED)
 
 # 10 earlier proteus
 s = slide("The earlier Proteus system: a prototype, not a claim", "Context")
-chain(s, 1.9, [("SDN traffic", ""), ("Classify", "random forest"), ("Drift", "KS test"), ("WGAN-GP", "synthetic attacks"), ("Fidelity gate", "MMD check"), ("Retrain", "redeploy")], w=1.78, gap=0.28, color=PURPLE)
-arrow(s, 12.0, 3.2, 12.0, 3.9, PURPLE)
-arrow(s, 12.0, 3.9, 1.6, 3.9, PURPLE, "loop")
-box(s, 0.6, 4.4, 5.8, 1.7, "Close prior work", "NetGuard (2025): generative adaptation for drifting, imbalanced IDS data", AMBER)
-box(s, 6.9, 4.4, 5.8, 1.7, "Our own studies found no benefit", "the demo's gain came from oracle labels, not synthetic data", RED)
-say(s, "So the research contribution is the InSDN study. Proteus code is kept as context and a /old console.")
+bullets(s, ["Built: WGAN-GP synthetic attacks, KS drift test, MMD fidelity gate, drift-triggered retraining, versioned releases.",
+            "Close prior work exists (NetGuard 2025: generative adaptation for drifting, imbalanced IDS data).",
+            "Our own studies found no benefit from the generative step; the demo's gain came from oracle labels.",
+            "So the research contribution is the InSDN study; Proteus is kept as context (/old console)."], size=21)
 
 # 11 takeaways
 s = slide("Takeaways", "Close")
-for i, (a, b, c) in enumerate([("Gap", "Controller rules never contained the labelled 5-tuples.", AMBER), ("Depends", "What a controller sees depends on the forwarding app.", TEAL), ("Careful", "On InSDN, controller-side scores are not detection accuracy.", PURPLE)]):
-    x = 0.6 + i * 4.15
-    box(s, x, 2.2, 3.9, 2.6, a, b, c, tsize=30, ssize=16)
-    if i < 2:
-        arrow(s, x + 3.93, 3.5, x + 4.2, 3.5, MUTED)
-say(s, "Next: interleave benign and attack traffic in one session and test a second controller.")
+bullets(s, ["The controller's rules never contained the labelled 5-tuples.", "What a controller sees depends on the forwarding app.",
+            "On InSDN, controller-side scores are not detection accuracy."], size=26)
+text(s, "Next: interleave benign and attack traffic in one session; test a second controller.", 0.8, 5.6, 12, 0.6, 16, MUTED)
 
 prs.save(sys.argv[1])
 print("saved", sys.argv[1])
