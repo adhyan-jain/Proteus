@@ -12,8 +12,10 @@ J = lambda n: json.load(open(R / n))  # noqa: E731
 fm, one, l3, xg = J("flowmod_matches.json"), J("live_modes_v4_one10.json"), J("live_modes_v4_linear3.json"), J("v4_strict_W5_xgb.json")
 st, hs, pi = J("stock_ryu_flowmods.json"), J("hostside_xgb.json"), J("protocol_inflation.json")
 ai, ac, lit = J("protocol_audit_insdn.json"), J("protocol_audit_cicids2017.json"), json.load(open(R.parent / "literature_check.json"))
+rr = J("recipe_replication.json")
 lp = lit["papers"]
 insdn_read = [p for p in lp if p["read"] and "UNSW" not in str(p.get("dataset"))]  # the one read paper not on InSDN/SDN data is GRU-NTM (UNSW-NB15, BoT-IoT)
+RECIPES = ("numeric", "numeric+port", "ids_all", "top15_mi_ids")
 S = lambda d, k: d["summary"][k]  # noqa: E731
 checks = [
     ("FlowMods total", fm["flowmods"], "3827"),
@@ -57,6 +59,18 @@ checks = [
     ("audit CICIDS rows", ac["rows"], "2100814"),
     ("audit CICIDS A-B gap pts", round(100 * (ac["A_random_flow_split"]["mean"] - ac["B_source_ip_grouped_split"]["mean"])), "35"),
     ("audit InSDN A-B gap pts", round(100 * (ai["A_random_flow_split"]["mean"] - ai["B_source_ip_grouped_split"]["mean"])), "nine"),
+    # recipe replication (recipe_replication.json)
+    ("recipe random min BAcc", round(min(rr[f"{r}|random"]["binary_bacc"]["mean"] for r in RECIPES), 4), "0.9998"),
+    ("recipe random min 8-class", round(min(rr[f"{r}|random"]["multiclass_acc"]["mean"] for r in RECIPES), 4), "0.9991"),
+    ("recipe grouped min BAcc", round(min(rr[f"{r}|grouped_src_ip"]["binary_bacc"]["mean"] for r in RECIPES), 3), "0.856"),
+    ("recipe grouped max BAcc", round(max(rr[f"{r}|grouped_src_ip"]["binary_bacc"]["mean"] for r in RECIPES), 3), "0.943"),
+    ("recipe grouped min 8-class", round(min(rr[f"{r}|grouped_src_ip"]["multiclass_acc"]["mean"] for r in RECIPES), 3), "0.687"),
+    ("recipe grouped max 8-class", round(max(rr[f"{r}|grouped_src_ip"]["multiclass_acc"]["mean"] for r in RECIPES), 3), "0.835"),
+    ("recipe widest CI 8-class", round(max(rr[f"{r}|grouped_src_ip"]["multiclass_acc"]["ci95"] for r in RECIPES), 3), "0.241"),
+    ("recipe ids grouped BAcc", round(rr["ids_all|grouped_src_ip"]["binary_bacc"]["mean"], 3), "0.941"),
+    ("recipe seeds", min(rr[k][m]["n"] for k in rr if "|" in k for m in ("binary_bacc", "multiclass_acc")), "10"),
+    ("recipe unseen-class test rows", max(rr[k]["test_rows_in_unseen_class"]["mean"] for k in rr if "|" in k), "0.0"),
+    ("recipe MI picks ids", all(x in rr["top15_mi_selected_on_full_data"] for x in ("Flow ID", "Src IP", "Dst IP")), "Flow ID, Src IP and Dst IP"),
     # literature audit counts
     ("lit papers examined", len(lp), "12"),
     ("lit papers read in full", sum(p["read"] for p in lp), "10"),

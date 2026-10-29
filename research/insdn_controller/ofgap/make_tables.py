@@ -141,5 +141,19 @@ table("tab:audit", "Evaluation-validity audit: balanced accuracy (benign vs.\\ a
       "Rows: InSDN " + f"{AU[0]['rows']:,}".replace(",", "\\,") + ", CICIDS2017 " + f"{AU[1]['rows']:,}".replace(",", "\\,") + ". C is a single deterministic split.",
       "lcc", "Protocol & InSDN & CICIDS2017", arows)
 
+# ---- recipe replication (results/recipe_replication.json)
+RR = json.loads((RES / "recipe_replication.json").read_text())
+rrows = []
+for k, nm in (("numeric", "Numeric features only"), ("numeric+port", "Numeric + ports"),
+              ("ids_all", "Numeric + identifier columns"), ("top15_mi_ids", "Top-15 by MI, selected before split")):
+    rrows.append(f"{nm} & " + " & ".join(pm(RR[f"{k}|{sp}"][m], 4 if sp == "random" else 3)
+                 for m, sp in (("binary_bacc", "random"), ("binary_bacc", "grouped_src_ip"),
+                               ("multiclass_acc", "random"), ("multiclass_acc", "grouped_src_ip"))))
+table("tab:recipe", "Feature-recipe replication on InSDN (one XGBoost classifier, GPU, 80:20, 10 seeds, mean{\\scriptsize$\\pm$}95\\% CI): "
+      "binary balanced accuracy and 8-class accuracy under a random flow split and a source-IP-grouped split. "
+      "Recipes approximate feature choices described in published InSDN papers; they are not those papers' models or code. "
+      "Grouping by source host also changes the attack-class mix between train and test, so grouped values are a stress test.",
+      "lcccc", "Recipe & BAcc random & BAcc grouped & 8-cls random & 8-cls grouped", rrows, size="\\scriptsize\\setlength{\\tabcolsep}{2pt}")
+
 Path(sys.argv[4]).write_text("\n".join(out))
 print("wrote", sys.argv[4], len(out), "blocks")

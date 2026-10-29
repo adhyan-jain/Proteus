@@ -148,3 +148,19 @@ E. Split-A test rows duplicating a train row (\%) & 48.7 & 20.3 \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\begin{table}[t]
+\caption{Feature-recipe replication on InSDN (one XGBoost classifier, GPU, 80:20, 10 seeds, mean{\scriptsize$\pm$}95\% CI): binary balanced accuracy and 8-class accuracy under a random flow split and a source-IP-grouped split. Recipes approximate feature choices described in published InSDN papers; they are not those papers' models or code. Grouping by source host also changes the attack-class mix between train and test, so grouped values are a stress test.}
+\label{tab:recipe}
+\centering\scriptsize\setlength{\tabcolsep}{2pt}
+\begin{tabular}{lcccc}
+\toprule
+Recipe & BAcc random & BAcc grouped & 8-cls random & 8-cls grouped \\
+\midrule
+Numeric features only & 0.9998{\scriptsize$\pm$0.0000} & 0.943{\scriptsize$\pm$0.057} & 0.9991{\scriptsize$\pm$0.0001} & 0.788{\scriptsize$\pm$0.186} \\
+Numeric + ports & 0.9998{\scriptsize$\pm$0.0000} & 0.856{\scriptsize$\pm$0.151} & 0.9998{\scriptsize$\pm$0.0000} & 0.687{\scriptsize$\pm$0.241} \\
+Numeric + identifier columns & 1.0000{\scriptsize$\pm$0.0000} & 0.941{\scriptsize$\pm$0.088} & 0.9999{\scriptsize$\pm$0.0000} & 0.804{\scriptsize$\pm$0.187} \\
+Top-15 by MI, selected before split & 1.0000{\scriptsize$\pm$0.0000} & 0.941{\scriptsize$\pm$0.088} & 0.9999{\scriptsize$\pm$0.0000} & 0.835{\scriptsize$\pm$0.175} \\
+\bottomrule
+\end{tabular}
+\end{table}

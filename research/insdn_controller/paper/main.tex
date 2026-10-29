@@ -39,7 +39,7 @@ captures, also installed only MAC-pair entries (86 of 91 FlowMods; none with IP 
 benchmarks; we quantify it with one pipeline on two datasets. On InSDN a random flow-level split gives 0.9998 balanced accuracy, whereas holding out source hosts gives
 $0.907\pm0.085$ (worst split 0.66); on CICIDS2017 the values are 0.9917 and $0.641\pm0.056$; IP addresses and ports alone give at least 0.9999 on both, and
 48.7\% of InSDN's random-split test rows duplicate a training row. Of nine InSDN papers read in full, none reports a host-grouped split and three use identifier columns as inputs, so their protocols cannot rule out this leakage;
-this does not show their reported numbers are wrong. A third dataset, UKMDDoSDN, could not be used.
+this does not show their reported numbers are wrong. A recipe replication with one classifier, approximating four published feature choices, scores at least 0.9998 binary balanced accuracy under a random split and 0.856--0.943 under a host-grouped split (a stress test, since grouping also changes class composition). A third dataset, UKMDDoSDN, could not be used.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -73,7 +73,7 @@ structures occur and none involves IP or transport fields (also true of all 3\,8
 controller receives 0.68 to 1.29 PacketIns per target packet.
 \item \textbf{A quantified evaluation-validity audit (\S\ref{sec:audit}).} With one pipeline on InSDN and CICIDS2017, random flow splits give
 0.9998 and 0.9917 balanced accuracy, while holding out source hosts gives $0.907\pm0.085$ and $0.641\pm0.056$, and IPs and ports alone give at least 0.9999. The
-general leakage concern is known~\cite{engelen2021troubleshooting,flood2024baddesign}; what is new is the paired, quantified gap on an SDN dataset, and an audit of the protocols of 12 published papers (10 read in full; nine of them on InSDN).
+general leakage concern is known~\cite{engelen2021troubleshooting,flood2024baddesign}; what is new is the paired, quantified gap on an SDN dataset, and an audit of the protocols of 12 published papers (10 read in full; nine of them on InSDN), plus a recipe replication on InSDN in which four published-style feature recipes score at least 0.9998 binary balanced accuracy under a random split but 0.856--0.943 under a host-grouped split (Table~\ref{tab:recipe}).
 \item \textbf{A reproducible control-channel pipeline (\S\ref{sec:method}).} An OpenFlow~1.3 parser and window
 featuriser for the 44 captures with reported parser loss, and window labels grounded in InSDN's own flow labels.
 \item \textbf{Detection from the controller's view, as a feasibility result (\S\ref{sec:results}).} Evaluated on
@@ -310,6 +310,8 @@ read 10 in full (\texttt{literature\_check.json}); the other two are characteris
 Of the nine InSDN papers read in full, none reports a host-grouped or capture-grouped split, and three use identifier columns (such as Flow ID or source IP) among their model inputs;
 the remaining papers either state that they removed such columns or do not say. This means their protocols cannot rule out the leakage we measure. It does not show that any
 reported number is wrong: we use our own classifier and the CSV features, and did not re-run any cited model.
+
+\textbf{Recipe replication with one classifier.} To see whether the gap depends on which features are used, we ran four feature recipes on InSDN with the same XGBoost (80:20 splits, 10 seeds, Table~\ref{tab:recipe}): numeric flow features only, numeric plus ports, numeric plus identifier columns, and the 15 features with highest mutual information selected on all rows before the split. These approximate feature choices described in published InSDN papers; they are not those papers' models, code or reported numbers, and we do not claim to have reproduced them. Under a random split every recipe reaches binary balanced accuracy of at least 0.9998 and 8-class accuracy of at least 0.9991. Under a source-IP-grouped split binary balanced accuracy falls to between 0.856 and 0.943 and 8-class accuracy to between 0.687 and 0.835, with wide intervals (up to $\pm$0.241). Adding ports lowered the grouped score (0.856 against 0.943 for numeric features only), and adding identifier columns changed it little (0.941), so on this classifier identifiers neither rescue nor much hurt grouped performance. The mutual-information selection, run before the split, picked Flow ID, Src IP and Dst IP among its 15 features. Grouping by source IP also changes the attack-class composition between train and test, so the grouped numbers are a stress test and not ``the true accuracy''; the protocol cannot rule out that published random-split scores would fall under host-grouped evaluation, and it does not show that they would.
 
 \begin{figure}[t]
 \centering
