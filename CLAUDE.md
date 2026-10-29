@@ -84,9 +84,13 @@ broken or unverified) before changing anything.
 
 See the layout table in `README.md`. In short: `backend/` Python package (the `*_full` modules are
 the paper-grade, full-scale path where new backend work happens; the others are the frozen
-demo), `api/` read-only FastAPI layer, `frontend/` Next.js console, `sdn/` Ryu/Mininet,
-`models/` release bundles, `data/MANIFEST.md` dataset provenance (update it whenever a dataset
-source changes). `checkpoints/` and `results/` are gitignored run artifacts. The earlier research
+demo), `api/` read-only FastAPI layer, `frontend/` Next.js site (`src/app/new/` study pages,
+`src/app/old/` console; `/` redirects to `/new`), `sdn/` Ryu/Mininet, `models/` release bundles,
+`data/MANIFEST.md` dataset provenance (update it whenever a dataset source changes; raw data under
+`data/raw/` is local and gitignored), `docs/DEPLOYMENT.md` deployment notes. `checkpoints/` and the
+root `results/` (`results.pkl`) are gitignored run artifacts. `research/insdn_controller/` is the
+current controller-telemetry study (its own README, `reproduce.sh`, paper, and tracked result JSONs
+in `research/insdn_controller/results/`); it is not part of the backend. The earlier research
 programme (preregistered studies, papers, dossiers) was archived outside the repo on 2026-10-17;
 its short summary is in `README.md`.
 

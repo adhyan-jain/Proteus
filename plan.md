@@ -1,7 +1,20 @@
 # Plan: taking `research/insdn_controller` from workshop level to Q1 level
 
-Status date: 2026-10-28 (updated end of day, see "Progress log" at the bottom). Original state: 6-page measurement-and-validity paper (`research/insdn_controller/paper/main.pdf`),
-slides in `DEFENSE.md`, guide in `PRESENTATION_GUIDE.md`, gaps in `STATUS.md`. Nothing committed to git yet.
+Status date: 2026-10-29. HEAD is `e7ee714`, 16 commits ahead of `origin/master`; nothing pushed. Notable commits
+after the "Progress log" HEAD (0e47186) include: 1966cc6 presentation deck; 0f30e5b and a9cccd3 `/new` study site and `/old` console (frontend);
+f09441c and 82275c5 literature check (`literature_check.json`); 1cca43d split-protocol experiment (`ofgap/protocol_inflation.py`,
+`results/protocol_inflation.json`); bd60ca6 and 738a4ca literature/deck and paper updates; e7ee714 deck redesign. The
+"Progress log" below is dated 2026-10-28 and does not cover these.
+
+**Phase B (evaluation-validity audit, in progress 2026-10-29):** offline multi-dataset split-leakage audit of published IDS
+paper protocols. Live interleaved testbed still out of scope. So far: InSDN split protocols (`ofgap/protocol_inflation.py`)
+and the published-results check (`literature_check.json`).
+
+Paths in this file: `results/...` and `live/...` are relative to `research/insdn_controller/`. The slides are now
+`research/insdn_controller/PRESENTATION.pptx` (the guide is `research/insdn_controller/PRESENTATION_GUIDE.md`).
+Stale body references, checked 2026-10-29: `STATUS.md`, `DEFENSE.md`, `LAB_SPEC.md`, `live/flowlog.py`,
+`ofgap/label_windows.py` and `results/v4_strict_W5.json` do not exist in the tree (`v4_strict_W5.json` was removed in
+18de9b3; its successor is `results/v4_strict_W5_xgb.json`). Treat body mentions of them as historical.
 
 Rules that stay in force (CLAUDE.md): GPU for any training, no synthetic base dataset, local only, every number from a run,
 >=5 seeds with mean + 95% CI, no `git push` without go-ahead, no AI-attribution lines in commits, `git add` specific files only.

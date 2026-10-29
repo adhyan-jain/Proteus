@@ -17,8 +17,9 @@ traffic ──> RandomForest ──> max-prob confidence ──> KS test vs refe
 | Runtime lifecycle | `backend/drift_daemon.py` | Ring buffer, KS monitor, off-path adaptation, validation gate, release packaging, hot-swap, canary + rollback |
 | Releases | `backend/release_manager.py`, `model_manager.py` | SHA-256 manifests under `models/releases/vNNN`, double-buffered in-memory swap |
 | API | `api/server.py` | `/predict`, hot-swap/rollback, telemetry; serves `results/results.pkl` and `api/cache/datasets_summary.json` |
-| Console | `frontend/` | Next.js 16 / TypeScript / Tailwind; 10 screens; explicit "not available" states, no fabricated numbers |
+| Console | `frontend/` | Next.js 16 / TypeScript / Tailwind; `src/app/new/` study site (overview, novelty, gap, forwarding, validity, pipeline, faq, reproduce, literature; `/` redirects here) and `src/app/old/` console (11 pages); explicit "not available" states, no fabricated numbers |
 | SDN | `sdn/` | Ryu 4.34 app (`ryu_ids_app.py`), Mininet topology, `feature_mapper.py` (OpenFlow flow stats -> unified schema) |
+| Controller-telemetry study | `research/insdn_controller/` | Separate from the backend and not imported by it: OpenFlow 1.3 parser and controller features (`ofgap/`), Ryu forwarding apps and Mininet runner (`live/`), result JSONs in `results/`. `api/server.py` (`/api/controller-telemetry`) and the frontend read those result JSONs |
 
 ## Two backends
 
@@ -36,11 +37,13 @@ traffic ──> RandomForest ──> max-prob confidence ──> KS test vs refe
   wheel is wrong). Install with `uv pip install`, never `uv pip sync`.
 - `.venv-ryu` (Python 3.8): Ryu only; rebuild with `sdn/setup_ryu_venv.sh`.
 - `frontend/node_modules`: Next.js app.
+- System `python3` with Mininet, run as root: only for re-recording the live captures in
+  `research/insdn_controller/live/` (`run_benign.py`). `reproduce.sh` does not need root.
 
 `backend/config.py` must be the first import in any module doing numeric work: it caps BLAS/OpenMP
 threads before numpy/torch/sklearn initialise (otherwise 4 joblib workers x 16 BLAS threads each).
 
-## Known limits (verified against the code, 2026-10-17)
+## Known limits (verified against the code, 2026-10-17; item 7 re-verified 2026-10-29)
 
 1. **Stale drift reference (bug).** The KS reference is set once (daemon: first 30 live confidences;
    loop: initial model on its own first 50k training rows) and never recomputed when the model is
@@ -58,7 +61,15 @@ threads before numpy/torch/sklearn initialise (otherwise 4 joblib workers x 16 B
 5. **Default release `v001` is a 5-class NSL-KDD-schema reference model** trained on synthetic data;
    the 25-class CICIDS2017 pipeline is offline.
 6. **Closed-loop gains are not evidence that synthetic data helps** (see README research summary).
-7. **No live SDN run:** Mininet needs root, so `LiveMininetSource` is unimplemented and the
-   `sdn/topology/smoke_test.sh` / `scripts/run_real_sdn_e2e.sh` harnesses are written but unverified here.
+7. **No live SDN run in the backend.** `LiveMininetSource` (`backend/closed_loop_full.py`) is still
+   unimplemented (it raises `NotImplementedError`), and the `sdn/topology/smoke_test.sh` /
+   `scripts/run_real_sdn_e2e.sh` harnesses are written but not verified here. The separate research harness
+   (`research/insdn_controller/live/`) has run Mininet + Ryu on this machine, outside the backend: 10 runs per
+   forwarding mode on one switch (`research/insdn_controller/results/live_modes_v4_one10.json`), 10 per mode on a
+   three-switch chain (`live_modes_v4_linear3.json`), and 5 runs of unmodified Ryu `simple_switch_13`
+   (`stock_ryu_flowmods.json`). Those live runs are benign traffic only: no attack traffic and no interleaved
+   benign+attack sessions. The detection results use InSDN only. Only stock Ryu has been checked as a second
+   controller (ONOS and OpenDaylight have not been tested), only one- and three-switch topologies have been run,
+   and no other traffic types have been run.
 8. **Telemetry:** only about 9 distinct numeric features can be populated from OpenFlow 1.3 counters
    (`feature_mapper.py`); the rest are explicitly absent, never fabricated.

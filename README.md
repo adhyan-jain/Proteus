@@ -46,10 +46,12 @@ Dataset sources and SHA-256 hashes: [`data/MANIFEST.md`](data/MANIFEST.md).
 |---|---|
 | `backend/` | Backend: demo (`data`, `baseline`, `gan`, `stream`, `pipeline`), full scale (`data_full`, `baseline_full`, `gan_full`, `closed_loop_full`, `evaluate_full`, `validate_full`), runtime (`drift_daemon`, `model_manager`, `release_manager`), shared (`drift`, `fidelity`, `config`) |
 | `api/` | Read-only FastAPI layer + inference/hot-swap endpoints |
-| `frontend/` | Next.js console (10 screens) |
+| `frontend/` | Next.js site: `src/app/new/` study pages (overview, novelty, gap, forwarding, validity, pipeline, faq, reproduce, literature) and `src/app/old/` console (11 pages); `/` redirects to `/new` |
 | `sdn/` | Ryu app, Mininet topology, OpenFlow-to-schema feature mapper |
 | `models/` | Versioned release bundles |
+| `research/insdn_controller/` | Current study: controller-observable telemetry in InSDN (paper, `ofgap/` analysis, `live/` Ryu/Mininet captures, `results/`, `reproduce.sh`). Own README: `research/insdn_controller/README.md` |
 | `tests/`, `scripts/` | Tests; deployment-artifact export, rollback, real-SDN E2E harness |
+| `docs/`, `data/` | `docs/DEPLOYMENT.md` (containers, release bundles, API reference); `data/MANIFEST.md` (dataset sources and hashes; raw data under `data/raw/` is local and not in git) |
 
 ## What the research found (short version)
 
@@ -78,7 +80,12 @@ honest summary is that it does not, and the useful by-products are engineering l
 - **Publishability audits (2026-10-10):** none of the above is a new-method contribution; the only
   possibly publishable artefact is the leakage-controlled replay harness as research software.
 
-The full dossiers, preregistrations, raw results and papers were archived outside the repository
-(`~/private_research/proteus_repo_snapshot_20261017.tar.gz`, SHA-256
+The older research programme's full dossiers, preregistrations, raw results and papers were archived
+outside the repository (`~/private_research/proteus_repo_snapshot_20261017.tar.gz`, SHA-256
 `af54da7b119085d290ac67b99c9a5f946e4acfc1b4bd526ec1373e426cf66a6c`) and removed from the tree.
 Numbers above come from stored result files in that archive, not estimates.
+
+The current study is separate from that programme. It examines what an SDN controller can observe
+from OpenFlow traffic (InSDN ONOS captures, plus Mininet/Ryu captures recorded on this machine) and lives
+in [`research/insdn_controller/`](research/insdn_controller/README.md), with its own paper, `reproduce.sh`
+and result files in `research/insdn_controller/results/`. Its numbers are cited there, not here.
