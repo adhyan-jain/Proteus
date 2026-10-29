@@ -247,7 +247,7 @@ for i, (a, b) in enumerate(p2):
     text(s, a, 7.0, y, 2.5, 0.8, 18, ACC, bold=True)
     text(s, b, 9.55, y, 3.2, 0.8, 13, MUTED)
 text(s, "Then", 7.0, 5.0, 2.5, 0.8, 18, GREY, bold=True)
-text(s, f"Split audit on InSDN and CICIDS2017, and a full read of {n_read} papers, 9 on InSDN (slides 13 to 15)", 9.55, 5.0, 3.2, 0.8, 13, MUTED)
+text(s, f"Split audit on InSDN and CICIDS2017, and a full read of {n_read} papers, 9 on InSDN (slides 13 to 16)", 9.55, 5.0, 3.2, 0.8, 13, MUTED)
 ln = s.shapes.add_connector(MSO_CONNECTOR.STRAIGHT, Inches(6.75), Inches(2.0), Inches(6.75), Inches(5.7))
 ln.line.color.rgb, ln.line.width = LINE, Pt(1)
 text(s, "Strong-looking results kept dissolving under strict evaluation. We then measured the same failure in a published benchmark.", 0.6, 6.05, 12.1, 0.7, 16, FG, bold=True)
@@ -393,6 +393,37 @@ bullets(s, [f"Random split: at least {rlo:.3f} for every recipe.",
             f"Adding ports lowers the held-out-host score ({rv['numeric'][1]['mean']:.2f} to {rv['numeric+port'][1]['mean']:.2f}) while the random-split score rises."], x=8.8, y=1.9, w=4.0, size=15, gap=12)
 text(s, "Caveat: one classifier (XGBoost) and approximate recipes of the published feature choices, not the papers' models or code. Grouping by source host is a stress test, not a deployment estimate.", 0.6, 6.5, 12.1, 0.5, 12, MUTED)
 
+# 14c host structure and leave-one-host-out
+import re
+lh = J("leave_one_host_out.json")
+dl_ = J("dedup_ladder.json")
+rp1 = J("replicate_papers.json")["paper1"]
+cats, vals, pcs = [], [], []
+for ip, h in lh["hosts"].items():
+    if h["recall_attack"] is not None:
+        cats.append(f"{ip} (attack recall)"); vals.append(h["recall_attack"]); pcs.append(RED if h["recall_attack"] < 0.6 else ACC)
+for ip, h in lh["hosts"].items():
+    if h["fpr_benign"] is not None:
+        cats.append(f"{ip} (benign FPR)"); vals.append(h["fpr_benign"]); pcs.append(RED if 0.3 < h["fpr_benign"] < 0.5 else GREY)
+n_att = sum(1 for h in lh["hosts"].values() if h["recall_attack"] is not None)
+s = slide("Only about 3 attacker hosts: held-out-host detection collapses", "Host structure and leave-one-host-out")
+text(s, f"{lh['distinct_src_ips']:,} source IPs, {lh['single_flow_src_ips']:,} with a single flow; {lh['hosts_ge_500_flows']} hosts with 500 or more flows hold {lh['rows_in_hosts_ge_500']:,} of {lh['rows']:,} rows.", 0.6, 1.5, 12.1, 0.4, 14, MUTED)
+bar(s, cats, [("Held-out host", vals)], 0.6, 1.95, 7.4, 4.45, colors=[ACC], fmt="0.00", horizontal=True, vmin=0, vmax=1.2, point_colors=pcs)
+text(s, "Train on all other hosts, test on the held-out host. Teal: attack recall; grey: benign false-positive rate; red: highlighted.", 0.6, 6.45, 7.4, 0.5, 11, MUTED)
+ddm = dl_["random|dedup"]["mean"]; ddf = 1 - dl_["rows_after_dedup"] / dl_["rows"]
+text(s, f"Duplicates are not the mechanism: dropping {ddf:.0%} exact duplicates leaves random-split BAcc at {ddm:.4f}.", 8.4, 1.95, 4.4, 0.9, 14, FG)
+text(s, "SDNGuardStack approximation (5 seeds)", 8.4, 3.0, 4.4, 0.35, 14, ACC, bold=True)
+a, b = rp1["a_random_ids|all_rows"]["acc"], rp1["b_grouped_ids|all_rows"]["acc"]
+b2 = rp1["b_grouped_ids|train_only"]["acc"]
+rep = re.search(r"Paper1 reported[^:]*: accuracy ([\d.]+)%", " ".join(J("replicate_papers.json")["notes"])).group(1)
+for i, (num, cap, col) in enumerate([(f"{a['mean']:.4f}", f"Random split (reported {rep}%)", ACC),
+        (f"{b2['mean']:.2f} to {b['mean']:.2f}", "Source-IP grouped", RED),
+        (f"±{max(b['ci95'], b2['ci95']):.2f}", "Largest 95% CI, grouped", GREY)]):
+    y = 3.45 + i * 0.75
+    text(s, num, 8.4, y, 2.1, 0.6, 22, col, bold=True)
+    text(s, cap, 10.55, y + 0.08, 2.3, 0.6, 12, MUTED)
+text(s, "Reproduces under its own protocol; does not hold for unseen hosts.", 8.4, 5.8, 4.4, 0.6, 14, FG, bold=True)
+
 # 14 limits
 s = slide("Limitations we state ourselves", "Honest scope")
 bullets(s, ["Controller study: one dataset (InSDN) and one recorded controller (ONOS); Ryu is checked only on our own benign traffic.",
@@ -406,7 +437,7 @@ bullets(s, ["Controller study: one dataset (InSDN) and one recorded controller (
 # 15 scope
 s = slide("Contributions: what is new and what is known", "Novelty and scope")
 cols = [("Already known", ["Identifier columns are shortcut features (Engelen 2021)", "Random splits leak on NIDS data (Flood 2024)", "Control-plane telemetry for SDN IDS (LAN-SDN-NIDS, SDNFLow)"], MUTED),
-        ("New here", ["Paired random vs host-held-out gap on InSDN and CICIDS2017, 10 seeds, CIs", "Audit of 9 published InSDN papers: none groups by host, none uses a real controller", "Published feature recipes on InSDN: ~0.999 random vs 0.69 to 0.84 held-out hosts", "Controller-telemetry gap: 0 FlowMods with IPs or ports"], ACC),
+        ("New here", ["Paired random vs host-held-out gap on InSDN and CICIDS2017, 10 seeds, CIs", "Audit of 9 published InSDN papers: none groups by host, none uses a real controller", "Published feature recipes on InSDN: ~0.999 random vs 0.69 to 0.84 held-out hosts", "Host structure and leave-one-host-out: about 3 attacker hosts", "Controller-telemetry gap: 0 FlowMods with IPs or ports"], ACC),
         ("Not done", ["Interleaved benign and attack traffic in one session", "A second SDN dataset or controller family", "Unread InSDN papers not characterised"], RED),
         ("Takeaways", ["Random-split scores on InSDN do not measure detection", "What a controller sees depends on the forwarding app", "On InSDN, controller-side scores are not detection accuracy"], FG)]
 for i, (t, items, c) in enumerate(cols):
