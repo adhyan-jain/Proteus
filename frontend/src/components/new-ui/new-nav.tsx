@@ -8,6 +8,7 @@ const ITEMS = [
   ["/new/gap", "1 · Gap"],
   ["/new/forwarding", "2 · Forwarding"],
   ["/new/validity", "3 · Validity"],
+  ["/new/literature", "Published results"],
   ["/new/pipeline", "Pipeline"],
   ["/new/faq", "Q&A and scope"],
   ["/new/reproduce", "Reproduce"],

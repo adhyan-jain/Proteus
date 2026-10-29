@@ -176,6 +176,13 @@ text(s, "Balanced accuracy, unseen captures, 1 s windows", 0.6, 6.35, 6.6, 0.4, 
 bullets(s, ["A one-line rule beats the model inside attack sessions.", "InSDN records benign and attack in separate sessions, so scores may reflect the session.",
             "Fix: benign and attack traffic mixed in one session."], x=7.5, y=2.1, w=5.3, size=20)
 
+# 6b published results
+lit = json.loads((Path(__file__).resolve().parent.parent / "literature_check.json").read_text())
+s = slide("How published InSDN results compare", "Abstract-level check, not a re-run")
+bullets(s, [p["paper"].split(" (")[0] + ":  " + p["reported"] for p in lit["papers"]], y=1.75, size=15)
+bullets(s, [f"Our host-side run on the same CSV (random row split): {hs['bacc_mean']:.4f}. Our controller view: {w1['mlp_all']['bacc']['mean']:.3f}.",
+            "We do not claim these papers are wrong: split protocols were not visible. We claim the benchmark cannot support a controller-side claim."], y=5.0, size=17)
+
 # 7 novelty 4 + 5
 s = slide("Novelty 4 and 5 · A caught pitfall, a rerunnable package", "Method")
 bullets(s, [f"Our first test app let ping/ARP rules hide TCP: the effect looked like {flawed:.0f}x instead of about {pf / mc:,.0f}x. We report both.",

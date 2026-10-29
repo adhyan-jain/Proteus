@@ -1,0 +1,10 @@
+{
+  "note": "Abstract/snippet-level check from web search on 2026-10-29. Full texts were not read and no detector was re-run. 'Reported' is what the authors state; it is not verified by us.",
+  "papers": [
+    {"paper": "Intrusion detection in software defined network using deep learning approaches (Sci. Rep. 2024)", "reported": "Transformer 99.02% (48 features); CNN-LSTM 99.01%, 99.19% with 6 features", "setup": "InSDN CSV features; framed as an IDS for the SDN controller", "split": "not visible in snippet", "url": "https://www.nature.com/articles/s41598-024-79001-1"},
+    {"paper": "A Hybrid CNN-LSTM Based Approach for Anomaly Detection Systems in SDNs (ACM ARES 2021)", "reported": "96.32% accuracy", "setup": "InSDN CSV features", "split": "not visible in snippet", "url": "https://dl.acm.org/doi/fullHtml/10.1145/3465481.3469190"},
+    {"paper": "Early Detection of Intrusion in SDN (Towhid et al.)", "reported": "Random forest 98.84% vs LSTM 85.31%", "setup": "InSDN CSV features", "split": "not visible in snippet", "url": "https://uregina.ca/~nss373/papers/Early-detection-SDN.pdf"},
+    {"paper": "Securing IoT and SDN systems using deep-learning based automatic intrusion detection (ScienceDirect)", "reported": "99.73% accuracy, 98.6% detection rate", "setup": "InSDN CSV features, two-level LSTM", "split": "not visible in snippet", "url": "https://www.sciencedirect.com/science/article/pii/S2090447923001004"},
+    {"paper": "Categorical Robustness Assessment for ML-based NIDS (arXiv 2026)", "reported": "Random forest 99.98% accuracy; ARP spoofing fails (6 samples)", "setup": "InSDN CSV features", "split": "not visible in snippet", "url": "https://arxiv.org/pdf/2606.12075"}
+  ]
+}
