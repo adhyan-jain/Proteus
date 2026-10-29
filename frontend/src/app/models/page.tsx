@@ -35,7 +35,10 @@ export default async function ModelsPage() {
         <Panel>
           <PanelHeader title="InSDN-Trained Model" />
           <PanelBody>
-            <EmptyState title="NOT AVAILABLE" reason={models.insdn_model.reason} />
+            <EmptyState title="NO DEPLOYED RELEASE" reason={models.insdn_model.reason} />
+            <a href="/controller-telemetry" className="mt-3 inline-block text-[12px] text-text-secondary underline">
+              Open Controller Telemetry (InSDN results)
+            </a>
           </PanelBody>
         </Panel>
       </div>
@@ -43,7 +46,7 @@ export default async function ModelsPage() {
       <Panel>
         <PanelHeader
           title="Datasets"
-          subtitle="Precomputed from proteus/data_full.py — full class distributions, row counts, and provenance"
+          subtitle="Precomputed from backend/data_full.py — full class distributions, row counts, and provenance"
         />
         <PanelBody>
           {datasets.available ? (

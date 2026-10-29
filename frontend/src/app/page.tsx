@@ -53,7 +53,7 @@ export default async function OverviewPage() {
     {
       id: "traffic",
       label: "Live SDN Traffic",
-      detail: "No live Mininet/Ryu controller connected in this build.",
+      detail: "No live controller connected. Recorded Mininet/Ryu testbed runs are shown under Topology and Controller Telemetry.",
       state: "unavailable",
     },
     {

@@ -109,7 +109,7 @@ export default async function SyntheticLabPage() {
           <PanelBody>
             <EmptyState
               title="NOT COMPUTED"
-              reason="This run does not compute a synthetic-sample diversity metric (e.g. pairwise distance / coverage). Would need to be added to proteus/gan.py to appear here."
+              reason="This run does not compute a synthetic-sample diversity metric (e.g. pairwise distance / coverage). Would need to be added to backend/gan.py to appear here."
             />
           </PanelBody>
         </Panel>

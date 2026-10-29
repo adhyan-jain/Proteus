@@ -640,7 +640,17 @@ def controller_telemetry():
     keys = ("mlp_all", "linear_all_history", "thr_packet_in_rate")
     models = {k: cv[k] for k in keys if k in cv}
     models["xgb_all_history"] = cv_x["xgb_all_history"]
-    return {"available": True, "source_files": list(need), "window_s": 5, "label_scheme": "strict",
+    extra = {}
+    if (CTRL_RESULTS / "stock_ryu_flowmods.json").exists():
+        sr = load("stock_ryu_flowmods.json")
+        extra["stock_ryu"] = {"runs": sr["runs"], "flowmods": sr["flowmods"], "by_match": sr["total_by_match_structure"],
+                              "ip_or_transport_fields": sr["ip_or_transport_fields_in_any_flowmod"],
+                              "packet_in_per_run": sr["packet_in_per_run"]}
+    if (CTRL_RESULTS / "hostside_xgb.json").exists():
+        hs = load("hostside_xgb.json")
+        extra["host_side"] = {k: hs[k] for k in ("rows", "features", "seeds", "bacc_mean", "bacc_ci95", "protocol")}
+    return {"available": True, "source_files": list(need) + [f for f in ("stock_ryu_flowmods.json", "hostside_xgb.json") if (CTRL_RESULTS / f).exists()],
+            "window_s": 5, "label_scheme": "strict", **extra,
             "grouped_cv": models,
             "within_session_trivial_any_ip_packet_in": load("review_checks.json")["within_session_W5_strict"]["any_ip_packet_in"], "live_modes": load("live_modes_v4_one10.json")["summary"],
             "live_modes_linear3": load("live_modes_v4_linear3.json")["summary"]}
@@ -670,5 +680,5 @@ def models_info():
             "data_source": d["data_source"] if d else None,
             "conditions": list(d["conditions"].keys()) if d else None,
         },
-        "insdn_model": _not_available("InSDN model training pending credentials."),
+        "insdn_model": _not_available("No InSDN-trained model is deployed in the release store. The InSDN controller-view detector is evaluated offline; see Controller Telemetry for its results."),
     }

@@ -134,6 +134,46 @@ export default async function ControllerTelemetryPage() {
         </PanelBody>
       </Panel>
 
+      {data.stock_ryu && (
+        <Panel>
+          <PanelHeader
+            title="Second controller application: Ryu stock simple_switch_13"
+            subtitle={`Unmodified application, ${data.stock_ryu.runs} runs, benign traffic. FlowMod match structures.`}
+          />
+          <PanelBody>
+            <table className="w-full text-[12px]">
+              <tbody>
+                {Object.entries(data.stock_ryu.by_match).map(([k, v]) => (
+                  <tr key={k} className="border-t border-border-subtle text-text-primary">
+                    <td className="py-1 mono">{k}</td>
+                    <td className="mono">{v} FlowMods</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p className="mt-3 text-[12px] text-text-secondary">
+              {data.stock_ryu.flowmods} FlowMods in total;{" "}
+              {data.stock_ryu.ip_or_transport_fields ? "some" : "none"} carry IP or transport match fields. PacketIns per run:{" "}
+              {data.stock_ryu.packet_in_per_run.join(", ")}.
+            </p>
+          </PanelBody>
+        </Panel>
+      )}
+
+      {data.host_side && (
+        <Panel>
+          <PanelHeader
+            title="Host-side flow-CSV baseline (contrast only)"
+            subtitle={`${data.host_side.rows.toLocaleString()} flows, ${data.host_side.features} features, ${data.host_side.seeds} seeds`}
+          />
+          <PanelBody className="text-[12px] text-text-secondary">
+            Balanced accuracy <span className="mono text-text-primary">{data.host_side.bacc_mean.toFixed(4)} ± {data.host_side.bacc_ci95.toFixed(5)}</span>.{" "}
+            {data.host_side.protocol}. Rows of one session fall on both sides of the split and a controller never receives these
+            features, so this is not comparable with the controller-view numbers above.
+          </PanelBody>
+        </Panel>
+      )}
+
       <p className="mono text-[11px] text-text-disabled">
         Source: research/insdn_controller/results/{data.source_files.join(", ")}
       </p>

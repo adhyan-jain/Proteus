@@ -1,5 +1,5 @@
 // Typed client for the Proteus read-only local API (api/server.py).
-// Every value returned here traces back to results/results.pkl or proteus/data_full.py
+// Every value returned here traces back to results/results.pkl or backend/data_full.py
 // via the FastAPI layer. Endpoints that lack real backend data resolve to
 // `{ available: false, reason }` — callers must render an explicit empty state for those,
 // never fabricate numbers to fill the shape.
@@ -33,6 +33,8 @@ export type ControllerTelemetry =
       within_session_trivial_any_ip_packet_in: { bacc_pooled: number; bacc_macro_captures: number; positives: number; negatives: number };
       live_modes: Record<string, Record<string, Ci>>;
       live_modes_linear3: Record<string, Record<string, Ci>>;
+      stock_ryu?: { runs: number; flowmods: number; by_match: Record<string, number>; ip_or_transport_fields: boolean; packet_in_per_run: number[] };
+      host_side?: { rows: number; features: number; seeds: number; bacc_mean: number; bacc_ci95: number; protocol: string };
     }
   | NotAvailable;
 
