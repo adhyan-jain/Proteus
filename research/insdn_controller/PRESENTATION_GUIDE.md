@@ -1,155 +1,239 @@
-# Presentation guide: "What does the SDN controller actually see?"
+# Presentation guide (plain-language version)
 
-For a 12–15 minute supervisor or panel meeting. Companion files: `paper/main.pdf` (IEEE journal format, 7 pages, authors
-Adhyan Jain, Atharva Sheersh Pandey, Kshitij Manikshete, VIT Vellore), `README.md` (how to reproduce) and `reproduce.sh`.
-Open the paper PDF next to this guide: reviewers trust a number more when you can point at its table.
+Paper: *What an SDN Controller Can Actually Observe: A Measurement and Validity Study of the InSDN OpenFlow Control Channel*
+Authors: Adhyan Jain, Atharva Sheersh Pandey, Kshitij Manikshete (VIT Vellore). Paper file: `research/insdn_controller/paper/main.pdf`.
 
-## The 30-second pitch
-"SDN intrusion-detection papers say the controller has a global view, but they are scored on flow features computed at the
-victim host. InSDN's authors also recorded their ONOS controller's OpenFlow traffic, and nobody seems to have looked at it.
-I parsed all 44 captures. The controller never installed or reported a 5-tuple flow entry: only MAC-pair and `eth_type`
-entries. It does see a dense PacketIn stream, and models built only from that reach 0.946 balanced accuracy on unseen
-captures. But I also found that this number can't be read as attack-detection accuracy, because of how InSDN was recorded.
-I repeated the granularity check on a second controller application, Ryu's stock learning switch, and it also installs only
-MAC-pair entries. So the contribution is the measurement, a reproducible pipeline, and a validity analysis that tells the
-next person what InSDN can and cannot support."
-
-## The things you want the audience to leave with
-1. **A real, checkable measurement:** 0 of 44 captures, 0 of 3,827 FlowMods, ever carry IP or transport match fields.
-2. **It is not only ONOS:** Ryu's unmodified `simple_switch_13` (5 runs, 2,982 requests, none failed) sent 91 FlowMods:
-   86 MAC-pair, 5 table-miss, none with IP or transport fields. Scope: one more application, not OpenDaylight or production.
-3. **A reproducible pipeline** with its own error rate reported (12 KB lost of 7.38M messages), hashes of every capture, and
-   `reproduce.sh`, which regenerates the result files and compares them with the committed ones.
-4. **You found the weakness yourself** (trivial rule 0.995; tiny session probes) and say what would fix it. This is what
-   makes a reviewer trust the rest.
-
-## What is new since the first version of the paper
-| Addition | Where | Number |
-|---|---|---|
-| Second controller application (stock Ryu) | live section | 91 FlowMods: 86 MAC-pair, 5 table-miss, 0 with IP/transport fields; 71, 69, 76, 76, 76 PacketIns per run |
-| Host-side flow-CSV contrast (XGBoost, GPU, 10 seeds) | results | BAcc 0.9998 ± 0.00003 on 343,889 flows; rows of one session on both sides of the split, so it is not comparable to the controller-view numbers |
-| Threat model and scope | new section | defender sees only the control channel; no attacks on the controller itself |
-| Related work, systematic | section 2 + appendix | LAN-SDN-NIDS ablation (link-fabrication F1 0.97 to 0.19 without OpenFlow features); UKMDDoSDN's two PCAPs have no OpenFlow packets (0 of 309,791) |
-| Deployment discussion | discussion | a forwarding change moves PacketIn volume 2–3 orders of magnitude, so models must be recalibrated |
-| Reproducibility | `reproduce.sh`, `ofgap/compare_results.py`, `paper/verify_numbers.py` | features bit-identical (264 files); FlowMod, review-check, live-study and stock-Ryu results identical; paper numbers checked against JSONs |
-
-**Possible sixth contribution point for the paper's list:** "A reproducibility package (hashes, one-command regeneration, and an automatic
-check of the quoted numbers) and a second-controller check." Say it only if the professor asks what is new; it is a strength, not the headline.
-
-## Timeline (13 min)
-| Min | Slide | Goal |
-|---|---|---|
-| 0–1 | 1 Question | Frame: benchmark features vs what a controller receives |
-| 1–3 | 2–3 Gap + PacketIn stream | Land the measurement; show the table once, don't read it |
-| 3–5 | 4 Forwarding case study | Show it as a *design* finding; state the confound before anyone asks |
-| 5–6 | 5 Method | One sentence per step; stress "no capture in both train and test" |
-| 6–8 | 6–7 Results + generalisation | Say "feasibility", not "detection accuracy" |
-| 8–11 | 8 Validity | Spend the most time here. This is your credibility slide |
-| 11–12 | 9 Contributions | Read the five items, one line each |
-| 12–13 | 10 Questions | Hand over; keep the Q&A table open |
-
-## Order of honesty (say these unprompted, in this order)
-1. "The 0.946 is capture-grouped, so it is optimistic. Variants of one scenario can sit on both sides of a fold."
-2. "Within sessions, a trivial 'any IP PacketIn' rule scores 0.995 under my strict labels. So I do not claim detection accuracy."
-3. "My first Ryu run showed only a 4× PacketIn difference because my learning switch shadowed TCP with ping/ARP entries.
-   I fixed the app and reran: per-flow forwarding sends ~10,400 TCP PacketIns per run vs ~12 for MAC-pair, in every paired run (10 of 10; also on a 3-switch chain).
-   One run had 41 failed requests; it did not reproduce in 59 later runs and the cause is not established."
-4. "Novelty is narrow: inside InSDN, controller-observable only. LAN-SDN-NIDS (2026) already builds a control-plane dataset."
-
-## Phrases to use / avoid
-| Say | Don't say |
-|---|---|
-| "feasibility", "separates attack captures from benign captures" | "my detector achieves 94.6% accuracy" |
-| "as far as my searches show" | "nobody has ever" / "first to" |
-| "the controller never installed or reported a 5-tuple entry" | "SDN controllers can't see flows" (it is ONOS-in-InSDN specific) |
-| "per-flow forwarding sent ~10,000 TCP PacketIns per run vs ~12 for MAC-pair in this testbed" | "granularity causes a 1000× PacketIn increase in SDN" (one switch, one app) |
-| "a visibility study, not a detection study" (for the Ryu testbed) | "I validated this live" |
-
-## Hard questions and what to answer
-| Question | Answer (short) |
-|---|---|
-| "So does it detect attacks?" | Not proven. It separates InSDN's attack captures from benign ones. A trivial rule beats it within sessions under strict labels. Fixing this needs benign and attack traffic interleaved in one session. |
-| "Why not just report the 99% from the CSV papers?" | Those use features a controller never receives, so they don't describe a deployable controller-side detector. That gap is the paper. |
-| "Logistic regression matches your MLP: what's the model contribution?" | None. The contribution is the measured view, the pipeline and the validity analysis. |
-| "Is 10 seeds enough?" | The seeds only vary folds and initialisation on the same 44 captures; the intervals are not over new testbeds. The cluster bootstrap over captures is wider and is in the paper. |
-| "Why is the PacketIn-rate baseline so bad?" | Plausibly because benign sessions also generate heavy PacketIn volume, but I can't verify it: the Normal group has no target-side captures. |
-| "What would make this a stronger paper?" | A second testbed with attack and benign traffic interleaved, and detection evaluated under each forwarding mode. |
-| "Which venue?" | As it stands: a workshop/conference or a lower-quartile journal as a measurement-and-validity paper. A stronger journal needs the interleaved testbed. |
-| "Is this just Ryu being simple?" | Yes for the forwarding mode result: it follows from the application. That is the point: the observable depends on the application, and ONOS `fwd` and Ryu's stock app both install MAC-pair entries. |
-| "Why does the host-side baseline score 0.9998?" | Row-level splits put flows of one session on both sides, and those features are not available to a controller. It shows the usual benchmark protocol is easy, not that the controller view is worse. |
-
-## Before the meeting (checklist)
-- [x] Live rerun with the corrected app is done (`results/live_modes_v4_one10.json`, `live_modes_v4_linear3.json`); the paper uses it.
-- [ ] Open `paper/main.pdf` and this guide side by side; know where Tables cv, family, cross and confound are.
-- [ ] Re-read slide 8 twice. It is the one you will be questioned on.
-- [ ] Know these numbers cold: 44 captures, 3,827 FlowMods, 0.946, 0.616, 0.995, 6 windows from 2 captures, 10,422 vs 12.3, 153.1 → 36.9, 3-switch 10,881 vs 18.0.
-- [ ] Be ready to answer "what is not done": see the limitations table below.
-- [ ] Do not claim detection accuracy; the interleaved benign+attack study has not been run.
-
-## If something goes wrong
-- A number is questioned: open `results/<file>.json` named under the slide; every number comes from one.
-- You don't know: say "I measured X but not Y; Y is future work." Never improvise a number.
+How to use this guide: read Part 1 and Part 2 first (what the paper is and what is new, in simple words). Part 3 is what you say.
+Parts 4 to 6 tell you exactly where everything is, what goes in and what comes out. Part 7 is the frontend.
 
 ---
 
-# Part 2: Exactly what goes in, what comes out, where it is stored
+## Part 1. What the paper is, in plain words
 
-Answer order if the professor says "walk me through the data": **raw file → parser → windows → features → model → result file → paper table**.
-All paths below are relative to the repo root `/home/adhyan/Desktop/Proteus`.
+**The problem.** Lots of papers say: "an SDN network has a central controller that sees everything, so we can build a smart attack
+detector on it". But when they test their detector, they use a file of numbers (a CSV) that was computed *at the victim computer*,
+not *at the controller*. Nobody checks whether the controller could ever have seen those numbers.
 
-## Stage-by-stage table
-| # | Stage | Input (exactly) | Code | Output (exactly) | Stored at |
-|---|---|---|---|---|---|
-| 0 | Dataset | InSDN PCAP archives from UCD (`Metsplotable-2_Group.zip`, `OVS_Group.zip`, `Normal_Group.zip`); 44 of the files are `*ONOS*` captures of the **controller↔switch OpenFlow 1.3 channel** (TCP 6653), 11 benign + 33 attack | download, `unzip -t`, SHA-256 | the extracted `.pcap`/`.pcapng` files | `data/raw/insdn_pcaps/ex/` (gitignored); hashes `data/raw/insdn_pcaps/ONOS_CAPTURES.sha256`; provenance and URLs in `data/MANIFEST.md` |
-| 1 | OpenFlow parse | one pcap | `ofgap/ofparse.py` (`of_messages`): TCP reassembly per direction, dedup by sequence number, resync on corruption | a stream of `(timestamp, direction, type, body)` OpenFlow messages: PACKET_IN, PACKET_OUT, FLOW_MOD, FLOW_REMOVED, stats replies | in memory; parser error counts (messages, desyncs, dropped bytes) go into `feats_v4/meta.json` |
-| 2 | Labels | the InSDN CSV flow table (attack flows by Flow ID) plus the list of attack-only IPs | `ofgap/attacker_ips.py`, `ctrlfeat._label` | each PACKET_IN is tagged `att_csv` (matches a CSV attack flow), `att_ip` (attack-only IP, no CSV match), `norm_csv`, `unm_ip` (IP not in CSV), `nonip` (ARP/LLDP), `unparsed` | counts per window in `feats_v4/cNNN_W5_lab.npy` |
-| 3 | Windowing + features | the message stream, window length W (1 s or 5 s) | `ofgap/ctrlfeat.py` (`extract`) | per window **22 numbers**: counts of PACKET_IN/OUT, FLOW_MOD, FLOW_REMOVED, stats replies; distinct src/dst MAC and IP, destination ports; TCP/UDP/ICMP/ARP/SYN fractions; mean frame length; entropy of src IP and dst port; flow-stats entry count and packet/byte deltas | `feats_v4/cNNN_W5.npy` (shape windows×22), `..._lab.npy` (windows×6 label counts), `..._bg.npy` (same features with attack-matched PACKET_INs removed, for the confound probe), `feats_v4/meta.json` (per-capture inventory). Directory is gitignored: regenerate with `ctrlfeat.py <pcap_root> <out_dir>` |
-| 4 | History | the 22-feature rows | `exp_ctrl.with_history` | each row becomes the current + 3 previous windows (H=4, log1p scaled) = 88 inputs, causal (no future windows) | in memory |
-| 5 | Models | 88-feature rows and window labels `y` (1 = at least one CSV-matched attack PACKET_IN; windows with unmatched attack-like IPs are dropped as ambiguous under "strict" labels) | `ofgap/exp_ctrl2.py`: MLP, logistic regression, XGBoost (GPU), single-feature thresholds | a 0/1 prediction per window; recall, FPR, balanced accuracy per fold and seed | in memory |
-| 6 | Evaluation | the predictions | `exp_ctrl2.py` | A) 5-fold CV **grouped by capture file** (a file is never in train and test); B) leave-one-attack-family-out; C) cross-deployment (Metasploitable↔OVS); D) session-confound probe; E) label-permutation control; 10 seeds, mean ± 95% CI, capture-cluster bootstrap | `results/v4_strict_W1.json`, `v4_strict_W5_xgb.json`, `v4_iprule_W1.json`, `v4_iprule_W5.json` |
-| 7 | Validity checks | window counts | `ofgap/review_checks.py` | trivial rules ("any PacketIn", "any IP PacketIn") scored within attack sessions | `results/review_checks.json` |
-| 8 | Granularity gap | the same 44 pcaps | `ofgap/gap_measure.py`, `flowmod_check.py` | which match fields FLOW_MODs and flow-stats replies carry (0 of 3,827 FlowMods have IP/transport match fields); PacketIns per target packet | `results/gap_attack_v2.json`, `results/flowmod_matches.json` |
-| 9 | Live forwarding study | **nothing from InSDN.** Ryu app `live/ryu_fwd.py` in 3 modes + Mininet (1 OVS switch, h1–h5 clients, h6 HTTP server); benign HTTP downloads and pings only | `live/run_benign.py` (needs root), sniffer on loopback port 6653 | one control-channel pcap per run, client logs | `live/campaign2/`, `live/out_linear3/`, `live/out_stock/` (hashes of all in `capture_hashes.sha256`) |
-| 10 | Live analysis | those pcaps | `live/live_table.py` | per-mode TCP PACKET_IN counts, FLOW_MOD counts, entries per 1 s stats reply, mean ± 95% CI over 10 runs, for one switch and for a 3-switch chain; stock Ryu FlowMod check (`ofgap/flowmod_stock.py`) | `results/live_modes_v4_one10.json`, `live_modes_v4_linear3.json`, `stock_ryu_flowmods.json`, tables `paper/live_table*.tex` |
-| 10b | Host-side contrast | InSDN CSV (343,889 flows, 78 features) | `ofgap/hostside_baseline.py` (XGBoost, GPU) | BAcc 0.9998 ± 0.00003, 10 seeds | `results/hostside_xgb.json` |
-| 11 | Paper and UI | the result JSONs | `ofgap/make_tables.py`, `live/live_table.py`; `api/server.py` `/api/controller-telemetry`; `frontend/src/app/controller-telemetry/page.tsx` | LaTeX tables and the UI page, both read directly from the JSONs | `paper/tables.tex`, `paper/live_table.tex`, `paper/main.pdf`; UI at route `/controller-telemetry` |
+**What we did.** The authors of a popular dataset (InSDN) also recorded the real messages between their controller (ONOS) and
+the switch. Nobody seems to have opened those recordings. We did. We read all 44 of them and asked three simple questions:
 
-## "What exactly is the input to the model? What comes out?"
-- **Input:** 88 numbers per 5-second window of control-channel traffic. They describe only what the controller receives (PacketIn headers, FlowMod/stats counts). No host-side flow features, no payloads, no CSV features.
-- **Output:** one decision per window, attack or not, plus recall, FPR and balanced accuracy with a 95% CI over 10 seeds.
-- **What is NOT done:** the model is never given a flow's 5-tuple record from the CSV; the CSVs are used only to label windows.
+1. Can the controller actually see the flows the dataset talks about? (Answer: no.)
+2. Does what the controller sees change if you change the forwarding program? (Answer: yes, massively.)
+3. If we build a detector using only what the controller sees, is a high score proof it works? (Answer: no, and we show why.)
 
-## "Where is everything stored?"
-| What | Where | In git? |
-|---|---|---|
-| Raw captures and archives | `data/raw/insdn_pcaps/` | no (large; hashes are recorded) |
-| Window features | `research/insdn_controller/feats_v4/` | no (regenerable) |
-| Result numbers (source of every figure) | `research/insdn_controller/results/*.json` | yes |
-| Live-study raw pcaps | `research/insdn_controller/live/out*/`, `live/campaign2/` | partly (see `.gitignore`) |
-| Capture hashes | `research/insdn_controller/capture_hashes.sha256` | yes |
-| Paper source and PDF | `research/insdn_controller/paper/` | yes |
-| Training device | NVIDIA RTX 4060 (CUDA): MLP, logistic regression and XGBoost all use `device=cuda` | n/a |
+So the paper is **a careful measurement plus a warning about how to evaluate**. It is not a new detector.
 
-## Limitations that were fixed (and how), and those that were not
-| Limitation | Status |
+**Words you must know**
+| Word | Meaning |
 |---|---|
-| No tree-model baseline | Fixed: XGBoost on GPU, BAcc 0.952 ± 0.013 vs linear 0.961 ± 0.011 vs MLP 0.958 ± 0.012. Trees give no gain. |
-| "Folds by capture, not scenario" | Already covered by experiment B (leave-one-attack-family-out) in `results/v4_strict_W5_xgb.json`; cite that instead of building a new split. |
-| Frontend did not show the study | Fixed: `/controller-telemetry` page reads `/api/controller-telemetry`, which reads the result JSONs only. |
-| Host-side feature comparison | Done (`results/hostside_xgb.json`), with the caveat that it is a different unit and protocol. |
-| Source-side labelling for a future interleaved testbed | Removed from the repo during the paper cleanup (never run on data); it exists in git history under the tag `pre-paper-cleanup`. |
-| Multi-switch topology, ≥10 runs per mode, cause of the 41 failed requests | Multi-switch (3-switch chain) and 10 runs per mode: **Done** (`--topo linear3`, 30 + 15 new runs). The 41-failure run did not reproduce (0 failures in 59 later runs); cause not established. |
-| Second dataset or controller | **Partly done.** Second controller application: stock Ryu (done). Second dataset: UKMDDoSDN's two PCAPs downloaded and checked: 0 of 309,791 packets are OpenFlow, so unusable; LAN-SDN-NIDS data could not be reached (publisher blocks automated access) and is cited as related work only. OpenDaylight and ONOS under other apps are untested. |
-| Published control-plane detector re-implemented | **Not done.** The comparison is to threshold heuristics and our own models. |
-| Detector beating the trivial baseline in one session | **Not done.** Needs interleaved benign + attack traffic from the user's lab. |
-| InSDN session-identity confound | Cannot be fixed (property of the benchmark); stated in the paper. |
+| SDN controller | The one program that tells all switches how to forward traffic |
+| OpenFlow | The language the controller and switches use to talk |
+| PacketIn | "I got a packet I don't know what to do with, controller, help": the switch sends it to the controller |
+| FlowMod | The controller's answer: "install this rule in your table" |
+| Flow entry / match fields | A rule in the switch table and what it looks at (MAC addresses only, or also IP and ports) |
+| 5-tuple flow | One connection: source IP, destination IP, source port, destination port, protocol |
+| MAC-pair forwarding | Rules that only look at the two MAC addresses (coarse) |
+| Per-flow forwarding | Rules for every single connection (fine) |
+| Balanced accuracy (BAcc) | Accuracy that is fair when there are many more benign than attack samples; 0.5 = coin flip |
 
-## Extra hard questions about the data
-| Question | Answer |
+---
+
+## Part 2. The novelty points, explained so you can say them yourself
+
+Rule for all of them: we say "as far as our searches show", never "first". Combining known tools in a new way still counts as a
+contribution; we claim the combination and the measurement, not a new algorithm.
+
+### Novelty 1: "The controller never saw the flows the dataset labels"
+- **In one line:** the dataset labels connections by 5-tuple, but the controller's rules never contained IP addresses or ports.
+- **Analogy:** a security guard who only checks door numbers cannot tell you who walked through; a log that lists people by name was
+  written by someone else.
+- **What we did:** parsed all 44 controller recordings, read every FlowMod and flow-statistics message, counted which fields the rules look at.
+- **Evidence:** 0 of 3,827 FlowMods have IP or port fields (3,811 look at MAC pairs, 16 at EtherType). The controller did receive a stream
+  of PacketIns (0.68 to 1.29 per target packet in 9 of 12 attack scenarios).
+- **Why it matters:** every InSDN paper that calls its CSV-based detector "controller-based" is using numbers the controller never had.
+- **Say to the prof:** "We checked the dataset's own controller recordings. The controller never saw the 5-tuple flows the dataset
+  labels, so CSV-trained detectors don't describe a real controller-side detector."
+- **Where:** `ofgap/flowmod_check.py` -> `results/flowmod_matches.json`; `ofgap/gap_measure.py` -> `results/gap_attack_v2.json`; paper section III.
+
+### Novelty 2: "The forwarding program decides what the controller sees"
+- **In one line:** same traffic, different forwarding setting, and the controller's workload and view change by hundreds of times.
+- **Analogy:** a receptionist who asks every visitor for ID at every door (per-flow) is flooded with questions; one who only checks
+  which building you belong to (MAC-pair) hardly gets asked anything.
+- **What we did:** built a small Mininet + Ryu network, ran the same benign web traffic under three settings, 10 runs each, on one
+  switch and on a three-switch chain. Then repeated the check with Ryu's own unmodified example app.
+- **Evidence:** TCP PacketIns per run: 10,422 (per-flow) vs 12.3 (MAC-pair); 665 to 1,752 times more in every paired run. Three
+  switches: 10,881 vs 18.0. A shorter idle timeout cuts the per-flow entries a poller sees from 153.1 to 36.9. Stock Ryu: 91 FlowMods,
+  86 MAC-pair, 5 table-miss, none with IP or port fields.
+- **Honest limit:** the direction is expected from how reactive forwarding works; the value is the measured size, with confidence intervals.
+- **Say to the prof:** "What a controller can observe is a property of the forwarding app, so a detector's inputs must be specified
+  together with the forwarding setup."
+- **Where:** `live/ryu_fwd.py`, `live/run_benign.py`, `live/live_table.py` -> `results/live_modes_v4_one10.json`,
+  `live_modes_v4_linear3.json`, `stock_ryu_flowmods.json`; paper section VI.
+
+### Novelty 3: "A high score is not proof of detection" (the validity result)
+- **In one line:** controller-only models reach 0.946 balanced accuracy, but a one-line rule matches it, so the score does not prove detection.
+- **Analogy:** a test where all the "sick" patients were photographed in one room and all the "healthy" ones in another; a model that
+  recognises the room gets full marks without knowing anything about illness.
+- **What we did:** built detectors using only controller messages and tested them on captures they had never seen, on attack families
+  they had never seen, and across the two target setups. Then checked what a trivial rule scores.
+- **Evidence:** MLP 0.946 vs PacketIn-rate threshold 0.616 on unseen captures. But the rule "at least one IP PacketIn in the window"
+  scores 0.995 (1 s windows) and 1.000 (5 s) inside attack sessions. InSDN records benign and attack in separate sessions, so scores
+  cannot be separated from session recognition. XGBoost (0.952) and logistic regression (0.961) do not beat the simple MLP (0.958).
+- **Say to the prof:** "We do not claim a detector. We show that on InSDN, controller-side scores can't be trusted as detection
+  accuracy, and we say exactly what data would fix it: benign and attack traffic mixed in one session."
+- **Where:** `ofgap/ctrlfeat.py`, `ofgap/exp_ctrl2.py`, `ofgap/review_checks.py` -> `results/v4_strict_W1.json`, `v4_strict_W5_xgb.json`,
+  `v4_iprule_*.json`, `review_checks.json`; paper sections IV, V, VI.
+
+### Novelty 4: "A measurement pitfall we caught in ourselves"
+- **In one line:** our first test app hid TCP traffic from the controller and made the effect look 4 times instead of about 800 times.
+- **What happened:** ping and ARP rules also matched later TCP between the same hosts, so most connections never reached the controller.
+- **Why it is useful to others:** it shows how an overlapping coarse rule can understate what a controller sees by two orders of magnitude.
+- **Evidence:** first campaign 43.4 vs 11.0 PacketIns (4 times); fixed app 10,350 vs 11.6, later 10,422 vs 12.3 with 10 runs.
+- **Where:** `live/ryu_fwd_v1.py` (the flawed app, kept on purpose) and `results/live_modes_v2.json`; paper section VI.
+
+### Novelty 5: "Everything can be rebuilt and checked" (support, not the headline)
+- **In one line:** one command regenerates every table and compares it with the stored result; every capture has a hash.
+- **Where:** `reproduce.sh`, `ofgap/compare_results.py`, `paper/verify_numbers.py`, `capture_hashes.sha256`, `README.md`.
+- **Say it only as:** "the numbers can be checked", not as research novelty.
+
+### What is NOT new (say this before they do)
+- Using control-plane data for SDN detection: LAN-SDN-NIDS (2026) and SDNFLow already do it.
+- The detector: a simple model ties the neural network, and a trivial rule beats it inside sessions.
+- The stock-Ryu result: it follows from that app's code.
+- Related precedent: session leakage was shown on another dataset (IoT-NID); we show it for controller-side evaluation on InSDN.
+
+**Venue honesty:** workshop/conference level as is; a lower-quartile journal after revision. Not top-quartile: no new method, one dataset, no mixed benign+attack test.
+
+---
+
+## Part 3. The 2-minute pitch (say this)
+
+"Most SDN intrusion-detection papers say the controller sees everything, but they score on features computed at the victim host.
+InSDN's authors also recorded their controller's OpenFlow traffic, and we parsed all 44 recordings. First: no rule the controller
+installed ever looked at IP addresses or ports, so the connections the dataset labels were never visible to it. Second: in our
+own Mininet and Ryu tests, per-flow forwarding sends the controller hundreds to over a thousand times more PacketIns than
+MAC-pair forwarding, and Ryu's stock app also uses MAC-pair rules, so what a controller sees depends on the forwarding app.
+Third: models using only the controller's view reach 0.946 balanced accuracy, but a one-line rule matches that inside attack
+sessions, so on InSDN the number is not proof of detection. We therefore claim a measurement and a validity warning, not a new
+detector, and everything is reproducible from hashed captures. The missing piece, which we name, is a test with benign and attack
+traffic mixed in one session."
+
+**Order of honesty:** (1) "0.946 is optimistic." (2) "A trivial rule scores 0.995 inside sessions." (3) "Our first campaign was flawed; we report it."
+(4) "Novelty is narrow; LAN-SDN-NIDS already uses control-plane telemetry."
+
+---
+
+## Part 4. Architecture of the study: what goes in, what comes out
+
+```
+ InSDN controller recordings (44 pcaps)          InSDN flow CSVs (labels)
+              |                                          |
+              v                                          v
+      [1] OpenFlow parser  ---------------->  [2] label each PacketIn by matching its 5-tuple to the CSV
+              |
+              v
+      [3] cut into 1 s / 5 s windows -> 22 numbers per window (counts, distinct IPs, entropy ...)
+              |
+              v
+      [4] add the 3 previous windows (88 numbers) -> [5] models: MLP, logistic regression, XGBoost, thresholds
+              |
+              v
+      [6] tests: unseen captures, unseen attack family, other deployment, session probes, trivial rule
+              |
+              v
+      results/*.json -> tables in the paper (make_tables.py) -> numbers checked (verify_numbers.py)
+
+ Separate live experiment (no InSDN data):  Ryu app (3 modes) + Mininet -> control-channel pcap -> live_table.py -> results/live_modes_*.json
+```
+
+| # | Step | Input | Output | File |
+|---|---|---|---|---|
+| 0 | Dataset | InSDN archives (hashed, see `data/MANIFEST.md`) | 44 controller pcaps (11 benign, 33 attack) | `data/raw/insdn_pcaps/ex/` |
+| 1 | Parse OpenFlow | one pcap | a list of messages: PacketIn, PacketOut, FlowMod, FlowRemoved, stats replies (7,381,679 in total; 12,217 bytes lost) | `ofgap/ofparse.py` |
+| 2 | Label | each PacketIn's embedded packet + CSV Flow IDs | tag per PacketIn: attack-in-CSV, attack-IP-only, normal, unmatched IP, non-IP | `ofgap/ctrlfeat.py`, `attacker_ips.py` |
+| 3 | Windows and features | message stream, window length | 22 numbers per window | `ofgap/ctrlfeat.py` -> `feats_v4/` (regenerable) |
+| 4 | History | window rows | 88 inputs (current + 3 previous), causal | `ofgap/exp_ctrl.py` |
+| 5 | Models | 88 inputs + window label (attack or not) | one prediction per window; recall, FPR, balanced accuracy | `ofgap/exp_ctrl2.py` (GPU) |
+| 6 | Tests | predictions | 10-seed mean with 95% interval; bootstrap; trivial-rule scores | `exp_ctrl2.py`, `review_checks.py` |
+| 7 | Granularity check | the same pcaps | which fields FlowMods carry | `flowmod_check.py`, `gap_measure.py` |
+| 8 | Live study | Ryu app + Mininet, benign traffic | control-channel pcaps and client logs | `live/run_benign.py` (root) |
+| 9 | Live analysis | those pcaps | PacketIns, FlowMods, entries per poll, per mode | `live/live_table.py` |
+| 10 | Baselines | InSDN CSV | host-side XGBoost score (contrast) | `ofgap/hostside_baseline.py` |
+| 11 | Paper | result JSONs | LaTeX tables, PDF | `ofgap/make_tables.py`, `paper/` |
+
+**Model input and output in one sentence:** input = 88 numbers describing a few seconds of control-channel messages; output = "attack or
+not" for that window. The CSV flow features are never an input; the CSV only supplies labels.
+
+**Training device:** all models train on the RTX 4060 GPU.
+
+---
+
+## Part 5. Where is everything
+
+| What you need to show | Where |
 |---|---|
-| "Is the 'trivial rule' 0.5 or 0.995?" | Two different rules. "Any PacketIn" is always true on non-empty windows, so 0.5. "Any IP PacketIn" scores 0.995 (1 s) and 1.000 (5 s) within attack sessions under strict labels (`results/review_checks.json`), because the strict mask removes ambiguous windows and the leftover attack-free windows are ARP/LLDP only. |
-| "Where do the labels come from, and are they trustworthy?" | From the InSDN CSV flow table, matched to the PACKET_IN's embedded frame. Coverage is partial, which is why windows with unmatched attack-like IPs are dropped under strict labels and counted as attack under the IP rule; both are reported. |
-| "Why 5 s windows?" | 1 s and 5 s are both run (`v4_strict_W1/W5.json`). 5 s has more PacketIns per window but fewer windows; conclusions do not change. |
-| "Did you train on a CPU?" | No. CUDA only (project rule); MLP and logistic regression are PyTorch on the RTX 4060, XGBoost uses `device="cuda"`. |
-| "Is any number made up?" | No. Every figure in the paper is read from `results/*.json`; `paper/verify_numbers.py` checks the quoted ones, and `reproduce.sh` regenerates the JSONs from the raw data. |
-| "Can I rerun it?" | `research/insdn_controller/reproduce.sh` (GPU, raw InSDN captures per `data/MANIFEST.md`). Re-recording the live captures needs root (`README.md`). |
+| The paper (PDF and LaTeX) | `research/insdn_controller/paper/main.pdf`, `main.tex` |
+| Every number's source | `research/insdn_controller/results/*.json` |
+| Re-run everything | `research/insdn_controller/reproduce.sh` (README next to it explains) |
+| Number check against the paper | `python research/insdn_controller/paper/verify_numbers.py` |
+| Capture hashes | `research/insdn_controller/capture_hashes.sha256` |
+| Dataset sources and hashes | `data/MANIFEST.md` |
+| Raw captures (not in git) | `data/raw/insdn_pcaps/` and `research/insdn_controller/live/` |
+| The older Proteus system (GAN, drift) | `backend/`, `api/`, `frontend/`; not part of this paper's claims |
+
+---
+
+## Part 6. Questions you will get
+
+| Question | Short answer |
+|---|---|
+| Does it detect attacks? | Not proven. It separates InSDN's attack captures from benign ones; a trivial rule matches it inside sessions. |
+| Why not use the 99% CSV numbers? | The controller never receives those features; that gap is the paper. |
+| Logistic regression ties your neural net: what is the model contribution? | None. The contribution is the measurement, the validity analysis and the reproducible pipeline. |
+| Is 10 seeds enough? | They vary folds and initialisation on the same 44 captures; they are not new testbeds. The bootstrap over captures is wider and is in the paper. |
+| Isn't this obvious for ONOS? | The direction is; the benchmark is still used as if the controller saw those flows, and nobody had measured the size. |
+| Why no oversampling for rare classes? | Some classes have only 6 to 12 attack windows because the CSV labels cover part of each capture; augmenting would copy those windows and risks leakage. It is listed as future work. |
+| What would make it stronger? | Benign and attack traffic mixed in one session, the gap on another controller (OpenDaylight), and a re-implemented published detector. |
+| What did you not do? | No attack traffic generated by us; no published-detector re-implementation; one dataset; Ryu apps only as second controller. |
+
+**Numbers to remember:** 44 captures; 3,827 FlowMods, 0 with IP/ports; 0.946 vs 0.616; trivial rule 0.995; 10,422 vs 12.3 (665 to 1,752 times);
+153.1 to 36.9; 3-switch 10,881 vs 18.0; stock Ryu 91 / 86 / 5; host-side 0.9998.
+
+---
+
+## Part 7. The frontend: architecture and what each page is for
+
+```
+ Browser  ->  Next.js console (port 3000)  ->  FastAPI (port 8000)  ->  files on disk
+                10 pages                         read-only endpoints      results/results.pkl            (demo run)
+                                                                          models/releases/vNNN           (demo model)
+                                                                          research/insdn_controller/results/*.json  (this paper)
+```
+Start it: `.venv/bin/uvicorn api.server:app --port 8000` and `cd frontend && npm run dev` (page: http://localhost:3000).
+Every panel has a "What this shows" line; use it as your talking point.
+
+**Two groups of pages. Do not mix them up in front of the prof.**
+
+| Group | Pages | Data source | Status |
+|---|---|---|---|
+| **This paper** | **Controller Telemetry**, **Topology** | `research/insdn_controller/results/*.json` through `/api/controller-telemetry` | Real results from the paper |
+| **The older Proteus demo** | Overview, Live Detection, Experiments, Drift Monitor, Synthetic Lab, Fidelity Gate, Adaptation, Audit Log, Models | `results/results.pkl` (a small single-seed demo run) | Demo scale; its data source is `synthetic-fallback`; **not evidence for the paper** |
+
+| Page | What it shows | API endpoint | What to say |
+|---|---|---|---|
+| Controller Telemetry | Detection scores, forwarding-mode tables (1 and 3 switches), stock-Ryu result, host-side contrast | `/api/controller-telemetry` | "This is the paper's evidence, read straight from the result files." |
+| Topology | The two Mininet networks (1 switch, 3-switch chain) and recorded PacketIn counts | `/api/controller-telemetry` | "This is the testbed behind Novelty 2." |
+| Overview | The 8-stage closed-loop pipeline (traffic, classify, drift, generate, gate, retrain, redeploy) | several `/api/...` | "This is the earlier Proteus system architecture, a separate project." |
+| Models | Demo release, datasets (InSDN 343,889 rows; CICIDS2017 2.1 M rows) | `/api/models`, `/api/datasets/summary` | "Dataset sizes and class mix; shows why rare classes are tiny." |
+| Experiments, Drift, Synthetic Lab, Fidelity Gate, Adaptation, Live Detection, Audit Log | The demo's drift detection, GAN training, fidelity check and retraining | `/api/experiments/*`, `/api/drift/*`, `/api/gan/*`, `/api/gate/*`, `/api/adaptation/*` | "These belong to the older Proteus demo; its gain is not evidence that synthetic data helps." |
+
+**Frontend architecture of the study itself:** Topology page = the testbed; Controller Telemetry page = what was measured; the
+paper sections map one-to-one to those two pages. The 8-stage pipeline diagram on Overview is the Proteus system architecture; it
+does not describe the paper's pipeline (that one is Part 4).
+
+---
+
+## Part 8. If something goes wrong
+- A number is questioned: open `results/<file>.json` named in Part 2; every number comes from one.
+- You do not know: say "I measured X but not Y; Y is future work." Never improvise a number.
+- They ask about the older GAN system: say it is a separate project whose research findings are in the repo README and that this paper makes no GAN claim.

@@ -31,18 +31,6 @@ export default async function ModelsPage() {
         </PanelBody>
       </Panel>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <Panel>
-          <PanelHeader title="InSDN-Trained Model" />
-          <PanelBody>
-            <EmptyState title="NO DEPLOYED RELEASE" reason={models.insdn_model.reason} />
-            <a href="/controller-telemetry" className="mt-3 inline-block text-[12px] text-text-secondary underline">
-              Open Controller Telemetry (InSDN results)
-            </a>
-          </PanelBody>
-        </Panel>
-      </div>
-
       <Panel>
         <PanelHeader
           title="Datasets"
