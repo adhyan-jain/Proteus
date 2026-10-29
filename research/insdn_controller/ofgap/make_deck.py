@@ -247,7 +247,7 @@ for i, (a, b) in enumerate(p2):
     text(s, a, 7.0, y, 2.5, 0.8, 18, ACC, bold=True)
     text(s, b, 9.55, y, 3.2, 0.8, 13, MUTED)
 text(s, "Then", 7.0, 5.0, 2.5, 0.8, 18, GREY, bold=True)
-text(s, f"Split audit on InSDN and CICIDS2017, and a full read of {n_read} papers, 9 on InSDN (slides 13 to 14)", 9.55, 5.0, 3.2, 0.8, 13, MUTED)
+text(s, f"Split audit on InSDN and CICIDS2017, and a full read of {n_read} papers, 9 on InSDN (slides 13 to 15)", 9.55, 5.0, 3.2, 0.8, 13, MUTED)
 ln = s.shapes.add_connector(MSO_CONNECTOR.STRAIGHT, Inches(6.75), Inches(2.0), Inches(6.75), Inches(5.7))
 ln.line.color.rgb, ln.line.width = LINE, Pt(1)
 text(s, "Strong-looking results kept dissolving under strict evaluation. We then measured the same failure in a published benchmark.", 0.6, 6.05, 12.1, 0.7, 16, FG, bold=True)
@@ -378,6 +378,21 @@ for i, r in enumerate([hdr] + rows):
         pp.font.color.rgb = RGBColor(0xFF, 0xFF, 0xFF) if i == 0 else (RED if (j == 4 and v not in ("No (stated)", "Not stated")) else FG)
 text(s, f"{n_read} of {n_pap} papers read in full; the {n_pap - n_read} unread ones are not characterised. Table: the 9 read papers that use InSDN (one more read paper is not on InSDN). Numbers are the authors' own, not re-run. None groups by host; none evaluates a real controller.", 0.6, 6.0, 12.1, 0.9, 13, MUTED)
 
+# 14b published feature recipes, two splits
+rr = J("recipe_replication.json")
+RECS = [("numeric", "Numeric flow features"), ("numeric+port", "Numeric + ports"), ("ids_all", "All columns incl. IDs"), ("top15_mi_ids", "Top-15 by mutual info")]
+rv = {r: [rr[f"{r}|{sp}"]["multiclass_acc"] for sp in ("random", "grouped_src_ip")] for r, _ in RECS}
+s = slide("Published feature recipes, two splits", "Recipe replication on InSDN")
+bar(s, [n for _, n in RECS], [("Random split", [rv[r][0]["mean"] for r, _ in RECS]), ("Held-out source hosts", [rv[r][1]["mean"] for r, _ in RECS])], 0.6, 1.7, 7.8, 4.4, colors=[ACC, RED], fmt="0.0000", legend=True, vmin=0, vmax=1.15)
+text(s, "8-class accuracy, GPU XGBoost, 80:20, 10 seeds, 343,889 flows", 0.6, 6.15, 7.8, 0.3, 12, MUTED, align=PP_ALIGN.CENTER)
+lo = min(v[1]["mean"] for v in rv.values()); hi = max(v[1]["mean"] for v in rv.values())
+rlo = min(v[0]["mean"] for v in rv.values())
+cimin = min(v[1]["ci95"] for v in rv.values()); cimax = max(v[1]["ci95"] for v in rv.values())
+bullets(s, [f"Random split: at least {rlo:.3f} for every recipe.",
+            f"Held-out hosts: {lo:.2f} to {hi:.2f}, with 95% CIs of ±{cimin:.2f} to ±{cimax:.2f}.",
+            f"Adding ports lowers the held-out-host score ({rv['numeric'][1]['mean']:.2f} to {rv['numeric+port'][1]['mean']:.2f}) while the random-split score rises."], x=8.8, y=1.9, w=4.0, size=15, gap=12)
+text(s, "Caveat: one classifier (XGBoost) and approximate recipes of the published feature choices, not the papers' models or code. Grouping by source host is a stress test, not a deployment estimate.", 0.6, 6.5, 12.1, 0.5, 12, MUTED)
+
 # 14 limits
 s = slide("Limitations we state ourselves", "Honest scope")
 bullets(s, ["Controller study: one dataset (InSDN) and one recorded controller (ONOS); Ryu is checked only on our own benign traffic.",
@@ -391,13 +406,13 @@ bullets(s, ["Controller study: one dataset (InSDN) and one recorded controller (
 # 15 scope
 s = slide("Contributions: what is new and what is known", "Novelty and scope")
 cols = [("Already known", ["Identifier columns are shortcut features (Engelen 2021)", "Random splits leak on NIDS data (Flood 2024)", "Control-plane telemetry for SDN IDS (LAN-SDN-NIDS, SDNFLow)"], MUTED),
-        ("New here", ["Paired random vs host-held-out gap on InSDN and CICIDS2017, 10 seeds, CIs", "Audit of 9 published InSDN papers: none groups by host, none uses a real controller", "Controller-telemetry gap: 0 FlowMods with IPs or ports"], ACC),
+        ("New here", ["Paired random vs host-held-out gap on InSDN and CICIDS2017, 10 seeds, CIs", "Audit of 9 published InSDN papers: none groups by host, none uses a real controller", "Published feature recipes on InSDN: ~0.999 random vs 0.69 to 0.84 held-out hosts", "Controller-telemetry gap: 0 FlowMods with IPs or ports"], ACC),
         ("Not done", ["Interleaved benign and attack traffic in one session", "A second SDN dataset or controller family", "Unread InSDN papers not characterised"], RED),
         ("Takeaways", ["Random-split scores on InSDN do not measure detection", "What a controller sees depends on the forwarding app", "On InSDN, controller-side scores are not detection accuracy"], FG)]
 for i, (t, items, c) in enumerate(cols):
     x = 0.6 + i * 3.1
     text(s, t, x, 1.9, 2.9, 0.5, 20, c, bold=True)
-    bullets(s, items, x=x, y=2.6, w=2.85, size=14, gap=12)
+    bullets(s, items, x=x, y=2.6, w=2.85, size=13, gap=10)
 
 prs.save(sys.argv[1])
 print("saved", sys.argv[1])
