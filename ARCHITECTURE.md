@@ -73,3 +73,7 @@ threads before numpy/torch/sklearn initialise (otherwise 4 joblib workers x 16 B
    and no other traffic types have been run.
 8. **Telemetry:** only about 9 distinct numeric features can be populated from OpenFlow 1.3 counters
    (`feature_mapper.py`); the rest are explicitly absent, never fabricated.
+
+
+## Evaluation-validity audit (research/insdn_controller, 2026-10-29)
+Offline GPU audit of split protocols on InSDN and CICIDS2017: random flow split vs source-IP-grouped split, identifier-only probe, de-duplication and class-coverage controls, leave-one-host-out detection on both datasets, and an approximate replication of one published pipeline. Results: `research/insdn_controller/results/*.json`; scripts: `ofgap/protocol_audit.py`, `dedup_ladder.py`, `recipe_replication.py`, `replicate_papers.py`, `leave_one_host_out.py`. Limits: held-out-host results come from very few real hosts (InSDN has about three attacker hosts) and are deterministic across model seeds, so no confidence interval is computed; UKMDDoSDN was unusable; prior-art claims are bounded to papers read in full.

@@ -7,6 +7,8 @@ f09441c and 82275c5 literature check (`literature_check.json`); 1cca43d split-pr
 "Progress log" below is dated 2026-10-28 and does not cover these.
 
 **Phase B (evaluation-validity audit, in progress 2026-10-29):** offline multi-dataset split-leakage audit of published IDS
+
+> Update 2026-10-29 (late): Phase B results are in `research/insdn_controller/results/`: `protocol_audit_{insdn,cicids2017}.json` (random vs held-out-host split), `dedup_ladder.json`, `recipe_replication.json`, `replicate_papers.json`, `leave_one_host_out.json` and `leave_one_host_out_cicids2017.json` (second dataset: 48 source IPs, main attacker 172.16.0.1 held out -> 28.3% of attack flows caught). Paper (10 pages, 77 number checks) and 14-slide deck updated. UKMDDoSDN unusable (no benign class). Novelty is bounded: see `NOVELTY_CHECK.md` and `PRIOR_ART_HOSTS.md`.
 paper protocols. Live interleaved testbed still out of scope. So far: InSDN split protocols (`ofgap/protocol_inflation.py`)
 and the published-results check (`literature_check.json`).
 
