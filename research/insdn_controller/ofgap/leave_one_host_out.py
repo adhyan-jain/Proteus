@@ -44,16 +44,19 @@ for h in cnt[cnt >= 500].index[:int(sys.argv[3]) if len(sys.argv) > 3 else None]
     te = np.where(src == h)[0]
     tr = np.where(src != h)[0]
     preds = []
-    for seed in range(3):
+    for seed in range(int(sys.argv[4]) if len(sys.argv) > 4 else 3):
         m = xgb.XGBClassifier(n_estimators=200, max_depth=6, tree_method="hist", device="cuda", random_state=seed).fit(X.iloc[tr], y[tr])
         preds.append(m.predict(X.iloc[te]))
     p = np.mean(preds, axis=0) >= 0.5
+    per_seed_recall = [float(q[y[te] == 1].mean()) for q in preds] if (y[te] == 1).any() else None
+    per_seed_fpr = [float(q[y[te] == 0].mean()) for q in preds] if (y[te] == 0).any() else None
     ate = y[te] == 1
     lt = lab.iloc[te].values
     d = {"rows": int(len(te)), "attack_rows": int(ate.sum()), "labels": sorted(set(lt)),
          "recall_attack": float(p[ate].mean()) if ate.any() else None,
          "fpr_benign": float(p[~ate].mean()) if (~ate).any() else None,
          "recall_by_class": {c: float(p[lt == c].mean()) for c in sorted(set(lt)) if c.upper() != "BENIGN"},
+         "per_seed_recall": per_seed_recall, "per_seed_fpr": per_seed_fpr, "n_model_seeds": len(preds),
          "train_rows": int(len(tr)), "train_attack_classes": sorted(set(lab.iloc[tr]) - {"BENIGN"})}
     R["hosts"][h] = d
     print(h, d["rows"], "recall", d["recall_attack"], "fpr", d["fpr_benign"], d["recall_by_class"], flush=True)

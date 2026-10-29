@@ -1,0 +1,180 @@
+{
+ "rows": 343889,
+ "distinct_src_ips": 122868,
+ "single_flow_src_ips": 122307,
+ "hosts_ge_500_flows": 8,
+ "rows_in_hosts_ge_500": 215404,
+ "hosts": {
+  "200.175.2.130": {
+   "rows": 110799,
+   "attack_rows": 110799,
+   "labels": [
+    "BFA",
+    "BOTNET",
+    "DoS",
+    "Probe",
+    "U2R",
+    "Web-Attack"
+   ],
+   "recall_attack": 0.5162320959575447,
+   "fpr_benign": null,
+   "recall_by_class": {
+    "BFA": 0.5112721417069244,
+    "BOTNET": 1.0,
+    "DoS": 0.3473926380368098,
+    "Probe": 0.6491915005160634,
+    "U2R": 1.0,
+    "Web-Attack": 0.4835164835164835
+   },
+   "per_seed_recall": [
+    0.5162320959575447,
+    0.5162320959575447,
+    0.5162320959575447,
+    0.5162320959575447,
+    0.5162320959575447,
+    0.5162320959575447,
+    0.5162320959575447,
+    0.5162320959575447,
+    0.5162320959575447,
+    0.5162320959575447
+   ],
+   "per_seed_fpr": null,
+   "n_model_seeds": 10,
+   "train_rows": 233090,
+   "train_attack_classes": [
+    "BFA",
+    "BOTNET",
+    "DDoS",
+    "DoS",
+    "Probe",
+    "U2R",
+    "Web-Attack"
+   ]
+  },
+  "192.168.20.133": {
+   "rows": 53790,
+   "attack_rows": 0,
+   "labels": [
+    "BENIGN"
+   ],
+   "recall_attack": null,
+   "fpr_benign": 0.37891801450083656,
+   "recall_by_class": {},
+   "per_seed_recall": null,
+   "per_seed_fpr": [
+    0.37891801450083656,
+    0.37891801450083656,
+    0.37891801450083656,
+    0.37891801450083656,
+    0.37891801450083656,
+    0.37891801450083656,
+    0.37891801450083656,
+    0.37891801450083656,
+    0.37891801450083656,
+    0.37891801450083656
+   ],
+   "n_model_seeds": 10,
+   "train_rows": 290099,
+   "train_attack_classes": [
+    "BFA",
+    "BOTNET",
+    "DDoS",
+    "DoS",
+    "Probe",
+    "U2R",
+    "Web-Attack"
+   ]
+  },
+  "192.168.3.130": {
+   "rows": 37374,
+   "attack_rows": 37362,
+   "labels": [
+    "BENIGN",
+    "BFA",
+    "DoS",
+    "Probe",
+    "U2R"
+   ],
+   "recall_attack": 0.9968684759916493,
+   "fpr_benign": 0.8333333333333334,
+   "recall_by_class": {
+    "BFA": 0.9932432432432432,
+    "DoS": 1.0,
+    "Probe": 0.9968877702903846,
+    "U2R": 0.9090909090909091
+   },
+   "per_seed_recall": [
+    0.9968684759916493,
+    0.9968684759916493,
+    0.9968684759916493,
+    0.9968684759916493,
+    0.9968684759916493,
+    0.9968684759916493,
+    0.9968684759916493,
+    0.9968684759916493,
+    0.9968684759916493,
+    0.9968684759916493
+   ],
+   "per_seed_fpr": [
+    0.8333333333333334,
+    0.8333333333333334,
+    0.8333333333333334,
+    0.8333333333333334,
+    0.8333333333333334,
+    0.8333333333333334,
+    0.8333333333333334,
+    0.8333333333333334,
+    0.8333333333333334,
+    0.8333333333333334
+   ],
+   "n_model_seeds": 10,
+   "train_rows": 306515,
+   "train_attack_classes": [
+    "BFA",
+    "BOTNET",
+    "DDoS",
+    "DoS",
+    "Probe",
+    "U2R",
+    "Web-Attack"
+   ]
+  },
+  "192.168.20.134": {
+   "rows": 5116,
+   "attack_rows": 5116,
+   "labels": [
+    "DoS"
+   ],
+   "recall_attack": 0.9380375293197811,
+   "fpr_benign": null,
+   "recall_by_class": {
+    "DoS": 0.9380375293197811
+   },
+   "per_seed_recall": [
+    0.9380375293197811,
+    0.9380375293197811,
+    0.9380375293197811,
+    0.9380375293197811,
+    0.9380375293197811,
+    0.9380375293197811,
+    0.9380375293197811,
+    0.9380375293197811,
+    0.9380375293197811,
+    0.9380375293197811
+   ],
+   "per_seed_fpr": null,
+   "n_model_seeds": 10,
+   "train_rows": 338773,
+   "train_attack_classes": [
+    "BFA",
+    "BOTNET",
+    "DDoS",
+    "DoS",
+    "Probe",
+    "U2R",
+    "Web-Attack"
+   ]
+  }
+ },
+ "note": "XGBoost on numeric flow features without IPs/ports/Flow ID/timestamp; majority of 3 model seeds; train = all rows from other hosts incl. all spoofed single-flow sources"
+}

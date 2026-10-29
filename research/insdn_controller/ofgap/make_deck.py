@@ -415,7 +415,7 @@ mh = ci_l["hosts"]["172.16.0.1"]
 text(s, "CICIDS2017", 8.4, 1.95, 4.4, 0.35, 14, ACC, bold=True)
 text(s, f"{ci_l['distinct_src_ips']} source IPs, {ci_l['single_flow_src_ips']} with a single flow; {ci_l['hosts_ge_500_flows']} hosts hold nearly all {ci_l['rows']:,} rows.", 8.4, 2.35, 4.4, 0.8, 13, MUTED)
 big(s, f"{mh['recall_attack']:.2f}", "attack recall when the main attacker 172.16.0.1 is held out", 8.4, 3.2, 4.4, RED, 48)
-text(s, f"{mh['fpr_benign']:.2f} of its benign flows are flagged. Training on all other hosts, XGBoost, 3 model seeds.", 8.4, 5.0, 4.4, 0.9, 13, FG)
+text(s, f"{mh['fpr_benign']:.2f} of its benign flows are flagged. Training on all other hosts, XGBoost; identical across 10 model seeds.", 8.4, 5.0, 4.4, 0.9, 13, FG)
 
 # SDNGuardStack
 rep = re.search(r"Paper1 reported[^:]*: accuracy ([\d.]+)%", " ".join(J("replicate_papers.json")["notes"])).group(1)
