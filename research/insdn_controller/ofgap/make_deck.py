@@ -178,10 +178,11 @@ bullets(s, ["A one-line rule beats the model inside attack sessions.", "InSDN re
 
 # 6b published results
 lit = json.loads((Path(__file__).resolve().parent.parent / "literature_check.json").read_text())
-s = slide("How published InSDN results compare", "Abstract-level check, not a re-run")
-bullets(s, [p["paper"].split(" (")[0] + ":  " + p["reported"] for p in lit["papers"]], y=1.75, size=15)
-bullets(s, [f"Our host-side run on the same CSV (random row split): {hs['bacc_mean']:.4f}. Our controller view: {w1['mlp_all']['bacc']['mean']:.3f}.",
-            "We do not claim these papers are wrong: split protocols were not visible. We claim the benchmark cannot support a controller-side claim."], y=5.0, size=17)
+s = slide("How published InSDN results compare", "Four papers, one full text read")
+bullets(s, [p["paper"].split(" (")[0] + ":  " + p["reported"].split(" (")[0] for p in lit["papers"]], y=1.75, size=16)
+bullets(s, ["Towhid et al. (full text read): 9 packet-derived features, all flows split 70:30, no grouping by capture or session mentioned.",
+            f"Our host-side run on InSDN with a random row split: {hs['bacc_mean']:.4f}. Our controller view: {w1['mlp_all']['bacc']['mean']:.3f}.",
+            "Not claimed: that these papers are wrong. Claimed: the benchmark cannot support a controller-side claim."], y=4.4, size=16)
 
 # 7 novelty 4 + 5
 s = slide("Novelty 4 and 5 · A caught pitfall, a rerunnable package", "Method")
