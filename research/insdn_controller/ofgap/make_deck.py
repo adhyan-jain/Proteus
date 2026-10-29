@@ -1,4 +1,4 @@
-"""Build PRESENTATION.pptx (flowchart style). Every number is read from results/*.json. Usage: make_deck.py <out.pptx>"""
+"""Build PRESENTATION.pptx (light, minimal). Every InSDN number is read from results/*.json. Usage: make_deck.py <out.pptx>"""
 import json
 import sys
 from pathlib import Path
@@ -7,57 +7,74 @@ from lxml import etree
 from pptx import Presentation
 from pptx.chart.data import CategoryChartData
 from pptx.dml.color import RGBColor
-from pptx.enum.chart import XL_CHART_TYPE, XL_LABEL_POSITION
+from pptx.enum.chart import XL_CHART_TYPE, XL_LABEL_POSITION, XL_LEGEND_POSITION
+from pptx.enum.dml import MSO_LINE
 from pptx.enum.shapes import MSO_CONNECTOR, MSO_SHAPE
 from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 from pptx.util import Inches, Pt
 
-R = Path(__file__).resolve().parent.parent / "results"
+HERE = Path(__file__).resolve().parent.parent
+R = HERE / "results"
 J = lambda f: json.loads((R / f).read_text().replace("NaN", "null"))  # noqa: E731
 fm, one, l3 = J("flowmod_matches.json"), J("live_modes_v4_one10.json")["summary"], J("live_modes_v4_linear3.json")["summary"]
-xg, rc, st, hs = J("v4_strict_W5_xgb.json")["A_grouped_cv"], J("review_checks.json"), J("stock_ryu_flowmods.json"), J("hostside_xgb.json")
-w1, v2 = J("v4_strict_W1.json")["A_grouped_cv"], J("live_modes_v2.json")["summary"]
-pi = J("protocol_inflation.json")
+rc, st, v2, pi = J("review_checks.json"), J("stock_ryu_flowmods.json"), J("live_modes_v2.json")["summary"], J("protocol_inflation.json")
+w1 = J("v4_strict_W1.json")
+cv, fam = w1["A_grouped_cv"], w1["B_leave_one_attack_family_out"]
+lit = json.loads((HERE / "literature_check.json").read_text())
 triv1 = rc["within_session_W1_strict"]["any_ip_packet_in"]["bacc_pooled"]
-mp = fm["total_by_match_structure"]["in_port|eth_dst|eth_src"]
+triv5 = rc["within_session_W5_strict"]["any_ip_packet_in"]["bacc_pooled"]
+mac_n, ip_n = fm["total_by_match_structure"]["in_port|eth_dst|eth_src"], fm["total_by_match_structure"].get("eth_type", 0)
 pf, mc = one["fivetuple"]["packet_in_tcp"]["mean"], one["mac"]["packet_in_tcp"]["mean"]
-pf3, mc3 = l3["fivetuple"]["packet_in_tcp"]["mean"], l3["mac"]["packet_in_tcp"]["mean"]
 flawed = v2["fivetuple"]["packet_in_tcp"]["mean"] / v2["mac"]["packet_in_tcp"]["mean"]
+fam_lo, fam_hi = min(v["mlp_all"]["bacc"]["mean"] for v in fam.values()), max(v["mlp_all"]["bacc"]["mean"] for v in fam.values())
+infl = (pi["A_random_flow_split"]["mean"] - pi["B_source_ip_grouped_split"]["mean"]) * 100
+worst = min(pi["B_source_ip_grouped_split"]["per_seed"])
+macro_ratio = pf / mc
 
-BG, PANEL, FG, MUTED = RGBColor(0x0B, 0x12, 0x20), RGBColor(0x14, 0x1E, 0x33), RGBColor(0xF1, 0xF5, 0xF9), RGBColor(0x9A, 0xA8, 0xBC)
-TEAL, AMBER, RED, PURPLE, GREEN = RGBColor(0x2D, 0xD4, 0xBF), RGBColor(0xF5, 0xB0, 0x41), RGBColor(0xF8, 0x71, 0x71), RGBColor(0xA7, 0x8B, 0xFA), RGBColor(0x4A, 0xDE, 0x80)
+BG, FG, MUTED, LINE, PANEL = RGBColor(0xFF, 0xFF, 0xFF), RGBColor(0x11, 0x18, 0x27), RGBColor(0x6B, 0x72, 0x80), RGBColor(0xD1, 0xD5, 0xDB), RGBColor(0xF3, 0xF4, 0xF6)
+ACC, RED, GREY = RGBColor(0x0F, 0x76, 0x6E), RGBColor(0xB9, 0x1C, 0x1C), RGBColor(0x9C, 0xA3, 0xAF)
+FONT = "Calibri"
 prs = Presentation()
 prs.slide_width, prs.slide_height = Inches(13.333), Inches(7.5)
+_n = [0]
 
 
-def slide(title, kicker=None):
-    s = prs.slides.add_slide(prs.slide_layouts[6])
-    s.background.fill.solid()
-    s.background.fill.fore_color.rgb = BG
-    if kicker:
-        text(s, kicker.upper(), 0.6, 0.35, 12, 0.4, 12, TEAL, bold=True)
-    text(s, title, 0.6, 0.7, 12.2, 0.9, 28, FG, bold=True)
-    return s
-
-
-def text(s, t, x, y, w, h, size=16, color=FG, bold=False, align=None):
+def text(s, t, x, y, w, h, size=16, color=FG, bold=False, align=None, anchor=None):
     tb = s.shapes.add_textbox(Inches(x), Inches(y), Inches(w), Inches(h))
     tf = tb.text_frame
     tf.word_wrap = True
+    tf.margin_left = tf.margin_right = tf.margin_top = tf.margin_bottom = 0
+    if anchor:
+        tf.vertical_anchor = anchor
     p = tf.paragraphs[0]
     p.text = t
-    p.font.size, p.font.bold, p.font.color.rgb = Pt(size), bold, color
+    p.font.name, p.font.size, p.font.bold, p.font.color.rgb = FONT, Pt(size), bold, color
     if align:
         p.alignment = align
     return tb
 
 
-def box(s, x, y, w, h, title, sub="", color=TEAL, shape=MSO_SHAPE.ROUNDED_RECTANGLE, fill=PANEL, tsize=15, ssize=11):
-    b = s.shapes.add_shape(shape, Inches(x), Inches(y), Inches(w), Inches(h))
+def slide(title, kicker):
+    s = prs.slides.add_slide(prs.slide_layouts[6])
+    s.background.fill.solid()
+    s.background.fill.fore_color.rgb = BG
+    _n[0] += 1
+    text(s, kicker.upper(), 0.6, 0.4, 9, 0.3, 12, ACC, bold=True)
+    text(s, title, 0.6, 0.72, 12.1, 0.9, 28, FG, bold=True)
+    text(s, "Proteus · What an SDN controller can observe", 0.6, 7.05, 8, 0.25, 10, MUTED)
+    text(s, str(_n[0] + 1), 12.0, 7.05, 0.73, 0.25, 10, MUTED, align=PP_ALIGN.RIGHT)
+    return s
+
+
+def box(s, x, y, w, h, title, sub="", color=ACC, fill=PANEL, dashed=False, tsize=14, ssize=11):
+    b = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(x), Inches(y), Inches(w), Inches(h))
     b.fill.solid()
     b.fill.fore_color.rgb = fill
     b.line.color.rgb = color
-    b.line.width = Pt(2)
+    b.line.width = Pt(1.25)
+    if dashed:
+        b.line.dash_style = MSO_LINE.DASH
+    b.shadow.inherit = False
     tf = b.text_frame
     tf.word_wrap = True
     tf.vertical_anchor = MSO_ANCHOR.MIDDLE
@@ -65,162 +82,273 @@ def box(s, x, y, w, h, title, sub="", color=TEAL, shape=MSO_SHAPE.ROUNDED_RECTAN
     p = tf.paragraphs[0]
     p.alignment = PP_ALIGN.CENTER
     p.text = title
-    p.font.size, p.font.bold, p.font.color.rgb = Pt(tsize), True, color
+    p.font.name, p.font.size, p.font.bold, p.font.color.rgb = FONT, Pt(tsize), True, FG
     if sub:
         q = tf.add_paragraph()
         q.alignment = PP_ALIGN.CENTER
         q.text = sub
-        q.font.size, q.font.color.rgb = Pt(ssize), FG
+        q.font.name, q.font.size, q.font.color.rgb = FONT, Pt(ssize), MUTED
     return b
 
 
-def arrow(s, x1, y1, x2, y2, color=MUTED, label=None):
+def arrow(s, x1, y1, x2, y2, color=GREY):
     c = s.shapes.add_connector(MSO_CONNECTOR.STRAIGHT, Inches(x1), Inches(y1), Inches(x2), Inches(y2))
     c.line.color.rgb = color
-    c.line.width = Pt(2.25)
+    c.line.width = Pt(1.5)
     ln = c.line._get_or_add_ln()
-    ln.append(etree.SubElement(ln, "{http://schemas.openxmlformats.org/drawingml/2006/main}tailEnd", type="triangle", w="lg", len="lg"))
-    if label:
-        text(s, label, min(x1, x2), min(y1, y2) - 0.32, abs(x2 - x1) + 0.4, 0.3, 11, color, align=PP_ALIGN.CENTER)
+    etree.SubElement(ln, "{http://schemas.openxmlformats.org/drawingml/2006/main}tailEnd", type="triangle", w="med", len="med")
 
 
-def chain(s, y, items, x0=0.6, w=1.85, h=1.25, gap=0.42, color=TEAL):
-    for i, (t, sub) in enumerate(items):
-        x = x0 + i * (w + gap)
-        box(s, x, y, w, h, t, sub, color)
-        if i < len(items) - 1:
-            arrow(s, x + w + 0.03, y + h / 2, x + w + gap - 0.03, y + h / 2, color)
-
-
-def say(s, t):
-    text(s, t, 0.6, 6.75, 12.2, 0.6, 14, MUTED)
-
-
-def chart(s, cats, vals, x, y, w, h, colors, fmt="#,##0.0"):
-    cd = CategoryChartData()
-    cd.categories = cats
-    cd.add_series("v", vals)
-    ch = s.shapes.add_chart(XL_CHART_TYPE.COLUMN_CLUSTERED, Inches(x), Inches(y), Inches(w), Inches(h), cd).chart
-    ch.has_legend = ch.has_title = False
-    ch.font.size, ch.font.color.rgb = Pt(12), FG
-    ch.value_axis.visible = False
-    ch.value_axis.has_major_gridlines = False
-    pl = ch.plots[0]
-    pl.has_data_labels = True
-    pl.data_labels.number_format, pl.data_labels.number_format_is_linked = fmt, False
-    pl.data_labels.font.size, pl.data_labels.font.color.rgb = Pt(14), FG
-    pl.data_labels.position = XL_LABEL_POSITION.OUTSIDE_END
-    pl.gap_width = 70
-    for i, col in enumerate(colors):
-        pt = pl.series[0].points[i]
-        pt.format.fill.solid()
-        pt.format.fill.fore_color.rgb = col
-
-
-def bullets(s, items, x=0.8, y=1.9, w=11.8, size=22):
-    tb = s.shapes.add_textbox(Inches(x), Inches(y), Inches(w), Inches(4.6))
+def bullets(s, items, x=0.6, y=2.0, w=6.0, size=18, gap=14):
+    tb = s.shapes.add_textbox(Inches(x), Inches(y), Inches(w), Inches(4.5))
     tf = tb.text_frame
     tf.word_wrap = True
+    tf.margin_left = tf.margin_right = tf.margin_top = tf.margin_bottom = 0
     for i, it in enumerate(items):
         p = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
-        p.text = "•  " + it
-        p.font.size, p.font.color.rgb = Pt(size), FG
-        p.space_after = Pt(16)
+        p.text = it
+        p.font.name, p.font.size, p.font.color.rgb = FONT, Pt(size), FG
+        p.space_after = Pt(gap)
 
 
-def big(s, number, caption, x, y, w=4.0, color=TEAL):
-    text(s, number, x, y, w, 1.2, 54, color, bold=True)
-    text(s, caption, x, y + 1.25, w, 1.2, 16, MUTED)
+def big(s, number, caption, x, y, w=5.0, color=ACC, size=54):
+    text(s, number, x, y, w, 1.0, size, color, bold=True)
+    text(s, caption, x, y + 1.05, w, 0.9, 16, MUTED)
+
+
+def bar(s, cats, series, x, y, w, h, colors=None, labels=None, fmt="0.00", horizontal=False, log=False, legend=False, vmin=None, vmax=None, point_colors=None):
+    """series: list of (name, values). labels: optional per-point label strings for the first series."""
+    cd = CategoryChartData()
+    cd.categories = cats
+    for name, vals in series:
+        cd.add_series(name, vals)
+    kind = XL_CHART_TYPE.BAR_CLUSTERED if horizontal else XL_CHART_TYPE.COLUMN_CLUSTERED
+    ch = s.shapes.add_chart(kind, Inches(x), Inches(y), Inches(w), Inches(h), cd).chart
+    ch.font.name, ch.font.size, ch.font.color.rgb = FONT, Pt(12), FG
+    ch.has_title = False
+    ch.has_legend = legend
+    if legend:
+        ch.legend.position, ch.legend.include_in_layout = XL_LEGEND_POSITION.BOTTOM, False
+        ch.legend.font.size = Pt(12)
+    va, ca = ch.value_axis, ch.category_axis
+    va.visible = False
+    va.has_major_gridlines = False
+    ca.format.line.color.rgb = LINE
+    ca.has_major_gridlines = False
+    ca.tick_labels.font.size = Pt(12)
+    if horizontal:
+        ca.reverse_order = True
+    if vmin is not None:
+        va.minimum_scale = vmin
+    if vmax is not None:
+        va.maximum_scale = vmax
+    if log:
+        sc = va._element.find("{http://schemas.openxmlformats.org/drawingml/2006/chart}scaling")
+        sc.insert(0, etree.Element("{http://schemas.openxmlformats.org/drawingml/2006/chart}logBase", val="10"))
+    pl = ch.plots[0]
+    pl.gap_width = 60
+    pl.has_data_labels = True
+    dl = pl.data_labels
+    dl.number_format, dl.number_format_is_linked = fmt, False
+    dl.font.size, dl.font.name, dl.font.color.rgb = Pt(13), FONT, FG
+    dl.position = XL_LABEL_POSITION.OUTSIDE_END
+    for si, ser in enumerate(pl.series):
+        ser.format.fill.solid()
+        ser.format.fill.fore_color.rgb = (colors or [ACC, GREY])[si]
+        if point_colors and si == 0:
+            for i, pc in enumerate(point_colors):
+                pt = ser.points[i]
+                pt.format.fill.solid()
+                pt.format.fill.fore_color.rgb = pc
+        if labels and si == 0:
+            for i, lab in enumerate(labels):
+                dlab = ser.points[i].data_label
+                dlab.text_frame.text = lab
+                f = dlab.text_frame.paragraphs[0].font
+                f.size, f.name, f.color.rgb = Pt(13), FONT, FG
+                dlab.position = XL_LABEL_POSITION.OUTSIDE_END
+    return ch
 
 
 # 1 title
 s = prs.slides.add_slide(prs.slide_layouts[6])
 s.background.fill.solid()
 s.background.fill.fore_color.rgb = BG
-text(s, "PROTEUS · SDN INTRUSION-DETECTION RESEARCH", 0.8, 1.5, 12, 0.5, 14, TEAL, bold=True)
-text(s, "What an SDN Controller Can Actually Observe", 0.8, 2.0, 12, 1.4, 44, FG, bold=True)
-text(s, "A measurement and validity study of the InSDN OpenFlow control channel", 0.8, 3.9, 12, 0.8, 22, MUTED)
-text(s, "Adhyan Jain · Atharva Sheersh Pandey · Kshitij Manikshete\nVIT Vellore", 0.8, 5.2, 12, 1.0, 18, FG)
+rule = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0.8), Inches(1.9), Inches(0.9), Inches(0.07))
+rule.fill.solid()
+rule.fill.fore_color.rgb = ACC
+rule.line.fill.background()
+text(s, "What an SDN Controller Can Actually Observe", 0.8, 2.2, 11.5, 1.6, 42, FG, bold=True)
+text(s, "A measurement and validity study of the InSDN OpenFlow control channel", 0.8, 3.9, 11.5, 0.6, 20, MUTED)
+text(s, "Adhyan Jain · Atharva Sheersh Pandey · Kshitij Manikshete", 0.8, 5.5, 11.5, 0.4, 16, FG)
+text(s, "Vellore Institute of Technology, Vellore", 0.8, 5.9, 11.5, 0.4, 14, MUTED)
 
 # 2 problem
 s = slide("Detectors are scored on data the controller never sees", "The problem")
-bullets(s, ["SDN papers say the controller has a global view, so build the detector there.",
-            "But they test on CSV features computed at the victim host, then call it controller-based.",
+bullets(s, ["SDN papers justify detection by the controller's global view.",
+            "They then evaluate on CSV features computed at the victim host.",
             "Nobody checked what the controller actually receives.",
-            "InSDN also recorded its controller's OpenFlow traffic. We opened those recordings."])
+            "InSDN also recorded its controller's OpenFlow traffic. We parsed all 44 of those captures."], w=5.6, size=19, y=2.0, gap=16)
+box(s, 7.0, 2.0, 5.7, 1.5, "What papers score on", "CICFlowMeter 5-tuple flow records\nwith 80+ statistics, computed at the target host", GREY)
+box(s, 7.0, 4.2, 5.7, 1.5, "What a controller observes", "PacketIn messages, FlowMod decisions,\nper-entry counters of the rules its app installed", ACC)
+text(s, "≠", 9.55, 3.55, 0.6, 0.6, 34, RED, bold=True, align=PP_ALIGN.CENTER)
 
-# 3 approach
-s = slide("What we did: 44 recordings, three questions", "Approach")
-bullets(s, ["Q1  Can the controller see the flows the dataset labels?",
-            "Q2  Does what it sees depend on the forwarding app?  (Mininet + Ryu, 65 runs)",
-            "Q3  Is a high score on the controller's view proof of detection?"], size=24)
-text(s, "Data: 44 InSDN controller captures (11 benign, 33 attack) + our own Mininet/Ryu testbed", 0.8, 5.2, 12, 0.6, 16, MUTED)
+# 3 primer
+s = slide("Background: how an OpenFlow controller sees traffic", "Primer")
+box(s, 0.6, 2.2, 2.4, 1.3, "Host", "sends a packet", GREY)
+box(s, 5.4, 2.2, 2.4, 1.3, "Switch", "flow table of rules", ACC)
+box(s, 10.3, 2.2, 2.4, 1.3, "Controller", "ONOS or Ryu + forwarding app", ACC)
+arrow(s, 3.04, 2.85, 5.36, 2.85)
+arrow(s, 7.84, 2.55, 10.26, 2.55)
+arrow(s, 10.26, 3.15, 7.84, 3.15)
+text(s, "PacketIn: table miss sends the packet's headers up", 7.9, 1.75, 2.4, 0.7, 11, MUTED, align=PP_ALIGN.CENTER)
+text(s, "FlowMod / PacketOut: install a rule, release the packet", 7.9, 3.25, 2.4, 0.7, 11, MUTED, align=PP_ALIGN.CENTER)
+for i, (t, d) in enumerate([("What it receives", "PacketIns for packets that miss the table, and packet and byte counters for the entries that exist."),
+                            ("What decides the view", "The forwarding app chooses the rules. Coarse rules (MAC pair) hide flows; per-flow rules expose them."),
+                            ("What papers assume", "Per-flow statistics such as inter-arrival times and flag counts, which are not in this vocabulary.")]):
+    x = 0.6 + i * 4.15
+    text(s, t, x, 4.5, 3.8, 0.4, 16, ACC, bold=True)
+    text(s, d, x, 4.95, 3.8, 1.5, 14, FG)
 
-# 4 novelty 1
-s = slide("Novelty 1 · The controller never saw the labelled flows", "Gap in the benchmark")
-big(s, "0 of %s" % f"{fm['flowmods']:,}", "FlowMods carry IP addresses or ports", 0.8, 2.0, 6.0, RED)
-big(s, f"{st['flowmods']}", "FlowMods from Ryu's stock app: also MAC-pair only", 7.2, 2.0, 5.0, TEAL)
-bullets(s, ["The dataset labels 5-tuple flows; the controller's rules only matched MAC pairs or EtherType.",
-            "So CSV-trained detectors are not controller-side detectors."], y=4.6, size=20)
+# 4 questions and method
+s = slide("Three questions, three kinds of evidence", "Approach")
+cards = [("Q1 · Can the controller see the labelled flows?", "Parse all 44 ONOS captures. Read every FlowMod and flow-statistics reply and list the match fields.", "Slides 7, 8"),
+         ("Q2 · Does the forwarding app change the view?", "Mininet + Ryu, three forwarding modes, 10 runs each on 1 and 3 switches, plus Ryu's stock app.", "Slides 11, 12"),
+         ("Q3 · Is a high score proof of detection?", "Controller-only models on unseen captures and attack families, against a trivial rule and different split protocols.", "Slides 9, 10, 13")]
+for i, (q, m, ref) in enumerate(cards):
+    x = 0.6 + i * 4.15
+    box(s, x, 2.0, 3.85, 3.3, "", "", ACC)
+    text(s, q, x + 0.2, 2.2, 3.45, 1.0, 17, ACC, bold=True)
+    text(s, m, x + 0.2, 3.35, 3.45, 1.6, 14, FG)
+    text(s, ref, x + 0.2, 4.95, 3.45, 0.3, 12, MUTED)
+text(s, "Everything is measured on recorded or locally generated captures. No synthetic base data, no cloud, 10 seeds with 95% confidence intervals.", 0.6, 5.8, 12.1, 0.7, 15, MUTED)
 
-# 5 novelty 2
-s = slide("Novelty 2 · The forwarding app decides what the controller sees", "Measured effect")
-chart(s, ["MAC-pair", "Per-flow"], [mc, pf], 0.6, 1.8, 6.0, 4.6, [TEAL, AMBER], "#,##0")
-text(s, "TCP PacketIns per run (1 switch, 10 runs)", 0.6, 6.35, 6.0, 0.4, 13, MUTED, align=PP_ALIGN.CENTER)
-bullets(s, [f"Same traffic: {pf / mc:,.0f}x more PacketIns with per-flow rules.", "Holds on a 3-switch chain too.",
-            f"A 2 s idle timeout hides most per-flow entries from a 1 s poller ({one['fivetuple']['fivetuple_entries_per_reply']['mean']:.0f} to {one['fivetuple_short']['fivetuple_entries_per_reply']['mean']:.0f})."], x=7.0, y=2.1, w=5.8, size=20)
+# 5 thesis
+s = slide("Two phases, one lesson: evaluation is the weak point", "Thesis")
+text(s, "PHASE 1 · PROTEUS: DOZENS OF ARCHITECTURES", 0.6, 1.75, 5.9, 0.3, 12, MUTED, bold=True)
+text(s, "PHASE 2 · INSDN VALIDITY STUDY", 7.0, 1.75, 5.7, 0.3, 12, ACC, bold=True)
+p1 = [("oracle labels", "The 5.91x headline gain came from labels, not from synthetic data"),
+      ("0.000", "Synthetic-dose controller vs plain adaptation: difference [0.000, 0.000], 10 seeds"),
+      ("97.55% vs 0.00%", "Recall of a 9-feature model vs a zero-filled 77-feature model"),
+      ("56% to 100%", "Drift alarms on unchanged traffic after adaptation (stale reference)")]
+p2 = [("0 of %s" % f"{fm['flowmods']:,}", "FlowMods match IP addresses or ports"),
+      (f"{triv1:.3f}", f"A one-line rule vs {cv['mlp_all']['bacc']['mean']:.3f} for the MLP, inside attack sessions"),
+      (f"≈{infl:.0f} points", "Score inflation from a random flow split vs held-out source hosts")]
+for i, (a, b) in enumerate(p1):
+    y = 2.15 + i * 0.95
+    text(s, a, 0.6, y, 2.5, 0.8, 18, FG, bold=True)
+    text(s, b, 3.15, y, 3.4, 0.8, 13, MUTED)
+for i, (a, b) in enumerate(p2):
+    y = 2.15 + i * 0.95
+    text(s, a, 7.0, y, 2.5, 0.8, 18, ACC, bold=True)
+    text(s, b, 9.55, y, 3.2, 0.8, 13, MUTED)
+text(s, "Next", 7.0, 5.0, 2.5, 0.8, 18, GREY, bold=True)
+text(s, "Run the same checks on published papers under a preregistered protocol", 9.55, 5.0, 3.2, 0.8, 13, MUTED)
+ln = s.shapes.add_connector(MSO_CONNECTOR.STRAIGHT, Inches(6.75), Inches(2.0), Inches(6.75), Inches(5.7))
+ln.line.color.rgb, ln.line.width = LINE, Pt(1)
+text(s, "Strong-looking results kept dissolving under strict evaluation. We then measured the same failure in a published benchmark.", 0.6, 6.05, 12.1, 0.7, 16, FG, bold=True)
+text(s, "Phase 1 figures are quoted from archived study results (repository README), not re-run here.", 0.6, 6.7, 12.1, 0.3, 11, MUTED)
 
-# 6 novelty 3
-s = slide("Novelty 3 · A high score is not proof of detection", "Validity")
-chart(s, ["PacketIn-rate\nthreshold", "MLP", "Trivial rule:\nany IP PacketIn"], [w1["thr_packet_in_rate"]["bacc"]["mean"], w1["mlp_all"]["bacc"]["mean"], triv1], 0.6, 1.8, 6.6, 4.6, [AMBER, TEAL, RED], "0.000")
-text(s, "Balanced accuracy, unseen captures, 1 s windows", 0.6, 6.35, 6.6, 0.4, 13, MUTED, align=PP_ALIGN.CENTER)
-bullets(s, ["A one-line rule beats the model inside attack sessions.", "InSDN records benign and attack in separate sessions, so scores may reflect the session.",
-            "Fix: benign and attack traffic mixed in one session."], x=7.5, y=2.1, w=5.3, size=20)
+# 6 architecture
+s = slide("Architecture: two evidence sources, one pipeline", "Architecture")
+CW, GAP, X0 = 1.65, 0.45, 0.6
+col = lambda i: X0 + i * (CW + GAP)  # noqa: E731
+laneA = [("44 pcaps", "ONOS control channel\n11 benign · 33 attack"), ("OpenFlow 1.3 parser", "PacketIn · FlowMod · stats"),
+         ("Window labels", "from InSDN CSV flow IDs"), ("22 features", "per 1 to 5 s window"), ("History", "88 model inputs"), ("Models + baselines", "10 seeds · 95% CI · trivial rule")]
+laneB = [("Ryu app", "3 forwarding modes"), ("Mininet", "1 or 3 switches\nbenign traffic"), ("Control pcap", "one per run"), ("Counts per mode", "PacketIn · FlowMod · entries"), ("Stock Ryu", "second controller, 5 runs")]
+text(s, "A · RECORDED  (InSDN, offline)", 0.6, 1.5, 6, 0.3, 12, ACC, bold=True)
+for i, (t, sub) in enumerate(laneA):
+    box(s, col(i), 1.85, CW, 1.2, t, sub, ACC, tsize=13, ssize=10)
+    if i < 5:
+        arrow(s, col(i) + CW + 0.04, 2.45, col(i + 1) - 0.04, 2.45)
+text(s, "B · LIVE  (our testbed, no InSDN data)", 0.6, 3.4, 6, 0.3, 12, ACC, bold=True)
+for i, (t, sub) in enumerate(laneB):
+    box(s, col(i), 3.75, CW, 1.2, t, sub, ACC, tsize=13, ssize=10, dashed=(i == 4))
+    if i < 4:
+        arrow(s, col(i) + CW + 0.04, 4.35, col(i + 1) - 0.04, 4.35)
+text(s, "C · OUTPUT", 0.6, 5.3, 6, 0.3, 12, ACC, bold=True)
+box(s, X0, 5.65, 12.15, 0.95, "results/*.json  →  tables and figures  →  paper", "checked by compare_results.py (tolerance 1e-6) and verify_numbers.py · every capture SHA-256 hashed", FG, fill=BG, tsize=14, ssize=11)
+arrow(s, col(5) + CW / 2, 3.1, col(5) + CW / 2, 5.6)
+arrow(s, col(4) + CW / 2, 5.0, col(4) + CW / 2, 5.6)
 
-# 6b published results
-lit = json.loads((Path(__file__).resolve().parent.parent / "literature_check.json").read_text())
-s = slide("How published InSDN results compare", "Four papers, one full text read")
-bullets(s, [p["paper"].split(" (")[0] + ":  " + p["reported"].split(" (")[0] for p in lit["papers"]], y=1.75, size=16)
-bullets(s, ["Towhid et al. (full text read): 9 packet-derived features, all flows split 70:30, no grouping by capture or session mentioned.",
-            f"Our test, same classifier: random flow split {pi['A_random_flow_split']['mean']:.4f}; held-out source hosts {pi['B_source_ip_grouped_split']['mean']:.3f} ± {pi['B_source_ip_grouped_split']['ci95']:.3f}; IPs and ports alone {pi['D_identifier_only_random_split']['mean']:.3f}.",
-            "Detected: the random-split protocol inflates the score by about 9 points on InSDN (worst held-out split 0.66). Not claimed: their exact numbers are wrong."], y=4.4, size=16)
+# 7 contribution 1
+s = slide("Contribution 1 · The controller never saw the labelled flows", "Observability gap")
+big(s, "0 of %s" % f"{fm['flowmods']:,}", "FlowMods in the 44 captures match IP addresses or transport ports", 0.6, 1.9, 5.4, RED)
+bar(s, ["MAC pair", "EtherType", "IP / ports"], [("FlowMods", [mac_n, ip_n, 0])], 6.6, 1.9, 6.1, 3.6, labels=[f"{mac_n:,}", f"{ip_n}", "0"], horizontal=True, point_colors=[ACC, ACC, RED], vmax=4500, vmin=0)
+text(s, "FlowMods by match structure", 6.6, 5.5, 6.1, 0.3, 12, MUTED, align=PP_ALIGN.CENTER)
+text(s, f"Ryu's stock learning switch agrees: {st['flowmods']} FlowMods in 5 captures, none with IP or transport fields. The dataset's 5-tuple flows are not counters a controller can read.", 0.6, 5.0, 5.4, 1.4, 14, FG)
 
-# 7 novelty 4 + 5
-s = slide("Novelty 4 and 5 · A caught pitfall, a rerunnable package", "Method")
-bullets(s, [f"Our first test app let ping/ARP rules hide TCP: the effect looked like {flawed:.0f}x instead of about {pf / mc:,.0f}x. We report both.",
-            "Overlapping coarse rules can understate controller load by two orders of magnitude.",
-            "One command rebuilds every result from hashed captures and checks the paper's numbers."], size=22)
+# 8 contribution 2
+s = slide("Contribution 2 · A pipeline from raw captures to labelled windows", "Reproducible pipeline")
+inv = w1["inventory"]
+order = ["dos", "probe", "ddos", "botnet", "web", "brute", "exploit"]
+nice = {"dos": "DoS", "ddos": "DDoS"}
+bar(s, [nice.get(k, k.title()) for k in order], [("attack windows", [inv[k]["attack_windows"] for k in order])], 6.4, 1.8, 6.3, 4.4, labels=[f"{inv[k]['attack_windows']:,}" for k in order], horizontal=True, fmt="#,##0", vmin=0, vmax=2600, colors=[ACC])
+text(s, "Attack-labelled 1 s windows per family (strict labels)", 6.4, 6.2, 6.3, 0.3, 12, MUTED, align=PP_ALIGN.CENTER)
+bullets(s, ["OpenFlow 1.3 parser with reported parser loss.", "Window labels grounded in InSDN's own flow labels.",
+            "22 controller-observable features, up to 88 inputs with history.", "Labels cover only part of the controller-visible traffic, which matters on the next slides."], w=5.4, size=17, y=2.0, gap=14)
 
-# 8 architecture
-s = slide("Study architecture: what goes in, what comes out", "Pipeline")
-text(s, "A · InSDN captures (recorded, offline)", 0.6, 1.55, 6, 0.35, 13, TEAL, bold=True)
-chain(s, 1.9, [("44 pcaps", "in: ONOS TCP 6653"), ("Parser", "out: PacketIn, FlowMod, stats"), ("Labels", "CSV flow IDs → tag per PacketIn"), ("Windows", "22 features per 1–5 s"), ("History", "88 inputs"), ("Models + tests", "10 seeds, CI, trivial rule")], w=1.78, h=1.5, gap=0.28)
-text(s, "B · Live forwarding study (no InSDN data)", 0.6, 3.75, 6, 0.35, 13, AMBER, bold=True)
-chain(s, 4.1, [("Ryu app", "3 forwarding modes"), ("Mininet", "1 or 3 switches, benign traffic"), ("Control-channel pcap", "one per run"), ("Counts per mode", "PacketIn, FlowMod, entries")], w=2.6, h=1.3, gap=0.55, color=AMBER)
-box(s, 0.6, 5.75, 12.1, 0.8, "Both end as results/*.json → tables in the paper", "model input: 88 numbers about a few seconds of controller messages · output: attack / not attack per window · the CSV only supplies labels", PURPLE, ssize=12)
+# 9 contribution 3
+s = slide(f"Contribution 3 · Controller-side models score high ({cv['mlp_all']['bacc']['mean']:.2f})", "Feasibility")
+keys = [("PacketIn-rate\nthreshold", cv["thr_packet_in_rate"]), ("Source-IP entropy\nthreshold", cv["thr_src_ip_entropy"]), ("Logistic", cv["linear_all_history"]), ("MLP", cv["mlp_all"])]
+bar(s, [k for k, _ in keys], [("balanced accuracy", [d["bacc"]["mean"] for _, d in keys])], 0.6, 1.8, 7.0, 4.4, labels=[f"{d['bacc']['mean']:.3f} ± {d['bacc']['ci95']:.3f}" for _, d in keys], fmt="0.000", vmin=0, vmax=1.15, point_colors=[GREY, GREY, ACC, ACC])
+text(s, "Balanced accuracy on unseen captures, 1 s windows, 10 seeds, 95% CI", 0.6, 6.2, 7.0, 0.3, 12, MUTED, align=PP_ALIGN.CENTER)
+big(s, f"{fam_lo:.2f} to {fam_hi:.2f}", "MLP balanced accuracy on each of six withheld attack families", 8.2, 2.0, 4.5, ACC, 38)
+bullets(s, ["Logistic regression matches the neural network.", "Offered as feasibility, not as a detector."], x=8.2, y=4.1, w=4.5, size=16)
 
-# 9 scope
-s = slide("What is not new, what we did not do, what is next", "Honest scope")
-for i, (t, items, col) in enumerate([("Not new", ["Control-plane telemetry for SDN IDS (LAN-SDN-NIDS, SDNFLow)", "The detector itself", "Stock Ryu behaviour"], AMBER),
-                                     ("Not done", ["Benign + attack in one session", "OpenDaylight or another dataset", "A re-implemented published detector"], RED),
-                                     ("Next", ["Interleave benign and attack traffic", "Gap on a second controller family", "In-fold oversampling for rare classes"], TEAL)]):
-    x = 0.8 + i * 4.1
-    text(s, t, x, 1.9, 3.8, 0.6, 26, col, bold=True)
-    bullets(s, items, x=x, y=2.7, w=3.8, size=17)
-text(s, "Venue: workshop / conference as is; lower-quartile journal after revision.", 0.8, 6.5, 12, 0.5, 14, MUTED)
+# 10 contribution 4
+s = slide("Contribution 4 · A one-line rule matches the model", "Validity")
+cats = ["PacketIn-rate\nthreshold", "MLP", "Trivial rule:\nany IP PacketIn"]
+vals = [cv["thr_packet_in_rate"]["bacc"]["mean"], cv["mlp_all"]["bacc"]["mean"], triv1]
+bar(s, cats, [("balanced accuracy", vals)], 0.6, 1.8, 6.6, 4.4, labels=[f"{v:.3f}" for v in vals], fmt="0.000", vmin=0, vmax=1.15, point_colors=[GREY, ACC, RED])
+text(s, "Balanced accuracy, strict labels, 1 s windows (rule: inside attack sessions)", 0.6, 6.2, 6.6, 0.3, 12, MUTED, align=PP_ALIGN.CENTER)
+bullets(s, [f"The rule scores {triv1:.3f} (1 s) and {triv5:.3f} (5 s) with no learning.", "InSDN records benign and attack traffic in separate sessions, so a score can reflect the session, not the attack.",
+            "We do not claim a detector. We report a validity threat for controller-side evaluation on InSDN.", "Fix: benign and attack traffic interleaved in one session."], x=7.6, y=2.0, w=5.1, size=16, gap=12)
 
-# 10 earlier proteus
-s = slide("The earlier Proteus system: a prototype, not a claim", "Context")
-bullets(s, ["Built: WGAN-GP synthetic attacks, KS drift test, MMD fidelity gate, drift-triggered retraining, versioned releases.",
-            "Close prior work exists (NetGuard 2025: generative adaptation for drifting, imbalanced IDS data).",
-            "Our own studies found no benefit from the generative step; the demo's gain came from oracle labels.",
-            "So the research contribution is the InSDN study; Proteus is kept as context (/old console)."], size=21)
+# 11 contribution 5
+s = slide("Contribution 5 · The forwarding app sets the view", "Forwarding case study")
+modes = [("mac", "MAC-pair"), ("fivetuple_short", "Per-flow, 2 s idle"), ("fivetuple", "Per-flow, 10 s idle")]
+bar(s, [lab for _, lab in modes], [("1 switch", [one[m]["packet_in_tcp"]["mean"] for m, _ in modes]), ("3-switch chain", [l3[m]["packet_in_tcp"]["mean"] for m, _ in modes])], 0.6, 1.8, 7.6, 4.5,
+    colors=[ACC, GREY], fmt="#,##0", log=True, legend=True, vmin=1, vmax=60000)
+text(s, "TCP PacketIns per run, log scale, 10 runs per mode", 0.6, 6.3, 7.6, 0.3, 12, MUTED, align=PP_ALIGN.CENTER)
+big(s, f"{macro_ratio:,.0f}×", "more PacketIns with per-flow rules on identical traffic", 8.7, 1.9, 4.0, ACC, 44)
+bullets(s, [f"A 2 s idle timeout cuts the entries a 1 s poller sees from {one['fivetuple']['fivetuple_entries_per_reply']['mean']:.0f} to {one['fivetuple_short']['fivetuple_entries_per_reply']['mean']:.0f} per reply.",
+            f"Our first app let ping/ARP rules shadow TCP and showed {flawed:.0f}×. We report both."], x=8.7, y=3.9, w=4.0, size=14, gap=10)
 
-# 11 takeaways
-s = slide("Takeaways", "Close")
-bullets(s, ["The controller's rules never contained the labelled 5-tuples.", "What a controller sees depends on the forwarding app.",
-            "On InSDN, controller-side scores are not detection accuracy."], size=26)
-text(s, "Next: interleave benign and attack traffic in one session; test a second controller.", 0.8, 5.6, 12, 0.6, 16, MUTED)
+# 12 contribution 6
+s = slide("Contribution 6 · A second controller and a rerunnable package", "Replication")
+big(s, f"{st['flowmods']}", "FlowMods from Ryu's unmodified simple_switch_13 in 5 captures: MAC pairs and table-miss only, no IP or ports", 0.6, 1.9, 5.8, ACC, 54)
+for i, (t, sub) in enumerate([("Hashed captures", "SHA-256 for every pcap used"), ("One command", "reproduce.sh rebuilds every result"), ("Automatic comparison", "compare_results.py, tolerance 1e-6"), ("Number check", "verify_numbers.py on the paper text")]):
+    box(s, 7.0, 1.9 + i * 1.15, 5.7, 0.95, t, sub, ACC, tsize=14, ssize=11)
+
+# 13 split protocol
+s = slide(f"Evaluation protocol alone moves the score by about {infl:.0f} points", "Split-protocol experiment")
+pcats = ["Random flow split", "Held-out source hosts", "IP addresses and ports only"]
+pv = [pi["A_random_flow_split"]["mean"], pi["B_source_ip_grouped_split"]["mean"], pi["D_identifier_only_random_split"]["mean"]]
+plab = [f"{pv[0]:.4f}", f"{pv[1]:.3f} ± {pi['B_source_ip_grouped_split']['ci95']:.3f}", f"{pv[2]:.3f}"]
+bar(s, pcats, [("balanced accuracy", pv)], 0.6, 1.8, 7.4, 4.4, labels=plab, fmt="0.000", vmin=0, vmax=1.15, point_colors=[GREY, ACC, RED])
+text(s, f"Same GPU XGBoost, 10 seeds, binary benign vs attack, {pi['rows']:,} flows", 0.6, 6.2, 7.4, 0.3, 12, MUTED, align=PP_ALIGN.CENTER)
+bullets(s, [f"Worst held-out split: {worst:.2f}.", "Identifiers alone reach 1.000, so a random split rewards memorising hosts.",
+            "Towhid et al. (full text read): all flows split 70:30, no grouping mentioned.", "Detected: inflation under the random-split protocol. Not claimed: that any paper's exact numbers are wrong."], x=8.4, y=2.0, w=4.3, size=15, gap=12)
+
+# 14 limits
+s = slide("Limitations we state ourselves", "Honest scope")
+bullets(s, ["One dataset (InSDN) and one recorded controller (ONOS); Ryu is checked only on our own benign traffic.",
+            "We generated no attack traffic; benign and attack are never interleaved in one session.",
+            "Labels cover only part of the controller-visible traffic, so session identity and unlisted attacks cannot be separated.",
+            "Only one of the four published papers checked was read in full; the others are unverified and not counted.",
+            "Phase 1 figures come from archived studies and are not re-run here.",
+            "Our literature searches (October 2026) are evidence, not proof, that nothing similar exists."], w=12.1, size=18, y=2.0, gap=14)
+
+# 15 scope
+s = slide("Scope and takeaways", "Close")
+cols = [("Not new", ["Control-plane telemetry for SDN IDS exists (LAN-SDN-NIDS, SDNFLow)", "The detector itself", "Stock Ryu behaviour follows from its code"], MUTED),
+        ("Next", ["Interleave benign and attack traffic in one session", "A second dataset or controller family", "Audit published papers under a preregistered protocol"], RED),
+        ("Takeaways", ["The controller never saw the labelled 5-tuples", "What it sees depends on the forwarding app", "On InSDN, controller-side scores are not detection accuracy"], ACC)]
+for i, (t, items, c) in enumerate(cols):
+    x = 0.6 + i * 4.15
+    text(s, t, x, 1.9, 3.8, 0.5, 22, c, bold=True)
+    bullets(s, items, x=x, y=2.6, w=3.8, size=15, gap=12)
 
 prs.save(sys.argv[1])
 print("saved", sys.argv[1])
