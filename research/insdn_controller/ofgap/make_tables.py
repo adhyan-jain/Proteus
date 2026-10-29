@@ -122,5 +122,24 @@ rows = [f"All windows (D1) & {pm(D['D1_all_windows']['bacc'])} & {v(D['D1_all_wi
 table("tab:confound", "Session probe: predicting benign vs.\\ attack \\emph{session} from PacketIn features after removing attack-matched PacketIns (${\\ge}5$ remaining per window). The residual can still contain unlisted attack traffic (D1: 424 of 518 attack-session windows contain unmatched-IP PacketIns), and D2 rests on 6 windows from 2 captures.",
       "lcc", "Variant & BAcc & Majority", rows)
 
+# ---- evaluation-validity audit (two datasets, same pipeline; read from results/protocol_audit_*.json)
+RES = Path(__file__).resolve().parent.parent / "results"
+AU = [json.loads((RES / f"protocol_audit_{n}.json").read_text()) for n in ("insdn", "cicids2017")]
+def hi(d):  # four-digit mean, with the CI only when it is visible at that precision
+    return f"{d['mean']:.4f}" + (f"{{\\scriptsize$\\pm${d['ci95']:.4f}}}" if d["ci95"] >= 5e-5 else "")
+
+
+arows = [
+    "A. Random 70:30 flow split & " + " & ".join(hi(a["A_random_flow_split"]) for a in AU),
+    "B. Held-out source hosts (70:30 by source IP) & " + " & ".join(pm(a["B_source_ip_grouped_split"]) for a in AU),
+    "C. Per-file time-ordered 70:30 (deterministic) & " + " & ".join(f"{a['C_time_ordered_split']['mean']:.4f}" for a in AU),
+    "D. IPs, ports and Flow ID only, random split & " + " & ".join(hi(a["D_identifier_only_random_split"]) for a in AU),
+    "E. Split-A test rows duplicating a train row (\\%) & " + " & ".join(f"{100 * a['E_test_rows_duplicating_train_row_splitA']['mean']:.1f}" for a in AU),
+]
+table("tab:audit", "Evaluation-validity audit: balanced accuracy (benign vs.\\ attack) of the same XGBoost (GPU) on the 77 numeric CICFlowMeter features, "
+      "same pipeline on both datasets, 10 seeds (mean{\\scriptsize$\\pm$}95\\% CI over seeds). A, B and C use no IPs, ports or timestamps; D uses only those. "
+      "Rows: InSDN " + f"{AU[0]['rows']:,}".replace(",", "\\,") + ", CICIDS2017 " + f"{AU[1]['rows']:,}".replace(",", "\\,") + ". C is a single deterministic split.",
+      "lcc", "Protocol & InSDN & CICIDS2017", arows)
+
 Path(sys.argv[4]).write_text("\n".join(out))
 print("wrote", sys.argv[4], len(out), "blocks")

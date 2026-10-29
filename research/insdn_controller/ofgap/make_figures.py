@@ -58,20 +58,28 @@ ax.set_ylabel("Balanced accuracy")
 ax.legend(frameon=False, loc="lower right", fontsize=6.5)
 save(fig, "fig_scores.pdf")
 
-# 3 split protocol
-pi = J("protocol_inflation.json")
-fig, ax = plt.subplots(figsize=(3.4, 2.3))
-names = ["Random\nflow split", "Held-out\nsource hosts", "Time-ordered\nper file", "IPs and ports\nonly"]
-vals = [pi["A_random_flow_split"]["mean"], pi["B_source_ip_grouped_split"]["mean"], pi["C_time_ordered_split"]["mean"], pi["D_identifier_only_random_split"]["mean"]]
-ax.bar(range(4), vals, 0.6, color=[AMBER, RED, TEAL, PURPLE])
-ps = pi["B_source_ip_grouped_split"]["per_seed"]
-ax.scatter(np.full(len(ps), 1) + np.linspace(-0.12, 0.12, len(ps)), ps, s=8, color="black", zorder=3, label="individual splits")
-for i, v in enumerate(vals):
-    ax.text(i, v + 0.012, f"{v:.3f}", ha="center", fontsize=6.5)
-ax.set_xticks(range(4), names, fontsize=6.5)
-ax.set_ylim(0.5, 1.08)
+# 3 split protocol: two datasets, four protocols (results/protocol_audit_*.json)
+audit = [("InSDN", J("protocol_audit_insdn.json")), ("CICIDS2017", J("protocol_audit_cicids2017.json"))]
+protos = [("A_random_flow_split", "Random flow split", AMBER), ("B_source_ip_grouped_split", "Held-out source hosts", RED),
+          ("C_time_ordered_split", "Time-ordered per file", TEAL), ("D_identifier_only_random_split", "IPs and ports only", PURPLE)]
+fig, ax = plt.subplots(figsize=(3.4, 2.7))
+w = 0.2
+for j, (key, lab, col) in enumerate(protos):
+    xs = np.arange(len(audit)) + (j - 1.5) * w
+    vals = [d[key]["mean"] for _, d in audit]
+    ax.bar(xs, vals, w * 0.92, color=col, label=lab)
+    for x, (_, d), v in zip(xs, audit, vals):
+        top = max([v] + (d[key]["per_seed"] if key.startswith("B_") else []))
+        ax.text(x, top + 0.012, f"{v:.2f}", ha="center", fontsize=5.5)
+    if key.startswith("B_"):
+        for x, (_, d) in zip(xs, audit):
+            ps = d[key]["per_seed"]
+            ax.scatter(np.full(len(ps), x) + np.linspace(-0.04, 0.04, len(ps)), ps, s=4, color="black", zorder=3,
+                       label="individual host splits" if x == xs[0] else None)
+ax.set_xticks(range(len(audit)), [n for n, _ in audit], fontsize=7)
+ax.set_ylim(0.4, 1.08)
 ax.set_ylabel("Balanced accuracy")
-ax.legend(frameon=False, loc="lower right", fontsize=6.5)
+ax.legend(frameon=False, loc="upper center", bbox_to_anchor=(0.5, -0.12), ncol=3, fontsize=5.5, columnspacing=0.8, handlelength=1.2)
 save(fig, "fig_split.pdf")
 
 # 4 PacketIns per target packet per scenario

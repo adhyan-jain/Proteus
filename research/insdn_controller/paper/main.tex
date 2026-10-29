@@ -35,9 +35,11 @@ about 12 for MAC-pair forwarding (at least 665$\times$ in every paired run, for 
 IP-specific entries a 1\,s poller sees from $153.1\pm2.4$ to $36.9\pm0.5$ per reply. A first campaign with a flawed
 application, in which ping and ARP entries shadowed TCP, understated the PacketIn effect by more than two orders of
 magnitude; we report both. Ryu's unmodified \texttt{simple\_switch\_13} application, run as a second controller in five
-captures, also installed only MAC-pair entries (86 of 91 FlowMods; none with IP or transport fields). The benchmark's labels are also confounded with its recordings: with the
-same classifier, a random flow-level split gives 0.9998 balanced accuracy, holding out source hosts gives $0.907\pm0.085$ (worst split 0.66),
-and IP addresses and ports alone give 1.000.
+captures, also installed only MAC-pair entries (86 of 91 FlowMods; none with IP or transport fields). Second, we audit the evaluation protocol. The concern that random splits and identifier columns inflate NIDS scores is known for non-SDN
+benchmarks; we quantify it with one pipeline on two datasets. On InSDN a random flow-level split gives 0.9998 balanced accuracy, whereas holding out source hosts gives
+$0.907\pm0.085$ (worst split 0.66); on CICIDS2017 the values are 0.9917 and $0.641\pm0.056$; IP addresses and ports alone give at least 0.9999 on both, and
+48.7\% of InSDN's random-split test rows duplicate a training row. Of nine InSDN papers read in full, none reports a host-grouped split and three use identifier columns as inputs, so their protocols cannot rule out this leakage;
+this does not show their reported numbers are wrong. A third dataset, UKMDDoSDN, could not be used.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -64,17 +66,20 @@ controller observed, or that evaluates detection restricted to that view (our se
 2026; they are evidence, not proof, of absence).
 
 InSDN's authors also captured the ONOS~\cite{berde2014onos} controller interface during every scenario. We analyse
-these captures and make six contributions:
+these captures and make seven contributions; the first two are the main ones:
 \begin{enumerate}
 \item \textbf{A measured observability gap (\S\ref{sec:gap}).} Across all flow-statistics replies, only two match
 structures occur and none involves IP or transport fields (also true of all 3\,827 FlowMods); in 9 of 12 scenarios the
 controller receives 0.68 to 1.29 PacketIns per target packet.
+\item \textbf{A quantified evaluation-validity audit (\S\ref{sec:audit}).} With one pipeline on InSDN and CICIDS2017, random flow splits give
+0.9998 and 0.9917 balanced accuracy, while holding out source hosts gives $0.907\pm0.085$ and $0.641\pm0.056$, and IPs and ports alone give at least 0.9999. The
+general leakage concern is known~\cite{engelen2021troubleshooting,flood2024baddesign}; what is new is the paired, quantified gap on an SDN dataset, and an audit of the protocols of 12 published papers (10 read in full; nine of them on InSDN).
 \item \textbf{A reproducible control-channel pipeline (\S\ref{sec:method}).} An OpenFlow~1.3 parser and window
 featuriser for the 44 captures with reported parser loss, and window labels grounded in InSDN's own flow labels.
 \item \textbf{Detection from the controller's view, as a feasibility result (\S\ref{sec:results}).} Evaluated on
 unseen captures, withheld attack families and across the two target deployments, against threshold heuristics and
 simpler models, over 10 seeds.
-\item \textbf{A validity analysis (\S\ref{sec:confound}).} Under InSDN's design, the detection scores cannot be
+\item \textbf{A validity analysis of the controller-view scores (\S\ref{sec:confound}).} Under InSDN's design, the detection scores cannot be
 separated from session recognition and label coverage; we quantify what a trivial rule achieves and what our probes
 can and cannot show.
 \item \textbf{A forwarding-application case study (\S\ref{sec:live}).} In a Mininet/Ryu testbed with benign traffic,
@@ -100,10 +105,9 @@ Pinto et al.~\cite{pinto2025flowexporter} showed detectors depend on the flow ex
 al.~\cite{sarhan2022standard} argued for standard NetFlow feature sets. These concern flow-record features; none asks
 what an SDN controller can observe.
 
-\textbf{Evaluation protocol in InSDN detection papers.} Published InSDN detectors report accuracies of 96\% to 99.7\%
-(Section~\ref{sec:confound}). The one such paper whose full text we could read~\cite{towhid2023early} computes nine packet-derived flow features
-from the PCAPs and divides all flows 70:30 into training and test sets; grouping by capture or session is not mentioned. We could not read the
-other three papers' methods, so we make no claim about them.
+\textbf{Evaluation protocol in InSDN detection papers.} Published InSDN detectors report accuracies of 96\% to 99.7\%.
+Flood et al.~\cite{flood2024baddesign} and Engelen et al.~\cite{engelen2021troubleshooting} describe split leakage and identifier shortcuts on non-SDN benchmarks; Section~\ref{sec:audit} extends that
+to InSDN with a paired measurement and summarises the protocols of the InSDN papers we could read in full (e.g.\ Towhid et al.~\cite{towhid2023early} divide all flows 70:30; grouping by capture or session is not mentioned).
 
 \textbf{Controller-side detection and control-plane data.} PacketIn and flow-table signals have long been used to
 detect flooding at the controller~\cite{braga2010lightweight,mousavi2015early} and to protect it~\cite{shin2013avantguard,wang2015floodguard,dhawan2015sphinx}.
@@ -284,21 +288,36 @@ unlisted traffic in the ``attack-free'' class. We conclude only that the availab
 session-recognition as a source of the scores; we do not claim that sessions are separable independently of attack
 traffic.
 
-\textbf{The split protocol itself inflates scores on this benchmark.} InSDN's benign flows exist only in \texttt{Normal\_data.csv} and every
-attack flow in the other two files, so a held-out-file test is impossible and the label is confounded with the recording. We compared splits with
-one classifier (XGBoost on the GPU, 77 numeric flow features without IPs, ports or timestamps, 343\,889 flows, 10 seeds). A random stratified 70:30
-flow split, the protocol of~\cite{towhid2023early}, gives balanced accuracy $0.9998\pm0.00004$. A 70:30 split by source IP (no host in both
-sets) gives $0.907\pm0.085$, with individual splits ranging from 0.66 to 1.00; a per-file time-ordered split shows no drop (0.9997), so the effect
-works through hosts and not through adjacent flows. A classifier given only IP addresses, ports and the Flow ID reaches 1.000, so identity alone
-separates the classes. This measures the protocol on the CSV features: the cited paper uses different features and we did not re-run its model.
+\subsection{Evaluation-validity audit: random flow splits versus held-out hosts}\label{sec:audit}
+\textbf{What is already known.} That randomised train/test splits and identifier columns (Flow ID, IPs, ports, timestamps) can inflate NIDS scores
+has been argued for non-SDN benchmarks: Engelen et al.~\cite{engelen2021troubleshooting} warn that identifier columns let a model associate
+host-specific information with a class, and Flood et al.~\cite{flood2024baddesign} show, on seven datasets that include CICIDS2017 but no SDN dataset, that standard
+randomised splits leak because of homogeneous traffic. We do not claim the phenomenon. In the papers we could read we found no study that measures it on
+InSDN or another SDN dataset, and none that reports a paired grouped-versus-random accuracy gap with confidence intervals for two datasets under one
+pipeline (a limited search, not proof of absence).
+
+\textbf{What we add.} We ran one pipeline on two datasets: XGBoost on the GPU, 77 numeric CICFlowMeter features without IPs, ports or timestamps,
+benign versus attack, 10 seeds (Table~\ref{tab:audit}, Fig.~\ref{fig:split}). A random stratified 70:30 flow split gives balanced accuracy 0.9998 on InSDN (343\,889 flows)
+and 0.9917 on CICIDS2017 (2\,100\,814 flows). Holding out source hosts (70:30 by source IP, no host in both sets) gives $0.907\pm0.085$ on InSDN, with
+individual splits from 0.66 to 1.00, and $0.641\pm0.056$ on CICIDS2017. A per-file time-ordered split shows no drop on InSDN (0.9997), so there the effect
+works through hosts and not through adjacent flows, but it falls to 0.719 on CICIDS2017, so no single explanation covers both. A classifier given only IP
+addresses, ports and the Flow ID scores at least 0.9999 on both datasets, so identity alone separates the classes. As a measure of redundancy, 48.7\% of
+the random-split test rows on InSDN (20.3\% on CICIDS2017) have an exact duplicate of their full feature vector in the training set. We also tried a third
+dataset, UKMDDoSDN~\cite{ukmddosdn2025}, but it was skipped: its two public PCAPs contain no benign class (Appendix~\ref{app:ukm}).
+
+\textbf{What we can and cannot say about published InSDN papers.} We examined 12 papers (eleven on SDN or InSDN-related data, one on other benchmarks) and
+read 10 in full (\texttt{literature\_check.json}); the other two are characterised by their abstracts only and we make no claim about their methods.
+Of the nine InSDN papers read in full, none reports a host-grouped or capture-grouped split, and three use identifier columns (such as Flow ID or source IP) among their model inputs;
+the remaining papers either state that they removed such columns or do not say. This means their protocols cannot rule out the leakage we measure. It does not show that any
+reported number is wrong: we use our own classifier and the CSV features, and did not re-run any cited model.
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=\columnwidth]{fig_split.pdf}
-\caption{Same classifier and features under four evaluation splits of the InSDN CSV (benign vs.\ attack, 10 seeds). Dots are the ten source-host splits (worst 0.66). Data: \texttt{protocol\_inflation.json}.}\label{fig:split}
+\caption{Same classifier and features under four evaluation protocols on two datasets (benign vs.\ attack, 10 seeds). Dots are the ten source-host splits. Data: \texttt{protocol\_audit\_insdn.json}, \texttt{protocol\_audit\_cicids2017.json}.}\label{fig:split}
 \end{figure}
 
-\textbf{Consequence.} The headline scores of \S\ref{sec:results} are feasibility evidence that PacketIn-level features
+\textbf{Consequence for the controller-view scores.} The headline scores of \S\ref{sec:results} are feasibility evidence that PacketIn-level features
 distinguish InSDN's attack captures from its benign captures, not a measurement of attack-detection accuracy. A
 convincing evaluation needs benign and attack traffic interleaved within one session, with labels for all
 controller-visible traffic, which InSDN does not provide.
@@ -306,7 +325,12 @@ controller-visible traffic, which InSDN does not provide.
 \input{live_section}
 
 \section{Discussion and Limitations}\label{sec:discussion}
-\textbf{Single testbed.} All InSDN results come from one ONOS/OVS deployment with 44 controller captures; class
+\textbf{Scope of the audit.} The audit is offline and uses flow-CSV features: we did not replay interleaved live traffic, and the grouped splits
+(by source IP) are one of several possible groupings. It uses XGBoost only; other models may be affected differently. Source-IP grouping also removes
+attacker identity, so lower grouped scores partly reflect genuinely harder generalisation to unseen attackers and not only leakage; we do not separate the two. A third dataset, UKMDDoSDN, could not be
+used (two PCAPs, no benign class), so two datasets is the evidence base. Time-ordered and grouped results disagree across the two datasets (Table~\ref{tab:audit}), and we have not identified why.
+
+\textbf{Single testbed.} All InSDN controller-view results come from one ONOS/OVS deployment with 44 controller captures; class
 counts are small for exploit, web, brute force and botnet. Confidence intervals reflect fold and initialisation
 variability, not new testbeds.
 
@@ -325,8 +349,8 @@ level on probe (0.812 vs.\ 0.794, within the interval) and behind on exploit and
 beats the best threshold (0.678 vs.\ 0.678), while OVS to Metasploitable-2 remains strong (0.977 vs.\ 0.924).
 
 \textbf{Published-paper check.} Our comparison of split protocols uses our own classifier and the CSV features; it shows the random-split protocol
-overstates held-out-host performance on InSDN by about nine points, not that any author's reported number is wrong. Only one of four papers' full
-texts could be read.
+overstates held-out-host performance on InSDN by about nine points (and on CICIDS2017 by about 35), not that any author's reported number is wrong. We read 10 of 12 examined papers in full (nine of them on InSDN); no
+published model was re-run, and the two unread papers are not characterised.
 
 \textbf{Baselines and deployment.} A GPU gradient-boosted tree baseline (XGBoost, BAcc $0.952\pm0.013$ at 5\,s, strict labels, 10 seeds) does not beat the linear ($0.961\pm0.011$) or MLP ($0.958\pm0.012$) models; detection is run offline on recorded control channels,
 not inline in a live controller, and we do not measure controller-side latency or mitigation effects. The forwarding

@@ -131,3 +131,20 @@ Attack-free windows only (D2) & 0.950{\scriptsize$\pm$0.031} & 0.500 \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\begin{table}[t]
+\caption{Evaluation-validity audit: balanced accuracy (benign vs.\ attack) of the same XGBoost (GPU) on the 77 numeric CICFlowMeter features, same pipeline on both datasets, 10 seeds (mean{\scriptsize$\pm$}95\% CI over seeds). A, B and C use no IPs, ports or timestamps; D uses only those. Rows: InSDN 343\,889, CICIDS2017 2\,100\,814. C is a single deterministic split.}
+\label{tab:audit}
+\centering\footnotesize\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lcc}
+\toprule
+Protocol & InSDN & CICIDS2017 \\
+\midrule
+A. Random 70:30 flow split & 0.9998 & 0.9917{\scriptsize$\pm$0.0001} \\
+B. Held-out source hosts (70:30 by source IP) & 0.907{\scriptsize$\pm$0.085} & 0.641{\scriptsize$\pm$0.056} \\
+C. Per-file time-ordered 70:30 (deterministic) & 0.9997 & 0.7187 \\
+D. IPs, ports and Flow ID only, random split & 1.0000 & 0.9999 \\
+E. Split-A test rows duplicating a train row (\%) & 48.7 & 20.3 \\
+\bottomrule
+\end{tabular}
+\end{table}
