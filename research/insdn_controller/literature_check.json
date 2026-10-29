@@ -1,9 +1,284 @@
 {
-  "note": "Checked 2026-10-29. Reported numbers are the authors' own (from abstracts/search snippets), not re-run by us. Only one full text could be read; 'verified' says what we confirmed. A fifth paper from an earlier search (arXiv 2606.12075) was removed: it uses ACI-IoT-2023, not InSDN.",
-  "papers": [
-    {"paper": "Early Detection of Intrusion in SDN (Towhid et al.)", "reported": "Random forest 98.84% vs LSTM 85.31% (accuracy, k=1 sub-flow dataset)", "verified": "Full text read. Features: 9 packet-derived flow features computed from the pcaps with Scapy (not the CSV). Split: all flows divided 70:30 into train and test; grouping by capture or session is not mentioned; leakage is not discussed.", "read": true, "url": "https://uregina.ca/~nss373/papers/Early-detection-SDN.pdf"},
-    {"paper": "Intrusion detection in software defined network using deep learning approaches (Sci. Rep. 2024)", "reported": "Transformer 99.02% (48 features); CNN-LSTM 99.01%, 99.19% with 6 features", "verified": "Full text not readable from here (publisher login and PMC bot check). Split, features and controller claim not verified.", "read": false, "url": "https://www.nature.com/articles/s41598-024-79001-1"},
-    {"paper": "A Hybrid CNN-LSTM Based Approach for Anomaly Detection Systems in SDNs (ACM ARES 2021)", "reported": "96.32% accuracy", "verified": "Full text not read. Split and features not verified.", "read": false, "url": "https://dl.acm.org/doi/fullHtml/10.1145/3465481.3469190"},
-    {"paper": "Securing IoT and SDN systems using deep-learning based automatic intrusion detection (ScienceDirect)", "reported": "99.73% accuracy, 98.6% detection rate", "verified": "Full text not read. Split and features not verified.", "read": false, "url": "https://www.sciencedirect.com/science/article/pii/S2090447923001004"}
-  ]
+ "note": "Updated 2026-10-29. Reported numbers are the authors' own, not re-run by us. 'read' = full text actually read (open-access copies); read:false entries are not verified. Batch notes: Batch 1, checked 2026-10-29. Reported numbers are the authors' own and were not re-run. 'read' is true only where the full text (Europe PMC full-text XML of the open-access PMC copy, tables and figures not included) was actually read and searched for split, feature and duplicate statements. Every string in split_quote and in the quoted fragments of 'verified'/'red_flags' was copied from that text. Where the text did not state something it is recorded as not found, not inferred; absence from the extracted text is not proof of absence in the paper, because figures (e.g. code screenshots) are not in the extracted text. Papers 2 and 3 (ACM ARES 2021, ScienceDirect ASEJ 2023) could not be read: publisher pages returned 403 / bot-check / domain block, so read=false and nothing about their protocol is claimed. A candidate with 98.4% on InSDN (Sci Rep 2025, PSO-GRUGAN, PMC11930995; 80%/20% split of 60,000 instances; its Table 1 shows Flow ID, Src IP, Src Port, Dst IP, Dst Port, Timestamp as InSDN columns but the text does not say whether they enter the model) was looked at but is below the 99% criterion and is not in the list.",
+ "papers": [
+  {
+   "paper": "Early Detection of Intrusion in SDN (Towhid et al.)",
+   "reported": "Random forest 98.84% vs LSTM 85.31% (accuracy, k=1 sub-flow dataset)",
+   "verified": "Full text read. Features: 9 packet-derived flow features computed from the pcaps with Scapy (not the CSV). Split: all flows divided 70:30 into train and test; grouping by capture or session is not mentioned; leakage is not discussed.",
+   "read": true,
+   "url": "https://uregina.ca/~nss373/papers/Early-detection-SDN.pdf"
+  },
+  {
+   "paper": "Intrusion detection in software defined network using deep learning approaches (Ataa, Sanad, El-khoribi; Sci. Rep. 2024)",
+   "reported": "Transformer 99.02% / CNN-LSTM 99.01% (8-class, 48 features); CNN-LSTM 99.19% binary with 6 features; 6 features multiclass 98.80-98.90%; 4 features 98.20-98.50%",
+   "verified": "Full text read (PMC11589109 via Europe PMC XML). Dataset InSDN, 343,889 records. Text states the 77-feature version was produced 'after removing socket information like IP addresses, flow IDs, etc.', then reduced to 48, 6 and 4 features (Table 2 lists Bwd Header Len, Flow Duration, Fwd Header Len, Flow Byts/s, Pkt Len Std, Pkt Size Avg). Preprocessing text: cleaned, 'the data was shuffled to randomize the order of samples', standard scaling. No train/test ratio, no stratification, no k-fold, no grouping and no duplicate handling is stated anywhere in the extracted text (searched: split, ratio, hold, train, test, validation, duplicate, 70/80/20/30%).",
+   "read": true,
+   "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11589109/",
+   "dataset": "InSDN (343,889 records; 8 classes after merging; binary variant too)",
+   "split_quote": null,
+   "grouped": null,
+   "identifiers_as_features": false,
+   "red_flags": [
+    "Split protocol is not described at all (no ratio, no grouping); shuffling of samples is the only statement, which implies a row-level random split, but that is an inference, not a quote",
+    "Abstract/intro say 'We specifically target the SDN controller where it represents a crucial point', but the evaluation is offline on a CSV (InSDN); no controller, Ryu/Mininet run or deployment of the model is described (the one Mininet/Ryu mention is in related work)",
+    "Authors state IPs and flow IDs were removed (identifiers_as_features=false per their statement); Src/Dst Port presence in the 48-feature set is not shown in the extracted text",
+    "99.0% headline is accuracy on a class-imbalanced set (Normal 68,424; DDoS 121,942; DoS 53,616 vs Botnet 164, U2R 17); per-class table shows U2R and Web-Attack with 0% F1 for some models and 'We have merged 4 poorly represented attacks in one class, which enhanced the accuracy by a significant score'",
+    "Single run; no seeds, no confidence intervals"
+   ]
+  },
+  {
+   "paper": "A Hybrid CNN-LSTM Based Approach for Anomaly Detection Systems in SDNs (Abdallah, Le-Khac, Jahromi, Jurcut; ACM ARES 2021)",
+   "reported": "96.32% accuracy (earlier recorded value, not re-checked)",
+   "verified": "Not verified. Bibliographic record confirmed via dblp/researchr search results (authors, venue, DOI 10.1145/3465481.3469190). Full text blocked (dl.acm.org returned HTTP 403). Nothing about split, features or dataset confirmed.",
+   "read": false,
+   "url": "https://dl.acm.org/doi/fullHtml/10.1145/3465481.3469190",
+   "dataset": null,
+   "split_quote": null,
+   "grouped": null,
+   "identifiers_as_features": null,
+   "red_flags": []
+  },
+  {
+   "paper": "Securing IoT and SDN systems using deep-learning based automatic intrusion detection (Elsayed, Hamada, Abdalla, Elsaid; Ain Shams Eng. J. 14(10):102211, 2023)",
+   "reported": "InSDN: 99.73% accuracy, 98.6% detection rate, 98.9% precision; ToN-IoT: 96.35% accuracy (SATIDS, improved LSTM, two-level)",
+   "verified": "Not verified beyond the abstract-level summary returned by search (authors, SATIDS, datasets ToN-IoT and InSDN, the numbers above). Full text not readable: ScienceDirect fetch blocked; Europe PMC has no record (hitCount 0). Split, features and duplicates not confirmed.",
+   "read": false,
+   "url": "https://www.sciencedirect.com/science/article/pii/S2090447923001004",
+   "dataset": "InSDN and ToN-IoT (per abstract summary only)",
+   "split_quote": null,
+   "grouped": null,
+   "identifiers_as_features": null,
+   "red_flags": []
+  },
+  {
+   "paper": "An efficient and interpretable intrusion detection framework for software-defined networks with multi-class imbalance (OptiXGB-IDS; Sci. Rep. 2026, doi 10.1038/s41598-026-58514-x)",
+   "reported": "InSDN test accuracy 99.87% (macro precision 0.9618, macro recall 0.9951, macro F1 0.9775, Cohen's kappa 0.9982); CIC-IDS2017 test accuracy 98.70%",
+   "verified": "Full text read (PMC13350713 via Europe PMC XML). XGBoost with class-specific WGAN-GP oversampling and ANOVA+GA feature selection on InSDN. Split: single 80:20 train-test partition of the 343,889 samples (275,111 train / 68,778 test), made before preprocessing and balancing. No grouping by host, session or time is described. Duplicate removal is listed in the preprocessing workflow (Fig. 3 caption: 'duplicate removal, categorical encoding, outlier detection and treatment, and feature standardization'), and the text says the split came before preprocessing, so duplicates are removed after the split and identical flows could sit on both sides. Retained features table includes 'Src Port' and 'Dst Port'; no Flow ID, Src IP, Dst IP or Timestamp found in the text.",
+   "read": true,
+   "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC13350713/",
+   "dataset": "InSDN (343,889 samples, 9 labels incl. DDoS1/DDoS2); CIC-IDS2017 as external check",
+   "split_quote": "The dataset was split into 80% training and 20% testing after data collection. This split was prior to any preprocessing steps such as normalization, feature selection or balancing of classes to ensure that no data of the testing set is utilized during training.",
+   "grouped": false,
+   "identifiers_as_features": true,
+   "red_flags": [
+    "Labelled 'leakage-free', but the claim covers preprocessing leakage only (fit scalers/imputers/GA/WGAN-GP on train); the split itself is a sample-level 80:20 split with no host/session/time grouping described, so same-host and near-duplicate flows can straddle train and test",
+    "Src Port and Dst Port are retained model inputs; the paper's own surrogate tree says 'Dst Port is the major split, followed by Init Bwd'",
+    "Duplicate removal happens after the split, so cross-split duplicates are not prevented by it",
+    "Headline accuracy 99.87% sits beside macro precision 0.9618; minority test classes are tiny (U2R 4, Web-Attack 28, BOTNET 30 test samples), so per-class numbers are very noisy",
+    "Reports 'inference time of 0.026312 ms per flow' but no controller, Ryu/Mininet or online deployment is evaluated; Mininet appears only in dataset description",
+    "Single hold-out headline; CV mentioned but no multi-seed confidence interval for the headline number was found",
+    "Uses WGAN-GP on InSDN (same augmentation family as Proteus) so it is the closest comparison paper"
+   ]
+  },
+  {
+   "paper": "Software defined network intrusion system to detect malicious attacks in computer Internet of Things security (deep feature extractor + supervised random forest; PeerJ Comput. Sci. 2025, doi 10.7717/peerj-cs.3103)",
+   "reported": "99.93% accuracy (0.0090 loss) on the main SDN dataset; 99.43% multi-class accuracy on a second Kaggle SDN dataset",
+   "verified": "Full text read (PMC12453748 via Europe PMC XML). Data availability lists InSDN (Kaggle badcodebuilder) and a second Kaggle 'SDN Intrusion Detection' set; the abstract's 'dataset consists of 207,146 rows and 84 features' does not match InSDN's 343,889 rows, and the text does not explain this (subset or different version unstated). Split: 'the study used the (train_test_split)() function as illustrated in Fig. 4'; the ratio and any stratification are only in a code-screenshot figure, not in text. Preprocessing: null rows removed, features dropped by correlation matrix; no duplicate handling and no mention of IP/port/Flow ID/Timestamp being dropped or kept (searched).",
+   "read": true,
+   "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12453748/",
+   "dataset": "InSDN per Data Availability (207,146 rows x 84 features as stated) plus Kaggle 'SDN Intrusion Detection' dataset",
+   "split_quote": "To split the data into a training set and a testing set, the study used the (train_test_split)() function as illustrated in Fig. 4 .",
+   "grouped": false,
+   "identifiers_as_features": null,
+   "red_flags": [
+    "Split is scikit-learn train_test_split, which is a random row-level split by default; no grouping, no temporal ordering, no seeds or repeats reported (ratio not in text)",
+    "Whether Flow ID / IPs / ports / timestamp were removed is not stated; only 'eliminate those with high correlation values' is described, so identifier features cannot be ruled out",
+    "Duplicate removal not mentioned",
+    "Row count (207,146) does not match the InSDN CSV size used elsewhere (343,889) and is not explained",
+    "Web-attack recall is low (reported 54.29% for the LSTM and 82.86% in another table) while the headline is 99.93%, i.e. the headline is a weighted average dominated by DDoS/DoS/Normal",
+    "Mininet/ONOS appear only in the description of the original InSDN testbed; no controller-side deployment of the proposed model is evaluated"
+   ]
+  },
+  {
+   "paper": "Distributed Denial of Services (DDoS) attack detection in SDN using Optimizer-equipped CNN-MLP (Sajid et al.; PLOS ONE 2025, doi 10.1371/journal.pone.0312425)",
+   "reported": "InSDN accuracy 0.9998 (99.98%); CICDDoS-2019 accuracy 0.9995. The abstract calls both '99.95% for the true positive (TP) of the CICDDoS-2019 dataset and 99.98% for the InSDN dataset'",
+   "verified": "Full text read (PMC11771897 via Europe PMC XML). Datasets: InSDN and CICDDoS-2019. No train/test ratio, split method, validation scheme, seed, or duplicate handling is described in the extracted text (searched: split, divid, partition, ratio, fold, shuffl, duplicate, validation set; only a generic statement that metrics are 'revealed by the validation dataset'). The SHAP feature table for InSDN lists 'Dst Port' (-1.44) among the influential model inputs, so a port-level identifier feature is an input. No Flow ID, IP or timestamp features found.",
+   "read": true,
+   "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11771897/",
+   "dataset": "InSDN; CICDDoS-2019",
+   "split_quote": null,
+   "grouped": null,
+   "identifiers_as_features": true,
+   "red_flags": [
+    "No split protocol stated at all, so leakage cannot be assessed; the headline 99.98% has no described held-out procedure",
+    "Dst Port is an input feature (SHAP table), the strongest negative contributor",
+    "Internally inconsistent metrics: abstract reports 99.98% 'for the true positive (TP)', body says 'precision rate of 09998 (99.98)' and 'accuracy of 0.9998', and later 'InSDN has evaluation data accuracy of 97% recall'",
+    "SDN controller is described as 'also able to provide an immediate counteraction as soon as an attack is recognized' but no controller, Mininet/Ryu experiment or mitigation was run; evaluation is on CSV datasets",
+    "Binary DDoS focus on a dataset where DDoS flows come from a few attacker hosts; no host-grouped evaluation",
+    "Single run, no seeds or confidence intervals"
+   ]
+  },
+  {
+   "paper": "Deep memory for deep threats: A novel architecture combining GRUs and deep learning models for IDS (GRU-NTM; PLOS ONE 2025, doi 10.1371/journal.pone.0332752)",
+   "reported": "99.98% accuracy, F1 up to 96% on unseen threats, FPR < 0.4%, 2.3 ms inference; abstract says it was benchmarked on UNSW-NB15, BoT-IoT, CICIDS2017 and CSE-CIC-IDS2018",
+   "verified": "Full text read (PMC12527161 via Europe PMC XML). Not an SDN paper. Abstract/results claim CICIDS2017 and CSE-CIC-IDS2018, but the evaluation sentence in the introduction says 'we performed detailed assessments using two established datasets, UNSW-NB15 and BoT-IoT', and the described classifier is a 3-class Normal/DoS/DDoS softmax; CICIDS2017 appears in the text as an interpretability case study and in related work. Split: 80% training / 20% validation, described as chronological. Duplicate handling not found. Dataset description says UNSW-NB15 features 'include source and destination IP addresses, port numbers, and protocols'; whether they are fed to the model is not stated.",
+   "read": true,
+   "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12527161/",
+   "dataset": "UNSW-NB15 and BoT-IoT (per intro); abstract also names CICIDS2017 and CSE-CIC-IDS2018",
+   "split_quote": "The preprocessed data fulfilled the generalization tests through a split process, which divided the data into 80% training data and 20% validation data for model learning. [...] The chronological approach to splitting data mimicked actual operational conditions by showing future traffic patterns to the model which it had not encountered previously.",
+   "grouped": true,
+   "identifiers_as_features": null,
+   "red_flags": [
+    "Only temporal (chronological) split among the papers in this batch; grouped=true refers to time ordering, not host grouping",
+    "The 80/20 split is train/validation, and the same 20% is used for early stopping and tuning ('to adjust model parameters as well as identify the early stopping point'), so the 99.98% is not from an untouched test set",
+    "Abstract claims CICIDS2017 / CSE-CIC-IDS2018 benchmarks but the body's evaluation statement names only UNSW-NB15 and BoT-IoT (mismatch of scope)",
+    "'zero misclassifications using the confusion matrix' on a 3-class task is reported alongside 99.98%",
+    "'The methodology is geared to real-time applicability' and 'capable of detecting intrusions in real-time' rest on a 2.3 ms model inference time; no streaming, controller or live-traffic experiment",
+    "Zero-day claim is a hold-out of attack types from BoT-IoT, not live unseen traffic"
+   ]
+  },
+  {
+   "paper": "SDNGuardStack: An Explainable Ensemble Learning Framework for High-Accuracy Intrusion Detection in Software-Defined Networks (Ashikuzzaman et al., arXiv 2604.20934, 2026)",
+   "dataset": "InSDN",
+   "reported": "99.98% accuracy, Cohen kappa 0.9998 (stacking DT/ET/MLP + LightGBM meta-learner); 5-fold CV validation accuracy 1.0000",
+   "read": true,
+   "url": "https://arxiv.org/pdf/2604.20934",
+   "split_quote": "the dataset was split 80/20 between training and testing sets.",
+   "grouped": false,
+   "identifiers_as_features": true,
+   "verified": "Full text read. Top-15 mutual-information features selected include Flow ID, Src IP, Dst IP, Src Port, Dst Port. The authors' own SHAP ranking puts Flow ID first, then Bwd Header Len, Src Port, Src IP, and they present this as a finding. Split described only as 80/20; stratification, shuffling, grouping and duplicate handling not stated. No leakage discussion.",
+   "red_flags": [
+    "Flow ID, Src IP, Dst IP, Src Port as top selected features (quote: 'Flow ID, Bwd Header Len, and Src Port as the most important factors in the model predictions')",
+    "random-looking 80/20 split, grouping not stated",
+    "kappa 0.9998 and 5-fold CV accuracy 1.0000 reported as evidence of robustness",
+    "claims 'overfitting is sufficiently avoided' from train/test gap on same-distribution split"
+   ]
+  },
+  {
+   "paper": "Improving Robustness and Interpretability of Deep Learning-Based Intrusion Detection in Software-Defined Networks (Malik, Salman, Ahmed, Maryam; FAST-NU; ICIT 2026 submission PDF on author site, not peer-reviewed as far as we can tell)",
+   "dataset": "InSDN (48-feature CSV, 343,889 flows, 8 classes)",
+   "reported": "Re-evaluation of a prior CNN-LSTM/Transformer InSDN IDS that reported ~99% (single split): stratified 5-fold CV gives 81.60% accuracy (fold range 73.80-84.87%), weighted F1 79.52%, macro AUC 84.00%",
+   "read": true,
+   "url": "https://muhammadsalman1205.vercel.app/research-paper-icit2026.pdf",
+   "split_quote": "model evaluation was conducted using a single train-test split without variance analysis or cross-validation [1]. (describing the base paper); their own: stratified 5-fold cross-validation",
+   "grouped": false,
+   "identifiers_as_features": null,
+   "verified": "Full text read. Important: this is evidence that InSDN scores drop sharply under a different evaluation, but their drop comes from stratified K-fold (still flow-level, non-grouped) with RFE to 32 features and a BiLSTM, and they attribute it to single-split variance, not to leakage. Whether identifier columns are among the 32 retained features is not stated. The base paper [1] is likely the Sci. Rep. 2024 paper already in literature_check.json (not confirmed by the text).",
+   "red_flags": [
+    "fold accuracies as low as 73.80% on a dataset others report at 99%+: shows the headline numbers are not robust, but cause is not isolated",
+    "no grouping by source host/capture; no identifier-feature analysis"
+   ]
+  },
+  {
+   "paper": "A federated deep learning approach for SDN security with quantum optimized feature selection and hybrid MSDC net architecture (LightIDS-SDN; Scientific Reports, accepted 2026; PMC12957442)",
+   "dataset": "InSDN (Kaggle copy)",
+   "reported": "98.73% accuracy, 98.72% F1 at 80:20 (60:40 96.74, 70:30 97.02, 90:10 97.89); single-feature-selection baseline 93.61%",
+   "read": true,
+   "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12957442/",
+   "split_quote": "experiments were conducted on the InSDN dataset using four train-test split ratios: 60:40, 70:30, 80:20, and 90:10.",
+   "grouped": false,
+   "identifiers_as_features": null,
+   "verified": "Full text (PMC HTML) read. Preprocessing: 'duplicates are eliminated, and irrelevant features are discarded' (which features not listed in the text we parsed). Split randomisation/stratification/grouping not stated. SMOTE used for balancing; order relative to the split not stated in the passages found. Chooses the split ratio by test performance ('the 80:20 split is optimal'), i.e. selection on the test set.",
+   "red_flags": [
+    "split ratio picked on test results",
+    "no grouping by host/capture, no leakage discussion",
+    "identifier handling not stated",
+    "only a good sign: duplicates removed"
+   ]
+  },
+  {
+   "paper": "SICA: Generation and Deep Learning-Based Evaluation of a Novel Dataset for Intrusion Detection in SDN-IoT Environments (Saleh, Hamad; J. Eur. Syst. Autom. 59(1), 2026)",
+   "dataset": "New SICA dataset; InSDN and SDN-IoT used as comparison datasets",
+   "reported": "InSDN test accuracy 0.9961 (DNN and LSTM); SICA 0.9758 (DNN); SDN-IoT 0.8103-0.8485",
+   "read": true,
+   "url": "https://www.iieta.org/download/file/fid/192529",
+   "split_quote": "data splitting (with a ratio of 70% for training, 20% for testing, and 10% for validation).",
+   "grouped": false,
+   "identifiers_as_features": false,
+   "verified": "Full text read. InSDN is not the paper's own contribution; it is a comparison. Stated preprocessing removes identifiers: 'Flow ID', 'Src IP', 'Dst IP', 'Timestamp' (plus Idle features and Flow Duration) were manually removed. Whether that applies to the InSDN runs is implied by a shared pipeline but not stated. Split method (random/stratified) not stated. Notable: even with identifiers dropped and a presumably flow-level split, InSDN reaches 0.9961, consistent with our finding that identifier removal alone does not stop near-perfect scores (other leakage: flow-level splits, temporal/campaign structure) - but the paper does not analyse this.",
+   "red_flags": [
+    "InSDN near-perfect 0.9961 with identifiers dropped, random flow-level split presumed but not stated",
+    "cross-dataset claim ('A model tuned for InSDN (99% accuracy) may achieve only ~84% accuracy when deployed in an SDN-IoT environment') is a dataset-shift observation, not a grouped-split test"
+   ]
+  }
+ ],
+ "prior_work_on_leakage": [
+  {
+   "paper": "Engelen, Rimmer, Joosen - Troubleshooting an Intrusion Detection Dataset: the CICIDS2017 Case Study (IEEE SPW/WTMC 2021)",
+   "dataset": "CICIDS2017",
+   "read": true,
+   "url": "https://lirias.kuleuven.be/retrieve/713070",
+   "established": "Flow construction, labelling and TCP-appendix errors in CICIDS2017; explicitly names identifier columns as a shortcut-learning risk. Their own benchmark used a plain 75-25 split, so they did not study split-induced leakage.",
+   "quotes": [
+    "The original CSV files still contain attributes such as Flow ID, Source IP, Destination IP, Source Port, Destination Port, and Timestamp of the flow.",
+    "the other attributes should be excluded from the feature representation during training. This should prevent a flow-based NIDS from associating a certain timestamp or some host-specific information with a certain class",
+    "We used a train-test split of 75-25."
+   ],
+   "not_covered": "No grouped/host-held-out split; no measurement of how much identifier features inflate scores; no SDN data."
+  },
+  {
+   "paper": "Flood, Engelen, Aspinall - Bad Design Smells in Benchmark NIDS Datasets (IEEE EuroS&P 2024)",
+   "dataset": "7 datasets: ISCX 2012, CIC-IDS 2017, CSE-CIC-IDS 2018, UNSW-NB15, Ton-IoT, Bot-IoT, CTU-13 (no InSDN, no SDN dataset; the only SDN mention in the full text is a reference title)",
+   "read": true,
+   "url": "https://detlearsom.github.io/pubs/BadSmells-EuroSP24-finaldraft.pdf",
+   "established": "Standard randomised train/test splits leak because of homogeneous traffic; train/test sets of CIC-17 'overlap almost entirely'; timestamp is a label-leaking feature (CADE F1 on CIC-18 collapses without Timestamp, e.g. SSH-BF 0.8687 -> 0.1214 on original); no surveyed paper (38) commented on it; recommends not training and testing on the same attack class/dataset. This is the closest prior statement of our thesis, but for non-SDN datasets and shown mainly qualitatively/by PCA overlap plus ablations, not by a grouped-split vs random-split accuracy comparison.",
+   "quotes": [
+    "standard, randomised train/test splits result in data leakage. No papers in our overview commented on this or amended their evaluation process",
+    "this is often equivalent to training and evaluating models on flows from the same attack, a form of data leakage.",
+    "we recommend avoiding using training and test attack data from the same class and dataset",
+    "Such highly dependent features reduce the complexity of attack detection and lead to overly optimistic interpretations of classifier performance."
+   ],
+   "not_covered": "InSDN / any SDN dataset; per-source-IP grouped split measured end to end with confidence intervals."
+  },
+  {
+   "paper": "Lanvin, Gimenez, Han, Majorczyk, Me, Totel - Errors in the CICIDS2017 dataset and the significant differences in detection performances it makes (CRiSIS 2022, LNCS 13857)",
+   "dataset": "CICIDS2017",
+   "read": false,
+   "url": "https://link.springer.com/chapter/10.1007/978-3-031-31108-6_2",
+   "established": "Only the abstract-level summary was obtained (via search; HAL full text blocked by bot check): packet misordering, packet duplication and mislabelled attacks; corrections change supervised detection results. We did not read what they say about splits, so we make no claim about it.",
+   "quotes": [],
+   "not_covered": "unverified"
+  },
+  {
+   "paper": "Liu, Engelen, Lynar, Essam, Joosen - Error Prevalence in NIDS datasets: A Case Study on CIC-IDS-2017 and CSE-CIC-IDS-2018 (IEEE CNS 2022)",
+   "dataset": "CICIDS2017/2018",
+   "read": false,
+   "url": "https://aminer.org/pub/6389fe5c90e50fcafdcaab09/error-prevalence-in-nids-datasets-a-case-study-on-cic-ids-and",
+   "established": "Abstract-level only: undocumented errors in attack orchestration, feature generation, documentation, labelling; argued to undermine published results. Split protocol not read.",
+   "quotes": [],
+   "not_covered": "unverified"
+  },
+  {
+   "paper": "Kostas, Just, Lones - Individual Packet Features are a Risk to Model Generalisation in ML-Based Intrusion Detection (arXiv 2406.07578, 2024)",
+   "dataset": "IoT datasets (Edge-IIoTset etc.)",
+   "read": false,
+   "url": "https://arxiv.org/abs/2406.07578",
+   "established": "Abstract read: individual-packet-feature models 'can produce misleadingly high detection rates' and 'often fail to generalize across datasets'. A search summary also claims IP/ID/port identifier leakage; we could not confirm that wording in the extracted text, so it is not asserted here.",
+   "quotes": [
+    "produce misleadingly high detection rates"
+   ],
+   "not_covered": "SDN datasets"
+  },
+  {
+   "paper": "Arp et al. - Dos and Don'ts of Machine Learning in Computer Security (USENIX Security 2022)",
+   "dataset": "general",
+   "read": false,
+   "url": "https://www.usenix.org/conference/usenixsecurity22/presentation/arp",
+   "established": "Not opened in this batch; cited from memory as the general reference for sampling bias/spurious correlations in security ML. Do not quote specifics without reading it.",
+   "quotes": [],
+   "not_covered": "unverified"
+  }
+ ],
+ "assessment": {
+  "already_known_generally": "Yes. (1) Identifier columns (Flow ID, IPs, ports, Timestamp) are shortcut features: Engelen et al. 2021 say so explicitly for CICIDS2017. (2) Randomised train/test splits leak on homogeneous synthetic NIDS data, and train/test overlap is near-total on CIC-17: Flood et al. 2024, with a timestamp ablation and a recommendation to avoid same-class/same-dataset train and test. Do not claim these as new.",
+  "not_found_for_SDN": "In the papers we could read we found no prior study that tests random flow-level splits or identifier features on InSDN or any other SDN dataset. Flood et al.'s seven datasets exclude InSDN and all SDN datasets. Of the four InSDN papers read here, none discusses split leakage; one (SDNGuardStack) uses identifier columns as top features, one (SICA) states it dropped them, one (LightIDS-SDN) does not say, and one (Malik et al.) re-evaluates with stratified K-fold without discussing identifiers. This is an absence in a limited search (we did not read Lanvin or Liu in full, and several 2021-2026 InSDN papers remain unread), not proof that no one has done it.",
+  "what_is_new_in_our_audit": [
+   "A direct, quantified paired comparison on InSDN: random flow-level split 0.9998 vs source-IP-grouped split 0.907 +/- 0.085 (10 seeds, per our own result files) - prior work gives qualitative or PCA-overlap evidence or an ablation of one feature, not a grouped-vs-random accuracy gap with CIs.",
+   "Applying it to an SDN dataset, where the literature that does exist (Salman et al.) attributes InSDN's 99% -> ~82% drop to single-split variance and model design, not to leakage.",
+   "Showing that identifier removal is not sufficient (SICA-style dropping still yields 0.9961 with presumed flow-level split) - our grouped split targets the remaining host/campaign leakage. This framing should be tested by our own ablation, not asserted from SICA, whose split method is unstated.",
+   "Concrete evidence of the practice in the wild: SDNGuardStack (2026) puts Flow ID, Src IP, Dst IP, Src Port among selected features and reports 99.98%, and presents Flow ID and Src IP as 'important' SDN features."
+  ],
+  "caution": "Frame as 'extends known leakage findings (Engelen 2021, Flood 2024) to InSDN/SDN and quantifies the gap', not as discovery of the phenomenon. Lanvin 2022 and Liu 2022 should be read before finalising any 'first' claim."
+ },
+ "considered_and_excluded": [
+  {
+   "paper": "Hybrid CNN-BiLSTM with LightGBM Stacking, SDN-Gate, PSO (Ahman et al., ETASR 16(3), 2026)",
+   "reason": "Read in full; results (99.80% accuracy) are on the authors' own GNS3/OpenDaylight dataset, not InSDN (InSDN appears only in related work). Worth noting as a positive example: 'Non-statistical identifiers (e.g., Flow ID and IP addresses) were removed to prevent leakage', but split is a plain 80/20 train/validation with an untouched test set, grouping not stated.",
+   "url": "https://etasr.com/index.php/ETASR/article/download/18497/6770/94037"
+  },
+  {
+   "paper": "Internet of Things Software-Defined Network Intrusion Detection Dataset: Inter- and Intra-Domain (Dhirar, Hamad; Al-Khwarizmi Eng. J. 2025)",
+   "reason": "New dataset paper; InSDN only listed in a dataset comparison table."
+  }
+ ]
 }
