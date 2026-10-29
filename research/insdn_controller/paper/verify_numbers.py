@@ -10,7 +10,7 @@ R = H.parent / "results"
 tex = "".join((H / f).read_text() for f in ("main.tex", "live_section.tex")).replace("\\,", "").replace("$", "")
 J = lambda n: json.load(open(R / n))  # noqa: E731
 fm, one, l3, xg = J("flowmod_matches.json"), J("live_modes_v4_one10.json"), J("live_modes_v4_linear3.json"), J("v4_strict_W5_xgb.json")
-DL, RP, LH = J("dedup_ladder.json"), J("replicate_papers.json"), J("leave_one_host_out.json")
+DL, RP, LH, LC = J("dedup_ladder.json"), J("replicate_papers.json"), J("leave_one_host_out.json"), J("leave_one_host_out_cicids2017.json")
 st, hs, pi = J("stock_ryu_flowmods.json"), J("hostside_xgb.json"), J("protocol_inflation.json")
 ai, ac, lit = J("protocol_audit_insdn.json"), J("protocol_audit_cicids2017.json"), json.load(open(R.parent / "literature_check.json"))
 rr = J("recipe_replication.json")
@@ -66,6 +66,11 @@ checks = [
     ("LOHO main attacker recall", round(100 * LH["hosts"]["200.175.2.130"]["recall_attack"], 1), "%.1f" % (100 * LH["hosts"]["200.175.2.130"]["recall_attack"])),
     ("LOHO main attacker DoS", round(100 * LH["hosts"]["200.175.2.130"]["recall_by_class"]["DoS"], 1), "%.1f" % (100 * LH["hosts"]["200.175.2.130"]["recall_by_class"]["DoS"])),
     ("LOHO benign host fpr", round(100 * LH["hosts"]["192.168.20.133"]["fpr_benign"], 1), "%.1f" % (100 * LH["hosts"]["192.168.20.133"]["fpr_benign"])),
+    ("LOHO CIC ips", LC["distinct_src_ips"], "48"),
+    ("LOHO CIC main recall", round(100 * LC["hosts"]["172.16.0.1"]["recall_attack"], 1), "28.3"),
+    ("LOHO CIC main fpr", round(100 * LC["hosts"]["172.16.0.1"]["fpr_benign"], 1), "54.0"),
+    ("LOHO CIC bot lo", round(100 * min(LC["hosts"][k]["recall_attack"] for k in LC["hosts"] if k.startswith("192.168.10.") and LC["hosts"][k]["recall_attack"] not in (None, 0.0)), 1), "23.4"),
+    ("LOHO CIC bot hi", round(100 * max(LC["hosts"][k]["recall_attack"] for k in LC["hosts"] if k.startswith("192.168.10.") and LC["hosts"][k]["recall_attack"] is not None), 1), "43.5"),
     ("audit InSDN E pct", round(100 * ai["E_test_rows_duplicating_train_row_splitA"]["mean"], 1), "48.7"),
     ("audit InSDN rows", ai["rows"], "343889"),
     ("audit CICIDS A", round(ac["A_random_flow_split"]["mean"], 4), "0.9917"),

@@ -17,7 +17,20 @@ from backend import data_full  # noqa: E402
 
 assert torch.cuda.is_available(), "GPU required (CLAUDE.md rule 1)"
 out = sys.argv[1] if len(sys.argv) > 1 else "results/leave_one_host_out.json"
-df = data_full.load_insdn_raw()
+DS = sys.argv[2] if len(sys.argv) > 2 else "insdn"
+if DS == "cicids2017":
+    frames = []
+    for f in data_full.CICIDS2017_FILES:
+        d = pd.read_csv(data_full.CICIDS2017_DIR / f, low_memory=False)
+        d.columns = [c.strip() for c in d.columns]
+        d["__source_day"] = f.replace("-WorkingHours.csv", "")
+        for c in d.columns:
+            if c not in ("Flow ID", "Src IP", "Dst IP", "Timestamp", "Label", "__source_day"):
+                d[c] = pd.to_numeric(d[c], errors="coerce").astype(np.float32)
+        frames.append(d)
+    df = pd.concat(frames, ignore_index=True)
+else:
+    df = data_full.load_insdn_raw()
 lab = df["Label"].astype(str)
 ID = ["Flow ID", "Src IP", "Src Port", "Dst IP", "Dst Port", "Timestamp", "Label", "__source_day"]
 X = df.drop(columns=ID).select_dtypes(include=[np.number]).replace([np.inf, -np.inf], np.nan).fillna(0).astype(np.float32)
@@ -27,7 +40,7 @@ cnt = pd.Series(src).value_counts()
 R = {"rows": len(df), "distinct_src_ips": int(len(cnt)), "single_flow_src_ips": int((cnt == 1).sum()),
      "hosts_ge_500_flows": int((cnt >= 500).sum()), "rows_in_hosts_ge_500": int(cnt[cnt >= 500].sum()), "hosts": {}}
 print({k: v for k, v in R.items() if k != "hosts"}, flush=True)
-for h in cnt[cnt >= 500].index:
+for h in cnt[cnt >= 500].index[:int(sys.argv[3]) if len(sys.argv) > 3 else None]:
     te = np.where(src == h)[0]
     tr = np.where(src != h)[0]
     preds = []
