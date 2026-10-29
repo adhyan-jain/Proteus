@@ -17,10 +17,14 @@ HERE = Path(__file__).resolve().parent.parent
 R = HERE / "results"
 J = lambda f: json.loads((R / f).read_text().replace("NaN", "null"))  # noqa: E731
 fm, one, l3 = J("flowmod_matches.json"), J("live_modes_v4_one10.json")["summary"], J("live_modes_v4_linear3.json")["summary"]
-rc, st, v2, pi = J("review_checks.json"), J("stock_ryu_flowmods.json"), J("live_modes_v2.json")["summary"], J("protocol_inflation.json")
+rc, st, v2, pi = J("review_checks.json"), J("stock_ryu_flowmods.json"), J("live_modes_v2.json")["summary"], J("protocol_audit_insdn.json")
 w1 = J("v4_strict_W1.json")
 cv, fam = w1["A_grouped_cv"], w1["B_leave_one_attack_family_out"]
 lit = json.loads((HERE / "literature_check.json").read_text())
+ci = J("protocol_audit_cicids2017.json")
+infl_ci = (ci["A_random_flow_split"]["mean"] - ci["B_source_ip_grouped_split"]["mean"]) * 100
+dup_in, dup_ci = pi["E_test_rows_duplicating_train_row_splitA"]["mean"] * 100, ci["E_test_rows_duplicating_train_row_splitA"]["mean"] * 100
+n_read, n_pap = sum(1 for q in lit["papers"] if q.get("read")), len(lit["papers"])
 triv1 = rc["within_session_W1_strict"]["any_ip_packet_in"]["bacc_pooled"]
 triv5 = rc["within_session_W5_strict"]["any_ip_packet_in"]["bacc_pooled"]
 mac_n, ip_n = fm["total_by_match_structure"]["in_port|eth_dst|eth_src"], fm["total_by_match_structure"].get("eth_type", 0)
@@ -242,8 +246,8 @@ for i, (a, b) in enumerate(p2):
     y = 2.15 + i * 0.95
     text(s, a, 7.0, y, 2.5, 0.8, 18, ACC, bold=True)
     text(s, b, 9.55, y, 3.2, 0.8, 13, MUTED)
-text(s, "Next", 7.0, 5.0, 2.5, 0.8, 18, GREY, bold=True)
-text(s, "Run the same checks on published papers under a preregistered protocol", 9.55, 5.0, 3.2, 0.8, 13, MUTED)
+text(s, "Then", 7.0, 5.0, 2.5, 0.8, 18, GREY, bold=True)
+text(s, f"Split audit on InSDN and CICIDS2017, and a full read of {n_read} papers, 9 on InSDN (slides 13 to 14)", 9.55, 5.0, 3.2, 0.8, 13, MUTED)
 ln = s.shapes.add_connector(MSO_CONNECTOR.STRAIGHT, Inches(6.75), Inches(2.0), Inches(6.75), Inches(5.7))
 ln.line.color.rgb, ln.line.width = LINE, Pt(1)
 text(s, "Strong-looking results kept dissolving under strict evaluation. We then measured the same failure in a published benchmark.", 0.6, 6.05, 12.1, 0.7, 16, FG, bold=True)
@@ -322,33 +326,78 @@ for i, (t, sub) in enumerate([("Hashed captures", "SHA-256 for every pcap used")
     box(s, 7.0, 1.9 + i * 1.15, 5.7, 0.95, t, sub, ACC, tsize=14, ssize=11)
 
 # 13 split protocol
-s = slide(f"Evaluation protocol alone moves the score by about {infl:.0f} points", "Split-protocol experiment")
+s = slide(f"Random splits inflate scores: {infl:.0f} points on InSDN, {infl_ci:.0f} on CICIDS2017", "Split-protocol audit")
 pcats = ["Random flow split", "Held-out source hosts", "IP addresses and ports only"]
-pv = [pi["A_random_flow_split"]["mean"], pi["B_source_ip_grouped_split"]["mean"], pi["D_identifier_only_random_split"]["mean"]]
-plab = [f"{pv[0]:.4f}", f"{pv[1]:.3f} ± {pi['B_source_ip_grouped_split']['ci95']:.3f}", f"{pv[2]:.3f}"]
-bar(s, pcats, [("balanced accuracy", pv)], 0.6, 1.8, 7.4, 4.4, labels=plab, fmt="0.000", vmin=0, vmax=1.15, point_colors=[GREY, ACC, RED])
-text(s, f"Same GPU XGBoost, 10 seeds, binary benign vs attack, {pi['rows']:,} flows", 0.6, 6.2, 7.4, 0.3, 12, MUTED, align=PP_ALIGN.CENTER)
-bullets(s, [f"Worst held-out split: {worst:.2f}.", "Identifiers alone reach 1.000, so a random split rewards memorising hosts.",
-            "Towhid et al. (full text read): all flows split 70:30, no grouping mentioned.", "Detected: inflation under the random-split protocol. Not claimed: that any paper's exact numbers are wrong."], x=8.4, y=2.0, w=4.3, size=15, gap=12)
+keyp = ["A_random_flow_split", "B_source_ip_grouped_split", "D_identifier_only_random_split"]
+bar(s, pcats, [("InSDN", [pi[k]["mean"] for k in keyp]), ("CICIDS2017", [ci[k]["mean"] for k in keyp])], 0.6, 1.8, 7.6, 4.4, colors=[ACC, GREY], fmt="0.000", legend=True, vmin=0, vmax=1.15)
+text(s, f"Balanced accuracy, GPU XGBoost, 10 seeds, benign vs attack. {pi['rows']:,} / {ci['rows']:,} flows", 0.6, 6.2, 7.6, 0.3, 12, MUTED, align=PP_ALIGN.CENTER)
+big(s, f"{dup_in:.0f}% / {dup_ci:.0f}%", "of random-split test rows are exact duplicates of a training row (InSDN / CICIDS2017)", 8.6, 1.8, 4.2, RED, 40)
+Bi, Bc = pi["B_source_ip_grouped_split"], ci["B_source_ip_grouped_split"]
+bullets(s, [f"Held-out hosts: {Bi['mean']:.3f} ± {Bi['ci95']:.3f} (InSDN, worst seed {min(Bi['per_seed']):.2f}), {Bc['mean']:.3f} ± {Bc['ci95']:.3f} (CICIDS2017).",
+            "Identifiers alone reach 1.000 on both, so a random split rewards memorising hosts.",
+            "Known already: Engelen 2021, Flood 2024. New: the paired gap with CIs on an SDN dataset."], x=8.6, y=4.0, w=4.2, size=13, gap=8)
+
+# 13b published InSDN papers
+s = slide("What published InSDN papers report vs how they split", "Protocol audit of the literature")
+SHORT = {"Towhid": ("Towhid et al.", "RF 98.84%", "70:30, all flows", None, "Not stated"),
+         "Intrusion detection in software defined network using deep": ("Ataa et al. 2024", "99.02%", "Not described (shuffled)", None, "No (stated)"),
+         "OptiXGB": ("OptiXGB-IDS 2026", "99.87%", "80:20 random", None, "Ports"),
+         "Software defined network intrusion system": ("PeerJ CS 2025", "99.93%", "train_test_split", None, "Not stated"),
+         "Sajid": ("Sajid et al. 2025", "99.98%", "Not described", None, "Dst Port"),
+         "SDNGuardStack": ("SDNGuardStack 2026", "99.98%", "80/20", None, "Flow ID, IPs, ports"),
+         "Malik": ("Malik et al. 2026", "81.60% (CV)", "Stratified 5-fold", None, "Not stated"),
+         "LightIDS": ("LightIDS-SDN 2026", "98.73%", "Ratios 60:40 to 90:10", None, "Not stated"),
+         "SICA": ("SICA 2026", "99.61%", "70/20/10", None, "No (stated)")}
+rows = []
+for q in lit["papers"]:
+    if not q.get("read"):
+        continue
+    k = next((k for k in SHORT if k in q["paper"]), None)
+    if k is None or "InSDN" not in q.get("dataset", "InSDN"):
+        continue
+    nm, acc, sp, _, ids = SHORT[k]
+    g = {True: "Yes", False: "No", None: "Not stated"}[q.get("grouped")] if "grouped" in q else "No"
+    rows.append((nm, acc, sp, g, ids))
+assert len(rows) == 9, len(rows)
+hdr = ("Paper", "Reported", "Split", "Grouped by host", "IDs / ports as inputs")
+tbl = s.shapes.add_table(len(rows) + 1, 5, Inches(0.6), Inches(1.65), Inches(12.1), Inches(4.2)).table
+for j, w in enumerate([2.6, 1.7, 3.0, 2.0, 2.8]):
+    tbl.columns[j].width = Inches(w)
+for i, r in enumerate([hdr] + rows):
+    tbl.rows[i].height = Inches(0.42)
+    for j, v in enumerate(r):
+        c = tbl.cell(i, j)
+        c.fill.solid()
+        c.fill.fore_color.rgb = ACC if i == 0 else (PANEL if i % 2 == 0 else BG)
+        c.margin_top = c.margin_bottom = Inches(0.03)
+        c.vertical_anchor = MSO_ANCHOR.MIDDLE
+        pp = c.text_frame.paragraphs[0]
+        pp.text = v
+        bad = i > 0 and j >= 3 and v not in ("No (stated)", "Not stated") and v != "No" or (i > 0 and j == 4 and v not in ("No (stated)", "Not stated"))
+        pp.font.name, pp.font.size, pp.font.bold = FONT, Pt(12), (i == 0)
+        pp.font.color.rgb = RGBColor(0xFF, 0xFF, 0xFF) if i == 0 else (RED if (j == 4 and v not in ("No (stated)", "Not stated")) else FG)
+text(s, f"{n_read} of {n_pap} papers read in full; the {n_pap - n_read} unread ones are not characterised. Table: the 9 read papers that use InSDN (one more read paper is not on InSDN). Numbers are the authors' own, not re-run. None groups by host; none evaluates a real controller.", 0.6, 6.0, 12.1, 0.9, 13, MUTED)
 
 # 14 limits
 s = slide("Limitations we state ourselves", "Honest scope")
-bullets(s, ["One dataset (InSDN) and one recorded controller (ONOS); Ryu is checked only on our own benign traffic.",
+bullets(s, ["Controller study: one dataset (InSDN) and one recorded controller (ONOS); Ryu is checked only on our own benign traffic.",
             "We generated no attack traffic; benign and attack are never interleaved in one session.",
             "Labels cover only part of the controller-visible traffic, so session identity and unlisted attacks cannot be separated.",
-            "Only one of the four published papers checked was read in full; the others are unverified and not counted.",
+            f"Literature check: {n_read} of {n_pap} papers read in full; the rest are not characterised. Reported numbers are the authors' own.",
+            "The split audit covers two datasets, one model family (XGBoost) and binary labels; UKMDDoSDN has no benign class and was unusable.",
             "Phase 1 figures come from archived studies and are not re-run here.",
-            "Our literature searches (October 2026) are evidence, not proof, that nothing similar exists."], w=12.1, size=18, y=2.0, gap=14)
+            "Our literature search (October 2026) is evidence, not proof, that no one has measured this on an SDN dataset."], w=12.1, size=18, y=2.0, gap=14)
 
 # 15 scope
-s = slide("Scope and takeaways", "Close")
-cols = [("Not new", ["Control-plane telemetry for SDN IDS exists (LAN-SDN-NIDS, SDNFLow)", "The detector itself", "Stock Ryu behaviour follows from its code"], MUTED),
-        ("Next", ["Interleave benign and attack traffic in one session", "A second dataset or controller family", "Audit published papers under a preregistered protocol"], RED),
-        ("Takeaways", ["The controller never saw the labelled 5-tuples", "What it sees depends on the forwarding app", "On InSDN, controller-side scores are not detection accuracy"], ACC)]
+s = slide("Contributions: what is new and what is known", "Novelty and scope")
+cols = [("Already known", ["Identifier columns are shortcut features (Engelen 2021)", "Random splits leak on NIDS data (Flood 2024)", "Control-plane telemetry for SDN IDS (LAN-SDN-NIDS, SDNFLow)"], MUTED),
+        ("New here", ["Paired random vs host-held-out gap on InSDN and CICIDS2017, 10 seeds, CIs", "Audit of 9 published InSDN papers: none groups by host, none uses a real controller", "Controller-telemetry gap: 0 FlowMods with IPs or ports"], ACC),
+        ("Not done", ["Interleaved benign and attack traffic in one session", "A second SDN dataset or controller family", "Unread InSDN papers not characterised"], RED),
+        ("Takeaways", ["Random-split scores on InSDN do not measure detection", "What a controller sees depends on the forwarding app", "On InSDN, controller-side scores are not detection accuracy"], FG)]
 for i, (t, items, c) in enumerate(cols):
-    x = 0.6 + i * 4.15
-    text(s, t, x, 1.9, 3.8, 0.5, 22, c, bold=True)
-    bullets(s, items, x=x, y=2.6, w=3.8, size=15, gap=12)
+    x = 0.6 + i * 3.1
+    text(s, t, x, 1.9, 2.9, 0.5, 20, c, bold=True)
+    bullets(s, items, x=x, y=2.6, w=2.85, size=14, gap=12)
 
 prs.save(sys.argv[1])
 print("saved", sys.argv[1])
