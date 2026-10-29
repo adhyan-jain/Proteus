@@ -631,13 +631,12 @@ CTRL_RESULTS = ROOT / "research" / "insdn_controller" / "results"
 def controller_telemetry():
     """Read-only summary of the InSDN controller-telemetry study (research/insdn_controller/results/*.json)."""
     _metrics["total_requests"] += 1
-    need = ("v4_strict_W5.json", "v4_strict_W5_xgb.json", "live_modes_v4_one10.json", "live_modes_v4_linear3.json", "review_checks.json")
+    need = ("v4_strict_W5_xgb.json", "live_modes_v4_one10.json", "live_modes_v4_linear3.json", "review_checks.json")
     missing = [n for n in need if not (CTRL_RESULTS / n).exists()]
     if missing:
         return _not_available(f"Missing result files in {CTRL_RESULTS}: {', '.join(missing)}")
     load = lambda n: json.loads((CTRL_RESULTS / n).read_text())
-    cv = load("v4_strict_W5.json")["A_grouped_cv"]
-    cv_x = load("v4_strict_W5_xgb.json")["A_grouped_cv"]
+    cv = cv_x = load("v4_strict_W5_xgb.json")["A_grouped_cv"]
     keys = ("mlp_all", "linear_all_history", "thr_packet_in_rate")
     models = {k: cv[k] for k in keys if k in cv}
     models["xgb_all_history"] = cv_x["xgb_all_history"]
