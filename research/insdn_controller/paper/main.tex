@@ -1,6 +1,7 @@
 \documentclass[journal]{IEEEtran}
 \usepackage{amsmath,booktabs,multirow,graphicx,url}
 \usepackage[hidelinks]{hyperref}
+\emergencystretch=2em
 
 \begin{document}
 \title{What an SDN Controller Can Actually Observe:\\
@@ -20,7 +21,7 @@ resembling these records is rarely checked. We check it inside the benchmark its
 intrusion dataset, also published packet captures of its ONOS controller's OpenFlow~1.3 control channel; we parse
 all 44 of them (11 benign and 33 attack sessions across seven attack classes). In every flow-statistics reply, and in
 all 3\,827 FlowMods, in these captures the controller's flow entries match only on \texttt{eth\_type} or
-\texttt{(in\_port, eth\_src, eth\_dst)}; none matches IP addresses or transport ports, so the dataset's labelled
+\texttt{(in\_port,\allowbreak{} eth\_src,\allowbreak{} eth\_dst)}; none matches IP addresses or transport ports, so the dataset's labelled
 5-tuple flows are not counters the controller can read. What the controller does receive is a dense PacketIn stream: in 9 of 12 attack
 scenarios, between 0.68 and 1.29 PacketIns per data packet seen at the target. Using only this controller-observable
 view, small models reach a balanced accuracy of 0.946 on unseen captures under capture-grouped cross-validation
@@ -38,8 +39,8 @@ magnitude; we report both. Ryu's unmodified \texttt{simple\_switch\_13} applicat
 captures, also installed only MAC-pair entries (86 of 91 FlowMods; none with IP or transport fields). Second, we audit the evaluation protocol. The concern that random splits and identifier columns inflate NIDS scores is known for non-SDN
 benchmarks; we quantify it with one pipeline on two datasets. On InSDN a random flow-level split gives 0.9998 balanced accuracy, whereas holding out source hosts gives
 $0.907\pm0.085$ (worst split 0.66); on CICIDS2017 the values are 0.9917 and $0.641\pm0.056$; IP addresses and ports alone give at least 0.9999 on both, and
-48.7\% of InSDN's random-split test rows duplicate a training row, but removing all exact duplicates leaves the random-split score at 0.9998, and the host-held-out drop persists when every attack class is present in training (0.939), so duplicates do not explain it. The dataset has only eight hosts with at least 500 flows (122,307 of its 122,868 source IPs occur once), and when the main attacker host is held out a detector trained on the rest catches 51.6\% of its attack flows while 37.9\% of the largest benign host's flows are flagged. Of nine InSDN papers read in full, none reports a host-grouped split and three use identifier columns as inputs, so their protocols cannot rule out this leakage;
-this does not show their reported numbers are wrong. A recipe replication with one classifier, approximating four published feature choices, scores at least 0.9998 binary balanced accuracy under a random split and 0.856--0.943 under a host-grouped split (a stress test, since grouping also changes class composition). A third dataset, UKMDDoSDN, could not be used.
+48.7\% of InSDN's random-split test rows duplicate a training row, but removing all exact duplicates leaves the random-split score at 0.9998, and the host-held-out drop persists when every attack class is present in training (0.939), so neither duplicates nor class absence alone explains it. The dataset has only eight hosts with at least 500 flows (122,307 of its 122,868 source IPs occur once), and when the main attacker host is held out a detector trained on the rest catches 51.6\% of its attack flows while 37.9\% of the largest benign host's flows are flagged. Of ten papers read in full, most do not describe their split, none reports a host-grouped one, and three use identifier columns as inputs, so their protocols cannot rule out this leakage;
+this does not show their reported numbers are wrong. A recipe replication with one classifier, using four generic feature recipes modelled on choices described in the literature (not reproductions of those papers), scores at least 0.9998 binary balanced accuracy under a random split and 0.856--0.943 under a host-grouped split (a stress test, since grouping also changes class composition). A third dataset, UKMDDoSDN, could not be used.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -73,7 +74,7 @@ structures occur and none involves IP or transport fields (also true of all 3\,8
 controller receives 0.68 to 1.29 PacketIns per target packet.
 \item \textbf{A quantified evaluation-validity audit (\S\ref{sec:audit}).} With one pipeline on InSDN and CICIDS2017, random flow splits give
 0.9998 and 0.9917 balanced accuracy, while holding out source hosts gives $0.907\pm0.085$ and $0.641\pm0.056$, and IPs and ports alone give at least 0.9999. The
-general leakage concern is known~\cite{engelen2021troubleshooting,flood2024baddesign}; what is new is the paired, quantified gap on an SDN dataset, and an audit of the protocols of 12 published papers (10 read in full; nine of them on InSDN), plus a recipe replication on InSDN in which four published-style feature recipes score at least 0.9998 binary balanced accuracy under a random split but 0.856--0.943 under a host-grouped split (Table~\ref{tab:recipe}).
+general leakage concern is known~\cite{engelen2021troubleshooting,flood2024baddesign}; what is new is the paired, quantified gap on an SDN dataset, and an audit of the protocols of 12 published papers (10 read in full; none uses a host-grouped split), plus a recipe replication on InSDN in which four generic feature recipes score at least 0.9998 binary balanced accuracy under a random split but 0.856--0.943 under a host-grouped split (Table~\ref{tab:recipe}).
 \item \textbf{A reproducible control-channel pipeline (\S\ref{sec:method}).} An OpenFlow~1.3 parser and window
 featuriser for the 44 captures with reported parser loss, and window labels grounded in InSDN's own flow labels.
 \item \textbf{Detection from the controller's view, as a feasibility result (\S\ref{sec:results}).} Evaluated on
@@ -142,15 +143,15 @@ ONOS; attacks target a Metasploitable-2 VM or the OVS host. Besides the CSVs, th
 downloaded them from the dataset's institutional host; the Metasploitable-2 and OVS archives passed ZIP integrity
 checks, and for the Normal archive we fetched only the controller captures through HTTP range requests on its ZIP
 members, each checked against its recorded size. SHA-256 hashes of the 44 captures and the two full archives are
-released with the code (\texttt{capture\_hashes.sha256}).
+released with the code (\texttt{capture\_hashes\allowbreak{}.sha256}).
 The 44 controller captures (\texttt{*ONOS*}) are the subject of this paper (Table~\ref{tab:inventory}).
 
 \textbf{Granularity.} We decoded every OpenFlow~1.3 multipart flow-statistics reply in all 44 captures. Only two
 match structures occur: \texttt{eth\_type} (the controller's default punt rules; 80\,464 entry observations) and
-\texttt{(in\_port, eth\_src, eth\_dst)} (reactive forwarding; 24\,437 observations). No entry matches IP addresses
+\texttt{(in\_port,\allowbreak{} eth\_src,\allowbreak{} eth\_dst)} (reactive forwarding; 24\,437 observations). No entry matches IP addresses
 or transport ports. A 5-tuple flow, the unit InSDN labels, is therefore never a counter the controller can read; a
 MAC-pair entry aggregates every flow between two hosts. The 3\,827 FlowMods the controller sent show the same: 3\,811
-match \texttt{(in\_port, eth\_dst, eth\_src)}, 16 match \texttt{eth\_type}, and none has IP or transport fields, so a
+match \texttt{(in\_port,\allowbreak{} eth\_dst,\allowbreak{} eth\_src)}, 16 match \texttt{eth\_type}, and none has IP or transport fields, so a
 short-lived 5-tuple entry cannot have slipped between two polls. This describes the ONOS forwarding configuration used
 in InSDN; it is not a property of OpenFlow in general.
 
@@ -302,14 +303,14 @@ and 0.9917 on CICIDS2017 (2\,100\,814 flows). Holding out source hosts (70:30 by
 individual splits from 0.66 to 1.00, and $0.641\pm0.056$ on CICIDS2017. A per-file time-ordered split shows no drop on InSDN (0.9997), so there the effect
 works through hosts and not through adjacent flows, but it falls to 0.719 on CICIDS2017, so no single explanation covers both. A classifier given only IP
 addresses, ports and the Flow ID scores at least 0.9999 on both datasets, so identity alone separates the classes. As a measure of redundancy, 48.7\% of
-the random-split test rows on InSDN (20.3\% on CICIDS2017) have an exact duplicate of their full feature vector in the training set. Redundancy is not the mechanism: dropping all exact duplicates (343,889 to 184,607 rows) leaves the random-split score at 0.9998, and holding out source hosts while requiring every attack class to appear in training still gives 0.939 (0.812 after de-duplication), so the drop is not a missing-class artefact; splitting by the source--destination--port triple instead gives 0.961 (0.984 de-duplicated), so the effect is tied to unseen source hosts rather than to flows in general. A partial replication of one published pipeline (SDNGuardStack, our approximation, five seeds, default hyperparameters) reproduces its reported accuracy under a random split (0.9999 against the reported 99.98\%) but not under held-out hosts (0.72--0.78, 95\% CI up to $\pm$0.39), so the published number is reproducible and the question is what it measures. \textbf{Why the held-out-host score swings.} InSDN has 122,868 distinct source IPs, but 122,307 of them appear in exactly one flow (spoofed flood sources) and only eight hosts have at least 500 flows, together holding 215,404 of the 343,889 rows; three of those are attackers. A split by source IP therefore mostly decides where a few hosts fall, which is why the held-out-host score varies from 0.66 to 1.00 across splits. Holding out one of those hosts at a time (training on every other row, identifier columns removed, three model seeds) detects only 51.6\% of the attack flows of the main attacker host 200.175.2.130 (DoS 34.7\%) and flags 37.9\% of the flows of the largest benign host 192.168.20.133, while the other two attacker hosts are detected at 99.7\% and 93.8\%. This is a leave-one-host-out measurement on a dataset with very few real hosts, so it should be read as a stress test of generalisation to a new host, not as the accuracy a deployed detector would have.
+the random-split test rows on InSDN (20.3\% on CICIDS2017) have an exact duplicate of their full feature vector in the training set. Redundancy is not the mechanism: dropping all exact duplicates (343\,889 to 184,607 rows) leaves the random-split score at 0.9998, and holding out source hosts while requiring every attack class to appear in training still gives 0.939 (0.812 after de-duplication), so the drop persists when every attack class is present in training, although with wide confidence intervals and a changed class mix; splitting by the source--destination--port triple instead gives 0.961 (0.984 de-duplicated), so the effect is tied to unseen source hosts rather than to flows in general. A partial replication of one published pipeline (SDNGuardStack, our approximation, five seeds, default hyperparameters) reproduces its reported accuracy under a random split (0.9999 against the reported 99.98\%) but not under held-out hosts (0.72--0.78, 95\% CI up to $\pm$0.39), so the published number is reproducible and the question is what it measures. \textbf{Why the held-out-host score swings.} InSDN has 122,868 distinct source IPs, but 122,307 of them appear in exactly one flow (spoofed flood sources) and only eight hosts have at least 500 flows, together holding 215,404 of the 343\,889 rows; three of those are attackers. A split by source IP therefore mostly decides where a few hosts fall, which is why the held-out-host score varies from 0.66 to 1.00 across splits. Holding out one of those hosts at a time (training on every other row, identifier columns removed, three model seeds) detects only 51.6\% of the attack flows of the main attacker host 200.175.2.130 (DoS 34.7\%) and flags 37.9\% of the flows of the largest benign host 192.168.20.133, while the other two attacker hosts are detected at 99.7\% and 93.8\% (the former has only 12 benign flows, 10 of which are flagged). Holding out the main attacker removes 32\% of all rows from training, the figures use three model seeds, and no confidence interval is computed. This is a leave-one-host-out measurement on a dataset with very few real hosts, so it should be read as a stress test of generalisation to a new host, not as the accuracy a deployed detector would have.
 
 We also tried a third
 dataset, UKMDDoSDN~\cite{ukmddosdn2025}, but it was skipped: its two public PCAPs contain no benign class (Appendix~\ref{app:ukm}).
 
 \textbf{What we can and cannot say about published InSDN papers.} We examined 12 papers (eleven on SDN or InSDN-related data, one on other benchmarks) and
 read 10 in full (\texttt{literature\_check.json}); the other two are characterised by their abstracts only and we make no claim about their methods.
-Of the nine InSDN papers read in full, none reports a host-grouped or capture-grouped split, and three use identifier columns (such as Flow ID or source IP) among their model inputs;
+Of the ten papers read in full, most do not describe their split, none reports a host-grouped or capture-grouped split, and three use identifier columns (such as Flow ID or source IP) among their model inputs;
 the remaining papers either state that they removed such columns or do not say. This means their protocols cannot rule out the leakage we measure. It does not show that any
 reported number is wrong: we use our own classifier and the CSV features, and did not re-run any cited model.
 
@@ -353,7 +354,7 @@ level on probe (0.812 vs.\ 0.794, within the interval) and behind on exploit and
 beats the best threshold (0.678 vs.\ 0.678), while OVS to Metasploitable-2 remains strong (0.977 vs.\ 0.924).
 
 \textbf{Published-paper check.} Our comparison of split protocols uses our own classifier and the CSV features; it shows the random-split protocol
-overstates held-out-host performance on InSDN by about nine points (and on CICIDS2017 by about 35), not that any author's reported number is wrong. We read 10 of 12 examined papers in full (nine of them on InSDN); no
+overstates held-out-host performance on InSDN by about nine points (and on CICIDS2017 by about 35), not that any author's reported number is wrong. We read 10 of 12 examined papers in full (nine of them evaluated on InSDN data); no
 published model was re-run, and the two unread papers are not characterised.
 
 \textbf{Baselines and deployment.} A GPU gradient-boosted tree baseline (XGBoost, BAcc $0.952\pm0.013$ at 5\,s, strict labels, 10 seeds) does not beat the linear ($0.961\pm0.011$) or MLP ($0.958\pm0.012$) models; detection is run offline on recorded control channels,
@@ -400,7 +401,7 @@ The InSDN CSVs and PCAPs are public (sources and SHA-256 hashes in \texttt{data/
 experiments, forwarding-study applications, result files and table generators are in the project repository; the script
 \texttt{research/insdn\_controller/reproduce.sh} rebuilds the features from the raw ONOS captures, re-runs every experiment, and
 compares each result file with the stored one (tolerance $10^{-6}$), and \texttt{paper/verify\_numbers.py} checks the numbers quoted in the
-text against the result files. Hashes of every capture we recorded are in \texttt{capture\_hashes.sha256}. Re-recording the live
+text against the result files. Hashes of every capture we recorded are in \texttt{capture\_hashes\allowbreak{}.sha256}. Re-recording the live
 captures needs root privileges and will not reproduce packet timing exactly. The first, flawed campaign's captures were not retained;
 only its summary file is.
 

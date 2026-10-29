@@ -91,11 +91,11 @@ checks = [
     # literature audit counts
     ("lit papers examined", len(lp), "12"),
     ("lit papers read in full", sum(p["read"] for p in lp), "10"),
-    ("lit InSDN papers read in full", len(insdn_read), "nine"),
+    ("lit papers read in full (word)", sum(p["read"] for p in lp), "ten"),
     ("lit read InSDN, none grouped", sum(bool(p.get("grouped")) for p in insdn_read), "none reports a host-grouped"),
     ("lit read InSDN, ids as inputs", sum(bool(p.get("identifiers_as_features")) for p in insdn_read), "three"),
 ]
-WORDS = {"nine": 9, "three": 3, "none": 0}
+WORDS = {"nine": 9, "ten": 10, "three": 3, "none": 0}
 bad = 0
 for name, val, quoted in checks:
     num = WORDS.get(quoted.split()[0], quoted)  # quoted word -> number it stands for
