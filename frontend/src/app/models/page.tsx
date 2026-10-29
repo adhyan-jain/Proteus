@@ -14,7 +14,7 @@ export default async function ModelsPage() {
       <h1 className="text-[15px] font-semibold text-text-primary">Models & Datasets</h1>
 
       <Panel>
-        <PanelHeader title="Deployed demo release" subtitle="The versioned model artifact served by the inference API (demo scale)" />
+        <PanelHeader title="Deployed demo release" why="The model the API currently serves. It is a small demo classifier, not the InSDN or CICIDS models." />
         <PanelBody>
           {models.deployed_model ? (
             <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -46,7 +46,7 @@ export default async function ModelsPage() {
       <Panel>
         <PanelHeader
           title="Datasets"
-          subtitle="Precomputed from backend/data_full.py — full class distributions, row counts, and provenance"
+          why="The two benchmark datasets the study uses, with how many rows and the class mix. Bars show the 8 largest classes; most attack classes are tiny, which is why rare-class handling matters."
         />
         <PanelBody>
           {datasets.available ? (
@@ -68,7 +68,15 @@ export default async function ModelsPage() {
                         />
                         <Stat label="Load time" value={fmtDuration(d.load_seconds)} />
                       </div>
-                      {d.class_distribution && <ClassDistributionChart distribution={d.class_distribution} />}
+                      {d.class_distribution && (
+                        <ClassDistributionChart
+                          distribution={Object.fromEntries(
+                            Object.entries(d.class_distribution)
+                              .sort((a, b) => b[1] - a[1])
+                              .slice(0, 8),
+                          )}
+                        />
+                      )}
                     </>
                   ) : (
                     <EmptyState reason={d.error ?? "Dataset unavailable."} />

@@ -25,7 +25,8 @@ export default async function TopologyPage() {
       <Panel>
         <PanelHeader
           title="Mininet / Ryu testbed used in the forwarding study"
-          subtitle="Topologies from research/insdn_controller/live/run_benign.py; Open vSwitch with OpenFlow 1.3, controller on port 6653"
+          subtitle="The two Mininet networks used in the forwarding study"
+          why="Where the PacketIn numbers come from: every new flow from a host reaches its switch and is sent to the Ryu controller, which decides what flow entry to install."
         />
         <PanelBody>
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -83,14 +84,14 @@ export default async function TopologyPage() {
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Panel>
-          <PanelHeader title="Controller" />
+          <PanelHeader title="Controller" why="The program that decides how switches forward traffic." />
           <PanelBody className="text-[12px] text-text-tertiary">
             Ryu, OpenFlow 1.3, learning switch with a configurable entry granularity (MAC-pair, 5-tuple 10 s, 5-tuple 2 s).
             Not connected live; the numbers here are recorded runs.
           </PanelBody>
         </Panel>
         <Panel>
-          <PanelHeader title="Recorded TCP PacketIns per run (1 switch)" />
+          <PanelHeader title="TCP PacketIns per run (1 switch)" why="Controller workload per forwarding mode; fewer is lighter." />
           <PanelBody className="text-[12px] text-text-secondary">
             {ok ? (
               Object.entries(ok.live_modes).map(([m, v]) => (
@@ -105,7 +106,7 @@ export default async function TopologyPage() {
           </PanelBody>
         </Panel>
         <Panel>
-          <PanelHeader title="Recorded TCP PacketIns per run (3 switches)" />
+          <PanelHeader title="TCP PacketIns per run (3 switches)" why="Controller workload per forwarding mode; fewer is lighter." />
           <PanelBody className="text-[12px] text-text-secondary">
             {ok ? (
               Object.entries(ok.live_modes_linear3).map(([m, v]) => (

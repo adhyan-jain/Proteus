@@ -64,7 +64,8 @@ export default async function SyntheticLabPage() {
       <Panel>
         <PanelHeader
           title="Generator / Critic Loss"
-          subtitle="Wasserstein loss with gradient penalty (λ=10, baked into critic loss below — not logged as a separate term)"
+          subtitle="Training progress of the synthetic-attack generator"
+          why="The generator learns to make fake attack records and the critic learns to tell them from real ones. Losses that settle (not diverging) mean training is stable."
         />
         <PanelBody>
           <GanLossChart lossLog={gan.loss_log} />
@@ -73,7 +74,7 @@ export default async function SyntheticLabPage() {
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Panel>
-          <PanelHeader title="Synthetic Sample Throughput" subtitle="Generated vs. fidelity-gate admitted, across static-augmentation and closed-loop phases" />
+          <PanelHeader title="Synthetic Sample Throughput" why="How many fake samples were made and how many passed the quality gate. 0% admitted means none were trusted enough to train on." />
           <PanelBody className="flex flex-col gap-4">
             <Stat label="Total samples generated" value={fmtInt(totalGenerated)} tone="synthetic" />
             <Stat label="Total admitted by fidelity gate" value={fmtInt(totalAdmitted)} tone="good" />
@@ -84,7 +85,7 @@ export default async function SyntheticLabPage() {
           </PanelBody>
         </Panel>
         <Panel>
-          <PanelHeader title="Rare-Class Context" subtitle="Why these classes were targeted for augmentation" />
+          <PanelHeader title="Rare-Class Context" why="Rare attack types have too few real examples, so the generator targets them." />
           <PanelBody className="flex flex-col gap-2 text-[12px] text-text-secondary">
             <p>
               Classes below {exp.available ? "3%" : ""} of the training distribution (with at least 5 samples)
@@ -103,30 +104,14 @@ export default async function SyntheticLabPage() {
         </Panel>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      {gan.degraded && (
         <Panel>
-          <PanelHeader title="Diversity Diagnostics" />
+          <PanelHeader title="Generator degraded" />
           <PanelBody>
-            <EmptyState
-              title="NOT COMPUTED"
-              reason="This run does not compute a synthetic-sample diversity metric (e.g. pairwise distance / coverage). Would need to be added to backend/gan.py to appear here."
-            />
+            <EmptyState title="GENERATOR DEGRADED" reason={gan.error ?? "Training raised an exception."} />
           </PanelBody>
         </Panel>
-        <Panel>
-          <PanelHeader title="Mode-Collapse Warnings" />
-          <PanelBody>
-            {gan.degraded ? (
-              <EmptyState title="GENERATOR DEGRADED" reason={gan.error ?? "Training raised an exception."} />
-            ) : (
-              <EmptyState
-                title="NOT MONITORED"
-                reason="No automated mode-collapse detector runs in this pipeline yet — inspect the loss curve above for the classic flat-critic-loss signature manually."
-              />
-            )}
-          </PanelBody>
-        </Panel>
-      </div>
+      )}
     </div>
   );
 }

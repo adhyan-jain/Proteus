@@ -36,7 +36,7 @@ export default async function AdaptationPage() {
       </div>
 
       <Panel>
-        <PanelHeader title="Adaptation Mechanism" subtitle="Every drift firing walks this chain before a new model is deployed" />
+        <PanelHeader title="Adaptation Mechanism" why="The steps taken each time drift is detected, from buffering traffic to deploying a retrained model." />
         <PanelBody>
           <div className="flex flex-wrap items-center gap-1.5">
             {STAGES.map((s, i) => (
@@ -94,7 +94,7 @@ export default async function AdaptationPage() {
       </div>
 
       <Panel>
-        <PanelHeader title="Before / After Macro-F1 per Retrain Event" subtitle="Measured on the same batch that triggered the retrain, immediately before and after" />
+        <PanelHeader title="Before / After Macro-F1 per Retrain Event" why="Did each retrain help? Compares quality on the same batch just before and just after. Zero change means the retrain added nothing." />
         <PanelBody>
           {successful.length > 0 ? (
             <div className="overflow-x-auto">

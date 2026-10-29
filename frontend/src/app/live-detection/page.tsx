@@ -41,7 +41,7 @@ export default async function LiveDetectionPage() {
       </Panel>
 
       <Panel>
-        <PanelHeader title="Detection Timeline — Closed-Loop Classifier" subtitle="Per-timestep macro-F1, drift firings, and gate decisions" />
+        <PanelHeader title="Detection Timeline" why="One row per timestep of the replayed stream: classifier quality, whether drift fired, and whether the synthetic batch was accepted (low MMD) or rejected (high MMD)." />
         <PanelBody>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[560px] border-collapse text-[12px]">

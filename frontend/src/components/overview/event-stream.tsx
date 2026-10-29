@@ -14,10 +14,12 @@ export function EventStream({
   drift,
   gate,
   adapt,
+  limit,
 }: {
   drift: DriftEvents;
   gate: GateLog;
   adapt: AdaptationEvents;
+  limit?: number;
 }) {
   const events: Event[] = [];
 
@@ -69,6 +71,7 @@ export function EventStream({
       {events
         .slice()
         .reverse()
+        .slice(0, limit ?? events.length)
         .map((e, i) => (
           <li key={i} className="flex items-center gap-3 py-2">
             <span className="mono w-10 shrink-0 text-[11px] text-text-disabled">t={e.timestep}</span>

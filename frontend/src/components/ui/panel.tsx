@@ -23,10 +23,12 @@ export function Panel({
 export function PanelHeader({
   title,
   subtitle,
+  why,
   right,
 }: {
   title: string;
   subtitle?: string;
+  why?: string;
   right?: ReactNode;
 }) {
   return (
@@ -34,6 +36,12 @@ export function PanelHeader({
       <div>
         <h3 className="text-[13px] font-semibold tracking-wide text-text-primary">{title}</h3>
         {subtitle && <p className="mt-0.5 text-[11px] text-text-tertiary">{subtitle}</p>}
+        {why && (
+          <p className="mt-2 border-l-2 border-border-default pl-2 text-[11.5px] leading-snug text-text-secondary">
+            <span className="font-semibold text-text-primary">What this shows: </span>
+            {why}
+          </p>
+        )}
       </div>
       {right}
     </div>

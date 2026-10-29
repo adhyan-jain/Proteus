@@ -44,7 +44,8 @@ export default async function ControllerTelemetryPage() {
       <Panel>
         <PanelHeader
           title="Detection from controller-observable features"
-          subtitle="Capture-grouped CV, 10 seeds, mean ± 95% CI. Feasibility only: the trivial rule is the bar to beat."
+          subtitle="Capture-grouped CV, 10 seeds, mean ± 95% CI"
+          why="How well models separate attack from benign using only what the controller sees. High scores are feasibility only: the note below shows a trivial rule matches them, so this is not proof of detection."
         />
         <PanelBody>
           <table className="w-full text-[12px]">
@@ -79,7 +80,8 @@ export default async function ControllerTelemetryPage() {
       <Panel>
         <PanelHeader
           title="Forwarding mode vs what the controller sees (1 switch)"
-          subtitle="Ryu + Mininet, benign traffic only, 10 runs per mode (mean ± 95% CI)"
+          subtitle="Benign traffic, 10 runs per mode"
+          why="Same traffic, three forwarding settings. Per-flow forwarding makes the controller see hundreds to over a thousand times more TCP PacketIns than MAC-pair forwarding, so what the controller sees depends on the forwarding app, not only on the attack."
         />
         <PanelBody>
           <table className="w-full text-[12px]">
@@ -108,7 +110,8 @@ export default async function ControllerTelemetryPage() {
       <Panel>
         <PanelHeader
           title="Same study on a 3-switch chain"
-          subtitle="Ryu + Mininet, benign traffic only, 10 runs per mode (mean ± 95% CI)"
+          subtitle="Benign traffic, 10 runs per mode"
+          why="Repeat on a chain of three switches to check the effect is not an artefact of one switch. The pattern holds."
         />
         <PanelBody>
           <table className="w-full text-[12px]">
@@ -138,7 +141,8 @@ export default async function ControllerTelemetryPage() {
         <Panel>
           <PanelHeader
             title="Second controller application: Ryu stock simple_switch_13"
-            subtitle={`Unmodified application, ${data.stock_ryu.runs} runs, benign traffic. FlowMod match structures.`}
+            subtitle={`Unmodified app, ${data.stock_ryu.runs} runs`}
+            why="Checks that MAC-pair entries are not a quirk of our own app. Ryu's stock learning switch also installs only MAC-pair entries, so the controller never sees IP or port details."
           />
           <PanelBody>
             <table className="w-full text-[12px]">
@@ -164,7 +168,8 @@ export default async function ControllerTelemetryPage() {
         <Panel>
           <PanelHeader
             title="Host-side flow-CSV baseline (contrast only)"
-            subtitle={`${data.host_side.rows.toLocaleString()} flows, ${data.host_side.features} features, ${data.host_side.seeds} seeds`}
+            subtitle={`${data.host_side.rows.toLocaleString()} flows, ${data.host_side.features} features`}
+            why="What the usual benchmark protocol scores. Near-perfect, but it uses host-side features a controller never gets and leaks sessions across the split, so it is shown for contrast only."
           />
           <PanelBody className="text-[12px] text-text-secondary">
             Balanced accuracy <span className="mono text-text-primary">{data.host_side.bacc_mean.toFixed(4)} ± {data.host_side.bacc_ci95.toFixed(5)}</span>.{" "}

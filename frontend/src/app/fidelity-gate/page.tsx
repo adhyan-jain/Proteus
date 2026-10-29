@@ -27,7 +27,8 @@ export default async function FidelityGatePage() {
       <Panel>
         <PanelHeader
           title="Latest Admission Decision"
-          subtitle="GENERATED BATCH → MMD TEST → THRESHOLD → ADMIT / REJECT"
+          subtitle="Generated batch → MMD test → threshold → admit / reject"
+          why="Before synthetic samples are used for training, this check measures how different they are from real traffic. Too different (above the threshold) means rejected."
         />
         <PanelBody>{latest ? <GateFlow entry={latest} threshold={gate.threshold} /> : <EmptyState reason="No gate decisions yet." />}</PanelBody>
       </Panel>
@@ -70,57 +71,14 @@ export default async function FidelityGatePage() {
       <Panel>
         <PanelHeader
           title="MMD Score History"
-          subtitle="Maximum Mean Discrepancy between each generated batch and its real comparison window. Point size = batch size."
+          subtitle="MMD of each generated batch; lower is more realistic"
+          why="Each point is one batch. Points under the threshold line were admitted, points above were rejected."
         />
         <PanelBody>
           <MmdHistoryChart entries={allEntries} threshold={gate.threshold} />
         </PanelBody>
       </Panel>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <Panel>
-          <PanelHeader title="Static-Augmentation Gate Log" subtitle="One-shot admission check before the stream begins" />
-          <PanelBody>
-            <GateTable entries={gate.static_gate_log} />
-          </PanelBody>
-        </Panel>
-        <Panel>
-          <PanelHeader title="Closed-Loop Gate Log" subtitle="Admission checks triggered during the simulated stream" />
-          <PanelBody>
-            <GateTable entries={gate.closed_loop_gate_log} />
-          </PanelBody>
-        </Panel>
-      </div>
-    </div>
-  );
-}
-
-function GateTable({ entries }: { entries: { step: number; mmd_score: number; admitted: boolean; n_samples: number }[] }) {
-  if (entries.length === 0) return <EmptyState reason="No entries logged." />;
-  return (
-    <div className="overflow-x-auto">
-      <table className="w-full min-w-[380px] border-collapse text-[12px]">
-        <thead>
-          <tr className="border-b border-border-subtle text-left text-text-tertiary">
-            <th className="py-1.5 pr-3 font-medium">step</th>
-            <th className="py-1.5 pr-3 font-medium">MMD score</th>
-            <th className="py-1.5 pr-3 font-medium">n samples</th>
-            <th className="py-1.5 font-medium">decision</th>
-          </tr>
-        </thead>
-        <tbody>
-          {entries.map((e, i) => (
-            <tr key={i} className="mono border-b border-border-subtle/60">
-              <td className="py-1.5 pr-3 text-text-primary">{e.step}</td>
-              <td className="py-1.5 pr-3 text-text-secondary">{fmtNum(e.mmd_score)}</td>
-              <td className="py-1.5 pr-3 text-text-tertiary">{fmtInt(e.n_samples)}</td>
-              <td className="py-1.5">
-                <Badge tone={e.admitted ? "good" : "bad"}>{e.admitted ? "admit" : "reject"}</Badge>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
     </div>
   );
 }

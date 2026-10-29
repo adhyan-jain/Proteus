@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Stat } from "@/components/ui/stat";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PipelineDiagram, type Stage, type StageState } from "@/components/pipeline/pipeline-diagram";
-import { fmtInt, fmtNum, fmtPct } from "@/lib/utils";
+import { fmtInt, fmtNum } from "@/lib/utils";
 import { OverviewMacroF1Chart } from "@/components/charts/overview-macro-f1-chart";
 import { EventStream } from "@/components/overview/event-stream";
 
@@ -143,7 +143,8 @@ export default async function OverviewPage() {
       <Panel>
         <PanelHeader
           title="Closed-Loop Pipeline"
-          subtitle="Live SDN traffic → ingestion → classification → drift detection → WGAN-GP generation → fidelity gate → retraining → redeployment"
+          subtitle="Traffic → classify → detect drift → generate → gate → retrain → redeploy"
+          why="The loop the system runs when traffic changes. Green stages ran in this demo run, amber stages need attention, grey stages have no live source."
         />
         <PanelBody>
           <PipelineDiagram stages={stages} />
@@ -152,7 +153,7 @@ export default async function OverviewPage() {
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
         <Panel className="lg:col-span-1">
-          <PanelHeader title="Detector Performance" subtitle="Held-out baseline evaluation" />
+          <PanelHeader title="Detector Performance" why="Baseline is the classifier before any drift. Closed-loop is the same classifier after the loop retrained it; the gap shows whether adapting helped." />
           <PanelBody className="flex flex-col gap-4">
             <Stat label="Baseline macro-F1" value={metrics.available ? fmtNum(metrics.macro_f1) : "—"} tone="network" />
             <Stat
@@ -167,7 +168,8 @@ export default async function OverviewPage() {
         <Panel className="lg:col-span-3">
           <PanelHeader
             title="Macro-F1 Over Time — Baseline vs. Closed-Loop"
-            subtitle="Simulated traffic stream, drift-injection timesteps marked"
+            subtitle="Simulated stream, drift marked"
+            why="Quality (macro-F1) at each timestep. A dip after a dashed line is the model degrading when the traffic shifts; recovery is the adaptation working."
           />
           <PanelBody>
             {conditions.available ? (
@@ -180,17 +182,11 @@ export default async function OverviewPage() {
       </div>
 
       <Panel>
-        <PanelHeader title="Recent Events" subtitle="Drift firings, fidelity-gate decisions, and retrain events from the last run, chronological" />
+        <PanelHeader title="Latest Events" why="The last few things the loop did: drift detected, synthetic batch accepted or rejected, model retrained. Full list is in Audit Log." />
         <PanelBody>
-          <EventStream drift={drift} gate={gate} adapt={adapt} />
+          <EventStream drift={drift} gate={gate} adapt={adapt} limit={5} />
         </PanelBody>
       </Panel>
-
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <Stat label="MMD threshold" value="0.25" />
-        <Stat label="Drift-injected timesteps" value={exp.drift_schedule.join(", ") || "none"} />
-        <Stat label="Runtime (this run)" value={`${fmtNum(exp.runtime_seconds, 1)} s`} />
-      </div>
     </div>
   );
 }

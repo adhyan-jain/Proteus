@@ -7,7 +7,7 @@ import { DriftStatisticChart } from "@/components/charts/drift-statistic-chart";
 import { fmtNum } from "@/lib/utils";
 
 export default async function DriftPage() {
-  const [drift, exp] = await Promise.all([api.driftEvents(), api.experimentsLatest()]);
+  const drift = await api.driftEvents();
 
   if (!drift.available) {
     return <EmptyState title="NO DRIFT DATA" reason={drift.reason} className="mt-20" />;
@@ -53,7 +53,8 @@ export default async function DriftPage() {
       <Panel>
         <PanelHeader
           title="Two-Sample Kolmogorov-Smirnov Test — Confidence Distribution Drift"
-          subtitle="Compares the closed-loop classifier's per-batch confidence distribution against a reference distribution captured on held-out test data. Bars below α (dashed) fire a drift event."
+          subtitle="Each bar is one timestep; bars under the dashed α line fire drift"
+          why="Tests whether the classifier's confidence on new traffic still looks like its confidence on clean test data. A significant difference means the traffic has shifted, so the model should be retrained."
         />
         <PanelBody>
           <DriftStatisticChart events={drift.events} />
@@ -63,7 +64,8 @@ export default async function DriftPage() {
       <Panel>
         <PanelHeader
           title="Drift Events"
-          subtitle="Every timestep the detector fired, with the statistical evidence behind the decision"
+          subtitle="Only the timesteps where drift fired"
+          why="The statistical evidence behind each retrain: a small p-value (below α) is why the loop acted at that step."
         />
         <PanelBody>
           {drift.events.some((e) => e.fired) ? (
@@ -100,40 +102,6 @@ export default async function DriftPage() {
           )}
         </PanelBody>
       </Panel>
-
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <Panel>
-          <PanelHeader title="Drift Schedule (Injected)" subtitle="Timesteps where the simulated stream deliberately injected distribution shift" />
-          <PanelBody>
-            {exp.available ? (
-              <div className="flex flex-wrap gap-2">
-                {exp.drift_schedule.map((t) => (
-                  <Badge key={t} tone="bad">
-                    t={t}
-                  </Badge>
-                ))}
-              </div>
-            ) : (
-              <EmptyState reason="No experiment run available." />
-            )}
-          </PanelBody>
-        </Panel>
-        <Panel>
-          <PanelHeader title="Detection Method" />
-          <PanelBody className="flex flex-col gap-2 text-[12px] text-text-secondary">
-            <p>
-              Proteus monitors the closed-loop classifier&apos;s prediction-confidence distribution over each
-              incoming batch and compares it against a reference distribution captured on held-out test data
-              using a two-sample Kolmogorov-Smirnov test.
-            </p>
-            <p>
-              When the resulting p-value falls below α, the null hypothesis (same distribution) is rejected —
-              Proteus concludes the traffic distribution has shifted and triggers the adaptation pipeline
-              (generator resume → fidelity check → retrain).
-            </p>
-          </PanelBody>
-        </Panel>
-      </div>
     </div>
   );
 }

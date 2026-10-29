@@ -12,7 +12,7 @@ export default async function AuditLogPage() {
       <Panel>
         <PanelHeader
           title="Full Event History"
-          subtitle="Every drift firing, fidelity-gate decision, and retrain event from the last recorded run, in order"
+          why="The complete, newest-first record of what the loop did, so any change in model behaviour can be traced back to an event."
         />
         <PanelBody>
           {drift.available || gate.available || adapt.available ? (
