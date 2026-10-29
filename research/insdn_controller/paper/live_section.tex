@@ -14,6 +14,12 @@ loop-free three-switch chain (Table~\ref{tab:live_l3}, below).
 
 \input{live_table}
 
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{fig_forwarding.pdf}
+\caption{TCP PacketIns per run (mean $\pm$ 95\% CI, 10 runs per mode, log scale) under three forwarding modes, on one switch and on a three-switch chain. Data: \texttt{live\_modes\_v4\_one10.json}, \texttt{live\_modes\_v4\_linear3.json}.}\label{fig:fwd}
+\end{figure}
+
 \textbf{Granularity sets the PacketIn volume.} MAC-pair mode produced $12.3\pm2.3$ TCP PacketIns per run, against
 $10\,422\pm202$ (10\,s idle) and $10\,392\pm249$ (2\,s idle) under per-flow forwarding: 665$\times$ to 1\,752$\times$ (10\,s idle)
 and 668$\times$ to 1\,780$\times$ (2\,s idle) more in each of the ten paired runs (larger in 10 of 10; two-sided sign-test $p=0.002$). That is about 11--12 TCP PacketIns per

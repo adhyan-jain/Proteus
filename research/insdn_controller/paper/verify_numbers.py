@@ -10,7 +10,7 @@ R = H.parent / "results"
 tex = "".join((H / f).read_text() for f in ("main.tex", "live_section.tex")).replace("\\,", "").replace("$", "")
 J = lambda n: json.load(open(R / n))  # noqa: E731
 fm, one, l3, xg = J("flowmod_matches.json"), J("live_modes_v4_one10.json"), J("live_modes_v4_linear3.json"), J("v4_strict_W5_xgb.json")
-st, hs = J("stock_ryu_flowmods.json"), J("hostside_xgb.json")
+st, hs, pi = J("stock_ryu_flowmods.json"), J("hostside_xgb.json"), J("protocol_inflation.json")
 S = lambda d, k: d["summary"][k]  # noqa: E731
 checks = [
     ("FlowMods total", fm["flowmods"], "3827"),
@@ -32,6 +32,11 @@ checks = [
     ("host-side rows", hs["rows"], "343889"),
     ("host-side BAcc", round(hs["bacc_mean"], 4), "0.9998"),
     ("host-side features", hs["features"], "78"),
+    ("split A random", round(pi["A_random_flow_split"]["mean"], 4), "0.9998"),
+    ("split B held-out hosts", round(pi["B_source_ip_grouped_split"]["mean"], 3), "0.907"),
+    ("split B CI", round(pi["B_source_ip_grouped_split"]["ci95"], 3), "0.085"),
+    ("split B worst", round(min(pi["B_source_ip_grouped_split"]["per_seed"]), 2), "0.66"),
+    ("split C time-ordered", round(pi["C_time_ordered_split"]["mean"], 4), "0.9997"),
 ]
 bad = 0
 for name, val, quoted in checks:

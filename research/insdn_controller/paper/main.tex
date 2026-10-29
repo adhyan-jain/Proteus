@@ -35,7 +35,9 @@ about 12 for MAC-pair forwarding (at least 665$\times$ in every paired run, for 
 IP-specific entries a 1\,s poller sees from $153.1\pm2.4$ to $36.9\pm0.5$ per reply. A first campaign with a flawed
 application, in which ping and ARP entries shadowed TCP, understated the PacketIn effect by more than two orders of
 magnitude; we report both. Ryu's unmodified \texttt{simple\_switch\_13} application, run as a second controller in five
-captures, also installed only MAC-pair entries (86 of 91 FlowMods; none with IP or transport fields).
+captures, also installed only MAC-pair entries (86 of 91 FlowMods; none with IP or transport fields). The benchmark's labels are also confounded with its recordings: with the
+same classifier, a random flow-level split gives 0.9998 balanced accuracy, holding out source hosts gives $0.907\pm0.085$ (worst split 0.66),
+and IP addresses and ports alone give 1.000.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -98,6 +100,11 @@ Pinto et al.~\cite{pinto2025flowexporter} showed detectors depend on the flow ex
 al.~\cite{sarhan2022standard} argued for standard NetFlow feature sets. These concern flow-record features; none asks
 what an SDN controller can observe.
 
+\textbf{Evaluation protocol in InSDN detection papers.} Published InSDN detectors report accuracies of 96\% to 99.7\%
+(Section~\ref{sec:confound}). The one such paper whose full text we could read~\cite{towhid2023early} computes nine packet-derived flow features
+from the PCAPs and divides all flows 70:30 into training and test sets; grouping by capture or session is not mentioned. We could not read the
+other three papers' methods, so we make no claim about them.
+
 \textbf{Controller-side detection and control-plane data.} PacketIn and flow-table signals have long been used to
 detect flooding at the controller~\cite{braga2010lightweight,mousavi2015early} and to protect it~\cite{shin2013avantguard,wang2015floodguard,dhawan2015sphinx}.
 Arévalo-Herrera et al.~\cite{lansdnnids2026} release a dataset that pairs traffic features with control-plane
@@ -151,6 +158,12 @@ test this directly. The two sides are separate recordings and their alignment is
 indicative, not exact per-packet counts. The Normal group has no target-side captures, so we have no such ratio for
 benign traffic. Because each PacketIn carries the packet's headers, the 5-tuple is visible to the controller per
 packet, but never as a per-flow counter.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{fig_packetin_ratio.pdf}
+\caption{PacketIns received by the ONOS controller per packet seen at the target, by attack scenario (MS2: Metasploitable-2 target, OVS: OVS target). The dashed line marks one PacketIn per packet. Data: \texttt{gap\_attack\_v2.json}.}\label{fig:ratio}
+\end{figure}
 
 \textbf{Implication.} A model trained on InSDN's CSV consumes statistics (inter-arrival moments, per-direction length
 moments, flag counts per 5-tuple) that this controller never receives. The deployable signal is the PacketIn header
@@ -250,6 +263,12 @@ macro on the same windows (2\,589 attack and 320 attack-free windows at 1\,s; 61
 leaving attack-free windows that are almost all ARP/LLDP only (317 of 320 have no IP PacketIn). We therefore do not
 use the strict within-session figure as evidence of detection.
 
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{fig_scores.pdf}
+\caption{Balanced accuracy on unseen captures, capture-grouped CV, 10 seeds (XGBoost was run at 5\,s only). The red bars are the trivial rule ``at least one IP PacketIn'' scored inside attack sessions, which matches or exceeds every model. Data: \texttt{v4\_strict\_W1.json}, \texttt{v4\_strict\_W5\_xgb.json}, \texttt{review\_checks.json}.}\label{fig:scores}
+\end{figure}
+
 \textbf{With broader labels the margin over the trivial rule is real but not clean.} Under the IP-based label rule
 (\S\ref{sec:discussion}), which keeps all windows, the same trivial rule scores 0.741 pooled and 0.700 macro at 1\,s
 (0.653 and 0.668 at 5\,s), while the MLP scores 0.794 and 0.855 (0.715 and 0.782). The MLP is ahead, but this rule
@@ -264,6 +283,20 @@ and 2 windows at 5\,s (0.550). Under the IP-based rule the corresponding probe s
 unlisted traffic in the ``attack-free'' class. We conclude only that the available data cannot rule out
 session-recognition as a source of the scores; we do not claim that sessions are separable independently of attack
 traffic.
+
+\textbf{The split protocol itself inflates scores on this benchmark.} InSDN's benign flows exist only in \texttt{Normal\_data.csv} and every
+attack flow in the other two files, so a held-out-file test is impossible and the label is confounded with the recording. We compared splits with
+one classifier (XGBoost on the GPU, 77 numeric flow features without IPs, ports or timestamps, 343\,889 flows, 10 seeds). A random stratified 70:30
+flow split, the protocol of~\cite{towhid2023early}, gives balanced accuracy $0.9998\pm0.00004$. A 70:30 split by source IP (no host in both
+sets) gives $0.907\pm0.085$, with individual splits ranging from 0.66 to 1.00; a per-file time-ordered split shows no drop (0.9997), so the effect
+works through hosts and not through adjacent flows. A classifier given only IP addresses, ports and the Flow ID reaches 1.000, so identity alone
+separates the classes. This measures the protocol on the CSV features: the cited paper uses different features and we did not re-run its model.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{fig_split.pdf}
+\caption{Same classifier and features under four evaluation splits of the InSDN CSV (benign vs.\ attack, 10 seeds). Dots are the ten source-host splits (worst 0.66). Data: \texttt{protocol\_inflation.json}.}\label{fig:split}
+\end{figure}
 
 \textbf{Consequence.} The headline scores of \S\ref{sec:results} are feasibility evidence that PacketIn-level features
 distinguish InSDN's attack captures from its benign captures, not a measurement of attack-detection accuracy. A
@@ -290,6 +323,10 @@ analysis. Under that broader rule overall BAcc is lower (MLP 0.881, logistic reg
 against thresholds is unchanged, and at 1\,s the MLP is ahead of the best threshold on flood, web and brute force,
 level on probe (0.812 vs.\ 0.794, within the interval) and behind on exploit and botnet. Transfer from Metasploitable-2 to OVS no longer
 beats the best threshold (0.678 vs.\ 0.678), while OVS to Metasploitable-2 remains strong (0.977 vs.\ 0.924).
+
+\textbf{Published-paper check.} Our comparison of split protocols uses our own classifier and the CSV features; it shows the random-split protocol
+overstates held-out-host performance on InSDN by about nine points, not that any author's reported number is wrong. Only one of four papers' full
+texts could be read.
 
 \textbf{Baselines and deployment.} A GPU gradient-boosted tree baseline (XGBoost, BAcc $0.952\pm0.013$ at 5\,s, strict labels, 10 seeds) does not beat the linear ($0.961\pm0.011$) or MLP ($0.958\pm0.012$) models; detection is run offline on recorded control channels,
 not inline in a live controller, and we do not measure controller-side latency or mitigation effects. The forwarding
