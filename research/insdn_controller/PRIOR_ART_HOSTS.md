@@ -31,3 +31,16 @@ Search date 2026-10-29. Time-boxed web search (about 6 queries, 2 fetches). Sear
 
 ## Not searched (time limit)
 Google Scholar, IEEE Xplore, ScienceDirect, MDPI, PMC directly; full text of the Elsayed paper; Sci. Rep. 2026 and ETASR/IIETA InSDN papers that surfaced in results (unread). A deeper pass on those could still turn up a prior statement.
+
+## Full-text check (2026-10-29)
+Method: PDFs saved via WebFetch and converted with pdftotext, then grepped for IP/host/attacker/spoof/session/disjoint/split/InSDN and read in context.
+
+1. Flood, Engelen, Aspinall, Desmet, "Bad Design Smells in Benchmark NIDS Datasets", EuroS&P 2024. FULL TEXT READ (pdftotext, ~16.6k words; InSDN not covered by the paper: zero hits for "InSDN"/"SDN" outside a reference title).
+   - (a) InSDN host/IP structure: no such statement found in full text (InSDN absent). The only host-count statement is about CICIDS: "CIC 17 comprises 14 hosts and CIC 18 comprises of 500 hosts."
+   - (b) leave-one-host / held-out-attacker evaluation: no such statement found in full text. Nearest: "standard, randomised train/test splits result in data leakage." (homogeneous traffic, failed attacks); and "this is often equivalent to training and evaluating models on flows from the same attack, a form of data leakage." Their remedy is train/test from different runs of a generation process, not host-disjoint splits.
+   - Also: "Labelling flows via IPs and timestamps is challenging." (labelling, not evaluation).
+2. Salman et al., ICIT 2026 InSDN re-evaluation (Malik, Salman, Ahmed, Maryam). FULL TEXT READ (pdftotext, ~5.1k words). It uses stratified 5-fold CV; no mention of IP addresses, hosts, attackers, spoofing, or group/host/session-disjoint splits. (a) none; (b) none. Closest: criticism of single splits ("single train-test splits"), not host-level.
+3. Elsayed et al. 2020, InSDN, IEEE Access. COULD NOT READ (IEEE Xplore page returned empty; earlier note's description from snippets stands). Verdict unverified; cannot claim absence.
+4. Engelen et al. 2021, "Troubleshooting an Intrusion Detection Dataset: the CICIDS2017 Case Study". COULD NOT READ (arXiv id not located in time; a guessed id returned an unrelated paper, discarded). Verdict unverified. It concerns CICIDS2017 only, not InSDN.
+
+Net: among the two papers actually read in full, neither states InSDN's source-IP/host structure nor a leave-one-host-out evaluation. Elsayed 2020 (open-access PDF) and Engelen 2021 still need a full-text read before the novelty claim is made unhedged.
