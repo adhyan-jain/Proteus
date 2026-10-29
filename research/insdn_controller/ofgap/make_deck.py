@@ -183,7 +183,7 @@ s = slide("How published InSDN results compare", "Four papers, one full text rea
 bullets(s, [p["paper"].split(" (")[0] + ":  " + p["reported"].split(" (")[0] for p in lit["papers"]], y=1.75, size=16)
 bullets(s, ["Towhid et al. (full text read): 9 packet-derived features, all flows split 70:30, no grouping by capture or session mentioned.",
             f"Our test, same classifier: random flow split {pi['A_random_flow_split']['mean']:.4f}; held-out source hosts {pi['B_source_ip_grouped_split']['mean']:.3f} ± {pi['B_source_ip_grouped_split']['ci95']:.3f}; IPs and ports alone {pi['D_identifier_only_random_split']['mean']:.3f}.",
-            "Claimed: a random split overstates the score for unseen hosts by about 9 points. Not claimed: their exact numbers are wrong."], y=4.4, size=16)
+            "Detected: the random-split protocol inflates the score by about 9 points on InSDN (worst held-out split 0.66). Not claimed: their exact numbers are wrong."], y=4.4, size=16)
 
 # 7 novelty 4 + 5
 s = slide("Novelty 4 and 5 · A caught pitfall, a rerunnable package", "Method")
