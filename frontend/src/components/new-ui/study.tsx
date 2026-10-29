@@ -52,14 +52,17 @@ export function Stat({ title, value, note }: { title: string; value: string; not
   );
 }
 
-export function Section({ title, desc, children }: { title: string; desc?: string; children: ReactNode }) {
+export function Section({ title, desc, tell, children }: { title: string; desc?: string; tell?: string; children: ReactNode }) {
   return (
     <Card>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         {desc && <CardDescription>{desc}</CardDescription>}
       </CardHeader>
-      <CardContent className="flex flex-col gap-4 text-sm leading-relaxed">{children}</CardContent>
+      <CardContent className="flex flex-col gap-4 text-sm leading-relaxed">
+        {children}
+        {tell && <p className="rounded-md bg-secondary/60 px-3 py-2 font-medium">→ {tell}</p>}
+      </CardContent>
     </Card>
   );
 }
@@ -88,5 +91,40 @@ export function Next({ href, label }: { href: string; label: string }) {
     <Link href={href} className="text-sm underline text-muted-foreground">
       {label} →
     </Link>
+  );
+}
+
+export function Insight({ analogy, gain }: { analogy: string; gain: string }) {
+  return (
+    <div className="grid gap-3 md:grid-cols-2">
+      <div className="rounded-lg border border-border p-4">
+        <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Analogy</p>
+        <p className="mt-1 text-sm leading-relaxed">{analogy}</p>
+      </div>
+      <div className="rounded-lg border border-border bg-secondary/40 p-4">
+        <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">What we get</p>
+        <p className="mt-1 text-sm leading-relaxed">{gain}</p>
+      </div>
+    </div>
+  );
+}
+
+export function Chip({ children }: { children: ReactNode }) {
+  return <span className="rounded-full border border-border px-2 py-0.5 font-mono text-[11px] text-muted-foreground">{children}</span>;
+}
+
+export function Flow({ steps }: { steps: { title: string; sub: string; tone?: "teal" | "amber" }[] }) {
+  return (
+    <div className="flex flex-wrap items-stretch gap-2">
+      {steps.map((s, i) => (
+        <div key={s.title} className="flex items-center gap-2">
+          <div className={`min-w-32 rounded-lg border p-3 ${s.tone === "amber" ? "border-amber-400/60" : "border-teal-400/60"}`}>
+            <p className="text-sm font-semibold">{s.title}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">{s.sub}</p>
+          </div>
+          {i < steps.length - 1 && <span className="text-muted-foreground">→</span>}
+        </div>
+      ))}
+    </div>
   );
 }
