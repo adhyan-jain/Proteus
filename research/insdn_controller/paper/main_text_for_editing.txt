@@ -417,108 +417,108 @@ vector in the training set. Redundancy is not the mechanism:              one IP
 dropping all exact duplicates (343 889 to 184,607 rows) leaves            review_checks.json.
 the random-split score at 0.9998, and holding out source hosts
 while requiring every attack class to appear in training still
-gives 0.939 (0.812 after de-duplication), so the drop persists            the attack flows of the main attacker host 200.175.2.130 (DoS
-when every attack class is present in training, although with             34.7%) and flags 37.9% of the flows of the largest benign host
-wide confidence intervals and a changed class mix; splitting by           192.168.20.133, while the other two attacker hosts are detected
-the source–destination–port triple instead gives 0.961 (0.984             at 99.7% and 93.8% (the former has only 12 benign flows, 10
-de-duplicated), so the effect is tied to unseen source hosts              of which are flagged). Holding out the main attacker removes
-rather than to flows in general. A partial replication of one             32% of all rows from training, the figures are identical across
-published pipeline (SDNGuardStack, our approximation, five                ten model seeds (the classifier is deterministic on this input),
-seeds, default hyperparameters) reproduces its reported accu-             so the uncertainty lies in which host is held out and not in
-racy under a random split (0.9999 against the reported 99.98%)            training randomness, and no confidence interval is computed.
-but not under held-out hosts (0.72–0.78, 95% CI up to ±0.39),             On CICIDS2017 the structure is different (48 distinct source
-so the published number is reproducible and the question                  IPs, 15 of them with at least 500 flows, covering 2,100,712 of
-is what it measures. Why the held-out-host score swings.                  2,100,814 rows) but the pattern is the same: holding out the
-InSDN has 122,868 distinct source IPs, but 122,307 of them                main attacker 172.16.0.1 (442,098 flows) detects 28.3% of its
-appear in exactly one flow (spoofed flood sources) and only               attack flows and flags 54.0% of its benign flows; the bot hosts
-eight hosts have at least 500 flows, together holding 215,404             held out one at a time are detected at 23.4–43.5%, and host
-of the 343 889 rows; three of those are attackers. A split by             192.168.10.12 at 0.0% (largest eight hosts only; the held-out
-source IP therefore mostly decides where a few hosts fall,                host, not training randomness, is the source of uncertainty, and
-which is why the held-out-host score varies from 0.66 to 1.00             no confidence interval is computed). This is a leave-one-host-
-across splits. In the papers we could read in full we found no            out measurement on a dataset with very few real hosts, so it
-host-level analysis of InSDN and no held-out-host evaluation              should be read as a stress test of generalisation to a new host,
-on it; the InSDN dataset paper and Engelen et al. were not                not as the accuracy a deployed detector would have.
-available to us in full text, so we state this as an absence in              We also tried a third dataset, UKMDDoSDN [21], but it
-what we read and not as a claim of priority. Holding out one              was skipped: its two public PCAPs contain no benign class
-of those hosts at a time (training on every other row, identifier         (Appendix A).
-columns removed, three model seeds) detects only 51.6% of                    What we can and cannot say about published InSDN
+gives 0.939 (0.812 after de-duplication), so the drop persists            Holding out one of those hosts at a time (training on every
+when every attack class is present in training, although with             other row, identifier columns removed, three model seeds)
+wide confidence intervals and a changed class mix; splitting by           detects only 51.6% of the attack flows of the main attacker
+the source–destination–port triple instead gives 0.961 (0.984             host 200.175.2.130 (DoS 34.7%) and flags 37.9% of the flows
+de-duplicated), so the effect is tied to unseen source hosts              of the largest benign host 192.168.20.133, while the other two
+rather than to flows in general. A partial replication of one             attacker hosts are detected at 99.7% and 93.8% (the former
+published pipeline (SDNGuardStack, our approximation, five                has only 12 benign flows, 10 of which are flagged). Holding
+seeds, default hyperparameters) reproduces its reported accu-             out the main attacker removes 32% of all rows from training,
+racy under a random split (0.9999 against the reported 99.98%)            the figures are identical across ten model seeds (the classifier
+but not under held-out hosts (0.72–0.78, 95% CI up to ±0.39),             is deterministic on this input), so the uncertainty lies in which
+so the published number is reproducible and the question                  host is held out and not in training randomness, and no
+is what it measures. Why the held-out-host score swings.                  confidence interval is computed. On CICIDS2017 the structure
+InSDN has 122,868 distinct source IPs, but 122,307 of them                is different (48 distinct source IPs, 15 of them with at least 500
+appear in exactly one flow (spoofed flood sources) and only               flows, covering 2,100,712 of 2,100,814 rows) but the pattern
+eight hosts have at least 500 flows, together holding 215,404             is the same: holding out the main attacker 172.16.0.1 (442,098
+of the 343 889 rows; three of those are attackers. A split by             flows) detects 28.3% of its attack flows and flags 54.0% of its
+source IP therefore mostly decides where a few hosts fall,                benign flows; the bot hosts held out one at a time are detected
+which is why the held-out-host score varies from 0.66 to 1.00             at 23.4–43.5%, and host 192.168.10.12 at 0.0% (largest eight
+across splits. In the papers we could read in full we found no            hosts only; the held-out host, not training randomness, is the
+host-level analysis of InSDN and no held-out-host evaluation              source of uncertainty, and no confidence interval is computed).
+on it; Engelen et al. (CICIDS2017 only) name host-specific                This is a leave-one-host-out measurement on a dataset with
+information as a shortcut but evaluate with a random 75:25                very few real hosts, so it should be read as a stress test of
+split, and the InSDN dataset paper itself was not available to            generalisation to a new host, not as the accuracy a deployed
+us in full text (we read only its README), so we state this               detector would have.
+as an absence in what we read and not as a claim of priority.                We also tried a third dataset, UKMDDoSDN [21], but it
                                                                                                                                                                                 7
 
 
 
-papers. We examined 12 papers (eleven on SDN or InSDN-
-related data, one on other benchmarks) and read 10 in full                                                   1.00 0.91 1.00 1.00             0.99                1.00
-(literature_check.json); the other two are charac-
+was skipped: its two public PCAPs contain no benign class
+(Appendix A).                                                                                                1.00 0.91 1.00 1.00             0.99                1.00
+   What we can and cannot say about published InSDN
                                                                                                    1.0
-terised by their abstracts only and we make no claim about                                         0.9
+papers. We examined 12 papers (eleven on SDN or InSDN-                                             0.9
 
 
                                                                       Balanced accuracy
-their methods. Of the ten papers read in full, most do not
-describe their split, none reports a host-grouped or capture-                                      0.8
-grouped split, and three use identifier columns (such as Flow                                                                                        0.64 0.72
-ID or source IP) among their model inputs; the remaining                                           0.7
-papers either state that they removed such columns or do not
-say. This means their protocols cannot rule out the leakage we
+related data, one on other benchmarks) and read 10 in full
+(literature_check.json); the other two are charac-                                                 0.8
+terised by their abstracts only and we make no claim about                                                                                           0.64 0.72
+their methods. Of the ten papers read in full, most do not                                         0.7
+describe their split, none reports a host-grouped or capture-
+grouped split, and three use identifier columns (such as Flow
                                                                                                    0.6
-measure. It does not show that any reported number is wrong:                                       0.5
-we use our own classifier and the CSV features, and did not
-re-run any cited model.                                                                            0.4
-   Recipe replication with one classifier. To see whether the                                                         InSDN                         CICIDS2017
-gap depends on which features are used, we ran four feature                                              individual host splits   Held-out source hosts    IPs and ports only
-recipes on InSDN with the same XGBoost (80:20 splits, 10                                                 Random flow split        Time-ordered per file
-seeds, Table IX): numeric flow features only, numeric plus
-ports, numeric plus identifier columns, and the 15 features           Fig. 3.   Same classifier and features under four evaluation pro-
-with highest mutual information selected on all rows before           tocols on two datasets (benign vs. attack, 10 seeds). Dots are
+ID or source IP) among their model inputs; the remaining                                           0.5
+papers either state that they removed such columns or do not
+say. This means their protocols cannot rule out the leakage we                                     0.4
+measure. It does not show that any reported number is wrong:                                                          InSDN                         CICIDS2017
+we use our own classifier and the CSV features, and did not                                              individual host splits   Held-out source hosts    IPs and ports only
+re-run any cited model.                                                                                  Random flow split        Time-ordered per file
+   Recipe replication with one classifier. To see whether the
+gap depends on which features are used, we ran four feature           Fig. 3.   Same classifier and features under four evaluation pro-
+recipes on InSDN with the same XGBoost (80:20 splits, 10              tocols on two datasets (benign vs. attack, 10 seeds). Dots are
                                                                       the ten source-host splits. Data: protocol_audit_insdn.json,
-the split. These approximate feature choices described in             protocol_audit_cicids2017.json.
-published InSDN papers; they are not those papers’ models,
-code or reported numbers, and we do not claim to have repro-
-duced them. Under a random split every recipe reaches binary
-balanced accuracy of at least 0.9998 and 8-class accuracy                                                            1 switch 10,392 10,676               10,422 10,881
+seeds, Table IX): numeric flow features only, numeric plus            protocol_audit_cicids2017.json.
+ports, numeric plus identifier columns, and the 15 features
+with highest mutual information selected on all rows before
+the split. These approximate feature choices described in
+published InSDN papers; they are not those papers’ models,                                                           1 switch 10,392 10,676               10,422 10,881
                                                                                                    104
 
 
 
 
                                                                            TCP PacketIns per run
-of at least 0.9991. Under a source-IP-grouped split binary                                                           3-switch chain
-balanced accuracy falls to between 0.856 and 0.943 and 8-
-class accuracy to between 0.687 and 0.835, with wide intervals                                     103
-(up to ±0.241). Adding ports lowered the grouped score
-(0.856 against 0.943 for numeric features only), and adding                                        102
-identifier columns changed it little (0.941), so on this classifier                                                       18
+code or reported numbers, and we do not claim to have repro-                                                         3-switch chain
+duced them. Under a random split every recipe reaches binary
+                                                                                                   103
+balanced accuracy of at least 0.9998 and 8-class accuracy
+of at least 0.9991. Under a source-IP-grouped split binary
+balanced accuracy falls to between 0.856 and 0.943 and 8-                                          102
+class accuracy to between 0.687 and 0.835, with wide intervals                                                            18
                                                                                                                 12
-identifiers neither rescue nor much hurt grouped performance.                                      101
-The mutual-information selection, run before the split, picked
+(up to ±0.241). Adding ports lowered the grouped score                                             101
+(0.856 against 0.943 for numeric features only), and adding
+identifier columns changed it little (0.941), so on this classifier                                100
+identifiers neither rescue nor much hurt grouped performance.                                                  MAC-pair               Per-flow             Per-flow
+The mutual-information selection, run before the split, picked                                                                        2 s idle             10 s idle
 Flow ID, Src IP and Dst IP among its 15 features. Grouping by
-                                                                                                   100
-source IP also changes the attack-class composition between                                                    MAC-pair               Per-flow             Per-flow
-train and test, so the grouped numbers are a stress test and not                                                                      2 s idle             10 s idle
-“the true accuracy”; the protocol cannot rule out that published
-random-split scores would fall under host-grouped evaluation,
+source IP also changes the attack-class composition between
                                                                       Fig. 4.   TCP PacketIns per run (mean ± 95% CI, 10 runs
-and it does not show that they would.                                 per mode, log scale) under three forwarding modes, on one switch
-   Consequence for the controller-view scores. The headline           and on a three-switch chain. Data: live_modes_v4_one10.json,
-scores of §VI are feasibility evidence that PacketIn-level            live_modes_v4_linear3.json.
-features distinguish InSDN’s attack captures from its benign
-captures, not a measurement of attack-detection accuracy. A
+train and test, so the grouped numbers are a stress test and not      per mode, log scale) under three forwarding modes, on one switch
+“the true accuracy”; the protocol cannot rule out that published      and on a three-switch chain. Data: live_modes_v4_one10.json,
+random-split scores would fall under host-grouped evaluation,         live_modes_v4_linear3.json.
+and it does not show that they would.
+   Consequence for the controller-view scores. The headline
+scores of §VI are feasibility evidence that PacketIn-level            (ii) the 5-tuple for TCP/UDP with a 10 s idle timeout; or
+features distinguish InSDN’s attack captures from its benign          (iii) the 5-tuple with a 2 s idle timeout applied to all entries.
+captures, not a measurement of attack-detection accuracy. A           In the two 5-tuple modes, other IP traffic receives an (src,
 convincing evaluation needs benign and attack traffic inter-          dst, protocol) entry and ARP an ARP-only entry, so a coarse
 leaved within one session, with labels for all controller-visible     entry for one protocol cannot match another. The controller
 traffic, which InSDN does not provide.                                polls flow statistics every second. Traffic is benign only and
                                                                       generated by the same program with the same random seeds in
                                                                       every mode (request timing still differs): five hosts repeatedly
     VIII. A F ORWARDING -A PPLICATION C ASE S TUDY                    fetch files of 16 KB to 1 MB from an HTTP server (80%)
-   InSDN shows one forwarding configuration. To see whether           or ping it (20%) with random pacing for 90 s (captures span
+  InSDN shows one forwarding configuration. To see whether            or ping it (20%) with random pacing for 90 s (captures span
 what the controller observes depends on the forwarding appli-         ∼99 s including start-up). Each mode was run 10 times (seeds
 cation, we built a small testbed (Mininet, one Open vSwitch           0–9), reporting mean and 95% t-interval over runs (Table X);
 switch, six hosts; a Ryu OpenFlow 1.3 learning switch with            the 30 runs completed 26 891 requests, of which 41 failed
 a configurable entry granularity) and recorded its control            (below). We repeated the study on a loop-free three-switch
 channel with the same parser. The three modes install, for            chain (Table XI, below).
 each learned destination, an entry matching (i) the MAC pair;            Granularity sets the PacketIn volume. MAC-pair mode
-(ii) the 5-tuple for TCP/UDP with a 10 s idle timeout; or             produced 12.3 ± 2.3 TCP PacketIns per run, against 10 422 ±
-(iii) the 5-tuple with a 2 s idle timeout applied to all entries.     202 (10 s idle) and 10 392 ± 249 (2 s idle) under per-flow
-In the two 5-tuple modes, other IP traffic receives an (src,          forwarding: 665× to 1 752× (10 s idle) and 668× to 1 780×
                                                                                                                                              8
 
 
@@ -536,6 +536,9 @@ SERVER , PLUS PINGS ), 1- SWITCH M ININET /RYU TESTBED , ∼99 S CAPTURE PER RUN
 
 
 
+produced 12.3 ± 2.3 TCP PacketIns per run, against 10 422 ±           and 10 676 ± 804 under per-flow forwarding (391× to 1 509×
+202 (10 s idle) and 10 392 ± 249 (2 s idle) under per-flow            in every paired run), and the per-flow entries a 1 s poller sees
+forwarding: 665× to 1 752× (10 s idle) and 668× to 1 780×             per reply fall from 112.4 ± 2.3 to 27.0 ± 0.4 (ratio 0.235 to
 (2 s idle) more in each of the ten paired runs (larger in 10          0.245). The ratio is smaller than on one switch because the
 of 10; two-sided sign-test p = 0.002). That is about 11–12            MAC-pair baseline rises with the extra hops (18.0 vs. 12.3).
 TCP PacketIns per completed request, so each connection is               A stock Ryu application. To check that the MAC-pair be-
@@ -582,9 +585,6 @@ run is included in all figures.                                       gap follow
 server two hops from h1 and h2; 10 runs per mode, 26 826              finer counters at higher flow-table cost, and the PacketIn
 requests, none failed) the contrast holds (Table XI): 18.0 ± 5.0      stream would then be sparser. Our pipeline measures the gap
 TCP PacketIns per run under MAC-pair against 10 881 ± 794             for any capture; the numbers are specific to this configuration.
-and 10 676 ± 804 under per-flow forwarding (391× to 1 509×               Labels. Strict labels leave brute force, exploit, web and
-in every paired run), and the per-flow entries a 1 s poller sees      DDoS with few attack windows because the CSV omits much
-per reply fall from 112.4 ± 2.3 to 27.0 ± 0.4 (ratio 0.235 to         of their traffic (for DDoS, most of the spoofed flood). An
                                                                                                                                              9
 
 
@@ -602,83 +602,107 @@ SERVER , PLUS PINGS ), 1- SWITCH M ININET /RYU TESTBED , ∼99 S CAPTURE PER RUN
 
 
 
+   Labels. Strict labels leave brute force, exploit, web and          latency.
+DDoS with few attack windows because the CSV omits much                  What we could not do. We did not re-implement a
+of their traffic (for DDoS, most of the spoofed flood). An            published controller-side detector from its paper, so the com-
 alternative rule that also counts IPs seen only in attack flows       parison is to threshold heuristics and our own models only.
 labels more windows but overlaps with the IP-count features,          The two public candidates we examined as second sources
 so we report it as a sensitivity analysis. Under that broader rule    (Appendix A) could not be used.
 overall BAcc is lower (MLP 0.881, logistic regression 0.847,
-best threshold 0.748 at 1 s; MLP 0.887, best threshold 0.769 at
-5 s) and within-session macro BAcc is 0.855 (0.782 at 5 s). The                               X. C ONCLUSION
+best threshold 0.748 at 1 s; MLP 0.887, best threshold 0.769 at                               X. C ONCLUSION
+5 s) and within-session macro BAcc is 0.855 (0.782 at 5 s). The
+                                                                         InSDN’s own controller never installed or reported the 5-
 ranking against thresholds is unchanged, and at 1 s the MLP is
-ahead of the best threshold on flood, web and brute force, level         InSDN’s own controller never installed or reported the 5-
-on probe (0.812 vs. 0.794, within the interval) and behind on         tuple flow entries InSDN labels: its flow entries are MAC
-exploit and botnet. Transfer from Metasploitable-2 to OVS no          pairs or EtherType rules, and its view of traffic is a Pack-
-longer beats the best threshold (0.678 vs. 0.678), while OVS          etIn stream. Restricted to that view, small models separate
-to Metasploitable-2 remains strong (0.977 vs. 0.924).                 InSDN’s attack captures from its benign captures on unseen
-   Published-paper check. Our comparison of split protocols           captures, withheld families and a second deployment, where
-uses our own classifier and the CSV features; it shows the            the usual PacketIn-rate heuristic does not (BAcc 0.946 vs.
-random-split protocol overstates held-out-host performance on         0.616 on unseen captures). We could not show that this reflects
-InSDN by about nine points (and on CICIDS2017 by about                attack detection rather than session recognition and label
-35), not that any author’s reported number is wrong. We read          coverage: within sessions a trivial IP-PacketIn rule matches
-10 of 12 examined papers in full (nine of them evaluated on           or beats the model under strict labels, and our probes lack
-InSDN data); no published model was re-run, and the two               clean attack-free windows. We therefore present controller-
-unread papers are not characterised.                                  observable evaluation on InSDN as feasible but unproven, and
-   Baselines and deployment. A GPU gradient-boosted tree              recommend datasets that interleave benign and attack traffic.
-baseline (XGBoost, BAcc 0.952 ± 0.013 at 5 s, strict labels,          A benign-traffic Mininet/Ryu study shows that forwarding-
-10 seeds) does not beat the linear (0.961 ± 0.011) or MLP             application choices (entry granularity, idle timeout) change
-(0.958 ± 0.012) models; detection is run offline on recorded          what the controller can observe. The pipeline, capture hashes
-control channels, not inline in a live controller, and we do          and result files accompany this paper.
-not measure controller-side latency or mitigation effects. The
-forwarding study (§VIII) uses benign traffic and at most three
-switches; it measures visibility, not detection, and a cross-                                A PPENDIX A
-testbed detection experiment with labelled attacks is future                   C ANDIDATE S ECOND DATASETS E XAMINED
-work.
-   Deployment. A controller-side detector of this kind would             UKMDDoSDN              [21]:        we        downloaded
-run beside the control channel, reading a port mirror or              syn_flood_combined.pcap (18 922 240 B; 199 273
-the controller’s message log, and would need the forwarding           packets) and udp_flood_combined.pcap (15 420 748 B;
-application’s granularity to be stable: switching from MAC-           110 518 packets) from the authors’ repository, parsed them
-pair to per-flow forwarding changed TCP PacketIn volume               (pcapng, Linux cooked v2) and found no packet on TCP
-by two to three orders of magnitude in our testbed, so any            port 6633 or 6653: they are data-plane captures from many
-threshold or model tied to PacketIn rates must be retrained,          per-host interfaces. The CSV files the dataset page describes
-or at least recalibrated, after a forwarding change. The idle         were not in the repository listing and the Mendeley file
-timeout also changes what a poller sees (about a quarter as           list could not be read, so we make no claim about them.
-many per-flow entries at 2 s as at 10 s). Per-flow forwarding         The dataset page states CC BY 4.0 while the repository is
-exposes finer counters at a controller-load and flow-table            MIT-licensed; we did not resolve this. LAN-SDN-NIDS [10]:
-cost that we did not measure. Missing before deployment               we read its Crossref record (the publisher page refused
-can be argued: interleaved benign and attack traffic in one           automated access), which describes a flow-level dataset of
-session, a second controller family beyond Ryu applications           1 125 059 records with 11 control-plane metrics; we could
-(OpenDaylight, ONOS under other applications), and online             not verify whether raw OpenFlow captures are released, and
-latency.                                                              flow-level counts of PacketIn and FlowMod would not expose
-   What we could not do. We did not re-implement a                    FlowMod match fields. Neither was used as data. Hashes are
-published controller-side detector from its paper, so the com-        in data/MANIFEST.md.
+                                                                      tuple flow entries InSDN labels: its flow entries are MAC
+ahead of the best threshold on flood, web and brute force, level
+                                                                      pairs or EtherType rules, and its view of traffic is a Pack-
+on probe (0.812 vs. 0.794, within the interval) and behind on
+                                                                      etIn stream. Restricted to that view, small models separate
+exploit and botnet. Transfer from Metasploitable-2 to OVS no
+                                                                      InSDN’s attack captures from its benign captures on unseen
+longer beats the best threshold (0.678 vs. 0.678), while OVS
+                                                                      captures, withheld families and a second deployment, where
+to Metasploitable-2 remains strong (0.977 vs. 0.924).
+                                                                      the usual PacketIn-rate heuristic does not (BAcc 0.946 vs.
+   Published-paper check. Our comparison of split protocols
+                                                                      0.616 on unseen captures). We could not show that this reflects
+uses our own classifier and the CSV features; it shows the
+                                                                      attack detection rather than session recognition and label
+random-split protocol overstates held-out-host performance on
+                                                                      coverage: within sessions a trivial IP-PacketIn rule matches
+InSDN by about nine points (and on CICIDS2017 by about
+                                                                      or beats the model under strict labels, and our probes lack
+35), not that any author’s reported number is wrong. We read
+                                                                      clean attack-free windows. We therefore present controller-
+10 of 12 examined papers in full (nine of them evaluated on
+                                                                      observable evaluation on InSDN as feasible but unproven, and
+InSDN data); no published model was re-run, and the two
+                                                                      recommend datasets that interleave benign and attack traffic.
+unread papers are not characterised.
+                                                                      A benign-traffic Mininet/Ryu study shows that forwarding-
+   Baselines and deployment. A GPU gradient-boosted tree
+                                                                      application choices (entry granularity, idle timeout) change
+baseline (XGBoost, BAcc 0.952 ± 0.013 at 5 s, strict labels,
+                                                                      what the controller can observe. The pipeline, capture hashes
+10 seeds) does not beat the linear (0.961 ± 0.011) or MLP
+                                                                      and result files accompany this paper.
+(0.958 ± 0.012) models; detection is run offline on recorded
+control channels, not inline in a live controller, and we do
+not measure controller-side latency or mitigation effects. The                               A PPENDIX A
+forwarding study (§VIII) uses benign traffic and at most three                 C ANDIDATE S ECOND DATASETS E XAMINED
+switches; it measures visibility, not detection, and a cross-            UKMDDoSDN              [21]:        we        downloaded
+testbed detection experiment with labelled attacks is future          syn_flood_combined.pcap (18 922 240 B; 199 273
+work.                                                                 packets) and udp_flood_combined.pcap (15 420 748 B;
+   Deployment. A controller-side detector of this kind would          110 518 packets) from the authors’ repository, parsed them
+run beside the control channel, reading a port mirror or              (pcapng, Linux cooked v2) and found no packet on TCP
+the controller’s message log, and would need the forwarding           port 6633 or 6653: they are data-plane captures from many
+application’s granularity to be stable: switching from MAC-           per-host interfaces. The CSV files the dataset page describes
+pair to per-flow forwarding changed TCP PacketIn volume               were not in the repository listing and the Mendeley file
+by two to three orders of magnitude in our testbed, so any            list could not be read, so we make no claim about them.
+threshold or model tied to PacketIn rates must be retrained,          The dataset page states CC BY 4.0 while the repository is
+or at least recalibrated, after a forwarding change. The idle         MIT-licensed; we did not resolve this. LAN-SDN-NIDS [10]:
+timeout also changes what a poller sees (about a quarter as           we read its Crossref record (the publisher page refused
+many per-flow entries at 2 s as at 10 s). Per-flow forwarding         automated access), which describes a flow-level dataset of
+exposes finer counters at a controller-load and flow-table            1 125 059 records with 11 control-plane metrics; we could
+cost that we did not measure. Missing before deployment               not verify whether raw OpenFlow captures are released, and
+can be argued: interleaved benign and attack traffic in one           flow-level counts of PacketIn and FlowMod would not expose
+session, a second controller family beyond Ryu applications           FlowMod match fields. Neither was used as data. Hashes are
+(OpenDaylight, ONOS under other applications), and online             in data/MANIFEST.md.
                                                                                                                                                             10
 
 
 
-               DATA AND C ODE AVAILABILITY                                        [16] P. Berde, M. Gerola, J. Hart, Y. Higuchi, M. Kobayashi, T. Koide,
-                                                                                       B. Lantz, B. O’Connor, P. Radoslavov, W. Snow, and G. Parulkar,
-   The InSDN CSVs and PCAPs are public (sources                                        “ONOS: Towards an open, distributed SDN OS,” in Proc. 3rd Workshop
-and SHA-256 hashes in data/MANIFEST.md). Our                                           on Hot Topics in Software Defined Networking (HotSDN), 2014, pp. 1–6.
-parser, feature extraction, experiments, forwarding-                              [17] R. Flood, G. Engelen, and D. Aspinall, “Bad design smells in benchmark
-                                                                                       NIDS datasets,” in Proc. IEEE European Symposium on Security and
-study applications, result files and table gener-                                      Privacy (EuroS&P), 2024.
-ators are in the project repository; the script                                   [18] R. Sommer and V. Paxson, “Outside the closed world: On using machine
-research/insdn_controller/reproduce.sh                                                 learning for network intrusion detection,” in Proc. IEEE Symposium on
-                                                                                       Security and Privacy, 2010, pp. 305–316.
-rebuilds the features from the raw ONOS captures, re-runs                         [19] D. Arp, E. Quiring, F. Pendlebury, A. Warnecke, F. Pierazzi, C. Wress-
-every experiment, and compares each result file with the stored                        negger, L. Cavallaro, and K. Rieck, “Dos and don’ts of machine learning
-one (tolerance 10−6 ), and paper/verify_numbers.py                                     in computer security,” in Proc. 31st USENIX Security Symposium, 2022,
-                                                                                       pp. 3971–3988.
-checks the numbers quoted in the text against the                                 [20] M. S. Towhid and N. Shahriar, “Early detection of intrusion in
-result files. Hashes of every capture we recorded are in                               SDN,” University of Regina, preprint, https://uregina.ca/∼nss373/papers/
-capture_hashes.sha256. Re-recording the live captures                                  Early-detection-SDN.pdf.
-                                                                                  [21] M. A. B. Mokti, “UKMDDoSDN: A DDoS attacks dataset for software-
-needs root privileges and will not reproduce packet timing                             defined networks, version 2,” Mendeley Data, 2025.
-exactly. The first, flawed campaign’s captures were not
-retained; only its summary file is.
-
-                   ACKNOWLEDGMENT
-  All three authors contributed equally to the data analysis,
-experiments and writing.
+                  DATA AND C ODE AVAILABILITY                                     [14] H. Wang, L. Xu, and G. Gu, “FloodGuard: A DoS attack prevention ex-
+                                                                                       tension in software-defined networks,” in Proc. 45th Annual IEEE/IFIP
+   The InSDN CSVs and PCAPs are public (sources                                        Int. Conf. Dependable Systems and Networks (DSN), 2015, pp. 239–250.
+and SHA-256 hashes in data/MANIFEST.md). Our                                      [15] M. Dhawan, R. Poddar, K. Mahajan, and V. Mann, “SPHINX: Detecting
+parser, feature extraction, experiments, forwarding-                                   security attacks in software-defined networks,” in Proc. Network and
+                                                                                       Distributed System Security Symposium (NDSS), 2015.
+study applications, result files and table gener-                                 [16] P. Berde, M. Gerola, J. Hart, Y. Higuchi, M. Kobayashi, T. Koide,
+ators are in the project repository; the script                                        B. Lantz, B. O’Connor, P. Radoslavov, W. Snow, and G. Parulkar,
+research/insdn_controller/reproduce.sh                                                 “ONOS: Towards an open, distributed SDN OS,” in Proc. 3rd Workshop
+                                                                                       on Hot Topics in Software Defined Networking (HotSDN), 2014, pp. 1–6.
+rebuilds the features from the raw ONOS captures, re-runs                         [17] R. Flood, G. Engelen, and D. Aspinall, “Bad design smells in benchmark
+every experiment, and compares each result file with the stored                        NIDS datasets,” in Proc. IEEE European Symposium on Security and
+one (tolerance 10−6 ), and paper/verify_numbers.py                                     Privacy (EuroS&P), 2024.
+                                                                                  [18] R. Sommer and V. Paxson, “Outside the closed world: On using machine
+checks the numbers quoted in the text against the                                      learning for network intrusion detection,” in Proc. IEEE Symposium on
+result files. Hashes of every capture we recorded are in                               Security and Privacy, 2010, pp. 305–316.
+capture_hashes.sha256. Re-recording the live captures                             [19] D. Arp, E. Quiring, F. Pendlebury, A. Warnecke, F. Pierazzi, C. Wress-
+                                                                                       negger, L. Cavallaro, and K. Rieck, “Dos and don’ts of machine learning
+needs root privileges and will not reproduce packet timing                             in computer security,” in Proc. 31st USENIX Security Symposium, 2022,
+exactly. The first, flawed campaign’s captures were not                                pp. 3971–3988.
+retained; only its summary file is.                                               [20] M. S. Towhid and N. Shahriar, “Early detection of intrusion in
+                                                                                       SDN,” University of Regina, preprint, https://uregina.ca/∼nss373/papers/
+                                                                                       Early-detection-SDN.pdf.
+                         ACKNOWLEDGMENT                                           [21] M. A. B. Mokti, “UKMDDoSDN: A DDoS attacks dataset for software-
+                                                                                       defined networks, version 2,” Mendeley Data, 2025.
+   All three authors contributed equally to the data analysis,
+experiments and writing. An AI assistant (Claude, Anthropic)
+was used to help write analysis scripts, organise experiments,
+search the literature and draft text; the authors verified ev-
+ery reported number against the stored result files and take
+responsibility for the content.
 
                               R EFERENCES
  [1] D. Kreutz, F. M. V. Ramos, P. E. Verı́ssimo, C. E. Rothenberg,
@@ -722,10 +746,4 @@ experiments and writing.
      Scalable and vigilant switch flow management in software-defined
      networks,” in Proc. ACM Conf. Computer and Communications Security
      (CCS), 2013, pp. 413–424.
-[14] H. Wang, L. Xu, and G. Gu, “FloodGuard: A DoS attack prevention ex-
-     tension in software-defined networks,” in Proc. 45th Annual IEEE/IFIP
-     Int. Conf. Dependable Systems and Networks (DSN), 2015, pp. 239–250.
-[15] M. Dhawan, R. Poddar, K. Mahajan, and V. Mann, “SPHINX: Detecting
-     security attacks in software-defined networks,” in Proc. Network and
-     Distributed System Security Symposium (NDSS), 2015.
 
