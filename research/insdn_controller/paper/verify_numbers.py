@@ -10,7 +10,7 @@ R = H.parent / "results"
 tex = "".join((H / f).read_text() for f in ("main.tex", "live_section.tex")).replace("\\,", "").replace("$", "")
 J = lambda n: json.load(open(R / n))  # noqa: E731
 fm, one, l3, xg = J("flowmod_matches.json"), J("live_modes_v4_one10.json"), J("live_modes_v4_linear3.json"), J("v4_strict_W5_xgb.json")
-DL, RP = J("dedup_ladder.json"), J("replicate_papers.json")
+DL, RP, LH = J("dedup_ladder.json"), J("replicate_papers.json"), J("leave_one_host_out.json")
 st, hs, pi = J("stock_ryu_flowmods.json"), J("hostside_xgb.json"), J("protocol_inflation.json")
 ai, ac, lit = J("protocol_audit_insdn.json"), J("protocol_audit_cicids2017.json"), json.load(open(R.parent / "literature_check.json"))
 rr = J("recipe_replication.json")
@@ -59,6 +59,13 @@ checks = [
     ("SDNGuardStack random", round(RP["paper1"]["a_random_ids|train_only"]["acc"]["mean"], 4), "0.9999"),
     ("SDNGuardStack grouped lo", round(RP["paper1"]["b_grouped_ids|train_only"]["acc"]["mean"], 2), "0.72"),
     ("SDNGuardStack grouped hi", round(RP["paper1"]["b_grouped_ids|all_rows"]["acc"]["mean"], 2), "0.78"),
+    ("LOHO distinct ips", f"{LH['distinct_src_ips']:,}", "122,868"),
+    ("LOHO single flow", f"{LH['single_flow_src_ips']:,}", "122,307"),
+    ("LOHO big hosts", "eight hosts" if LH["hosts_ge_500_flows"] == 8 else "MISMATCH", "eight hosts"),
+    ("LOHO big host rows", f"{LH['rows_in_hosts_ge_500']:,}", "215,404"),
+    ("LOHO main attacker recall", round(100 * LH["hosts"]["200.175.2.130"]["recall_attack"], 1), "%.1f" % (100 * LH["hosts"]["200.175.2.130"]["recall_attack"])),
+    ("LOHO main attacker DoS", round(100 * LH["hosts"]["200.175.2.130"]["recall_by_class"]["DoS"], 1), "%.1f" % (100 * LH["hosts"]["200.175.2.130"]["recall_by_class"]["DoS"])),
+    ("LOHO benign host fpr", round(100 * LH["hosts"]["192.168.20.133"]["fpr_benign"], 1), "%.1f" % (100 * LH["hosts"]["192.168.20.133"]["fpr_benign"])),
     ("audit InSDN E pct", round(100 * ai["E_test_rows_duplicating_train_row_splitA"]["mean"], 1), "48.7"),
     ("audit InSDN rows", ai["rows"], "343889"),
     ("audit CICIDS A", round(ac["A_random_flow_split"]["mean"], 4), "0.9917"),
