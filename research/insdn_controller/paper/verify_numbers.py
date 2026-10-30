@@ -129,14 +129,24 @@ checks = [
     ("recon DDoS single-pkt flows", pr["OVS_DDoS"]["flows_with_single_packet"], "17565"),
     ("recon DDoS total flows", pr["OVS_DDoS"]["distinct_reconstructed_flows"], "17566"),
     ("recon Probe pct single-pkt", pr["OVS_Probe"]["pct_single_packet_flows"], "97.3"),
+    ("recon MS2 DoS pct single-pkt", pr["MS2_DoS"]["pct_single_packet_flows"], "2.8"),
+    ("recon MS2 DoS matching 5tuples", pr["MS2_DoS"]["matching_5tuples"], "494"),
+    ("recon MS2 DoS duration corr", pr["MS2_DoS"]["duration_correlation"], "-0.053"),
+    ("recon MS2 Probe pct single-pkt", pr["MS2_Probe"]["pct_single_packet_flows"], "0.2"),
+    ("recon MS2 Probe matching 5tuples", pr["MS2_Probe"]["matching_5tuples"], "13214"),
+    ("recon Normal pct single-pkt", pr["Normal_1"]["pct_single_packet_flows"], "8.4"),
+    ("recon Normal matching 5tuples", pr["Normal_1"]["matching_5tuples"], "140"),
     # host assignment audit (host_assignment_audit.json)
     ("host audit seed 0 test frac", round(100 * haa["seeds"][0]["test_frac"], 1), "43.7"),
     ("host audit seed 1 test frac", round(100 * haa["seeds"][1]["test_frac"], 1), "57.1"),
+    ("host audit seed 2 test frac", round(100 * haa["seeds"][2]["test_frac"], 1), "22.2"),
+    ("host audit seed 2 bacc", round(haa["seeds"][2]["score_bacc"], 3), "0.939"),
     # operational stream evaluation (operational_stream_evaluation.json)
     ("operational normal windows", f"{ose['normal_windows_total']:,}", "33,283"),
     ("operational normal ip windows", f"{ose['normal_windows_with_ip']:,}", "25,810"),
     ("operational normal ip fpr", ose["normal_windows_ip_fpr_pct"], "77.5"),
-    ("operational trivial rule bacc", ose["trivial_rule_overall_bacc"], "0.4889"),
+    ("operational strict trivial bacc", f"{ose['strict_trivial_rule_bacc']:.4f}", "0.6360"),
+    ("operational raw trivial bacc", ose["raw_stream_trivial_bacc"], "0.4889"),
 ]
 WORDS = {"nine": 9, "ten": 10, "three": 3, "none": 0}
 bad = 0

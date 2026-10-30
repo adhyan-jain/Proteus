@@ -9,7 +9,18 @@
     "median_packets_per_flow": 1.0,
     "max_packets_per_flow": 67,
     "median_duration_s": 0.0,
-    "max_duration_s": 66.75876903533936
+    "max_duration_s": 66.75876903533936,
+    "csv_flows_total": 48413,
+    "csv_single_packet_pct": 0.0,
+    "csv_median_packets": 2.0,
+    "csv_median_duration_s": 0.0,
+    "matching_5tuples": 0,
+    "packet_count_correlation": null,
+    "duration_correlation": null,
+    "mean_packets_recon": null,
+    "mean_packets_csv": null,
+    "mean_duration_recon_s": null,
+    "mean_duration_csv_s": null
   },
   "OVS_Probe": {
     "total_packet_in": 12839,
@@ -21,7 +32,18 @@
     "median_packets_per_flow": 1.0,
     "max_packets_per_flow": 27,
     "median_duration_s": 0.0,
-    "max_duration_s": 1654.2809779644012
+    "max_duration_s": 1654.2809779644012,
+    "csv_flows_total": 36194,
+    "csv_single_packet_pct": 0.0,
+    "csv_median_packets": 2.0,
+    "csv_median_duration_s": 0.003,
+    "matching_5tuples": 0,
+    "packet_count_correlation": null,
+    "duration_correlation": null,
+    "mean_packets_recon": null,
+    "mean_packets_csv": null,
+    "mean_duration_recon_s": null,
+    "mean_duration_csv_s": null
   },
   "OVS_Web": {
     "total_packet_in": 127,
@@ -33,7 +55,18 @@
     "median_packets_per_flow": 1.0,
     "max_packets_per_flow": 6,
     "median_duration_s": 0.0,
-    "max_duration_s": 4.0833899974823
+    "max_duration_s": 4.0833899974823,
+    "csv_flows_total": 98,
+    "csv_single_packet_pct": 0.0,
+    "csv_median_packets": 4.0,
+    "csv_median_duration_s": 0.003,
+    "matching_5tuples": 8,
+    "packet_count_correlation": -1.0,
+    "duration_correlation": 1.0,
+    "mean_packets_recon": 4.5,
+    "mean_packets_csv": 3.0,
+    "mean_duration_recon_s": 0.55,
+    "mean_duration_csv_s": 0.55
   },
   "MS2_DoS": {
     "total_packet_in": 200254,
@@ -45,7 +78,18 @@
     "median_packets_per_flow": 6.0,
     "max_packets_per_flow": 6075,
     "median_duration_s": 64.07548666000366,
-    "max_duration_s": 144.39670491218567
+    "max_duration_s": 144.39670491218567,
+    "csv_flows_total": 494,
+    "csv_single_packet_pct": 0.0,
+    "csv_median_packets": 8.0,
+    "csv_median_duration_s": 1.467,
+    "matching_5tuples": 494,
+    "packet_count_correlation": 0.504,
+    "duration_correlation": -0.053,
+    "mean_packets_recon": 4.49,
+    "mean_packets_csv": 7.44,
+    "mean_duration_recon_s": 31.72,
+    "mean_duration_csv_s": 10.5
   },
   "MS2_Probe": {
     "total_packet_in": 28518,
@@ -57,7 +101,18 @@
     "median_packets_per_flow": 2.0,
     "max_packets_per_flow": 369,
     "median_duration_s": 0.002586841583251953,
-    "max_duration_s": 1661.8748691082
+    "max_duration_s": 1661.8748691082,
+    "csv_flows_total": 25576,
+    "csv_single_packet_pct": 0.0,
+    "csv_median_packets": 8.0,
+    "csv_median_duration_s": 0.013,
+    "matching_5tuples": 13214,
+    "packet_count_correlation": 0.359,
+    "duration_correlation": 0.384,
+    "mean_packets_recon": 2.01,
+    "mean_packets_csv": 2.0,
+    "mean_duration_recon_s": 0.01,
+    "mean_duration_csv_s": 0.0
   },
   "Normal_1": {
     "total_packet_in": 16528,
@@ -69,6 +124,17 @@
     "median_packets_per_flow": 5.0,
     "max_packets_per_flow": 2837,
     "median_duration_s": 0.1081845760345459,
-    "max_duration_s": 549.6095559597015
+    "max_duration_s": 549.6095559597015,
+    "csv_flows_total": 35764,
+    "csv_single_packet_pct": 0.0,
+    "csv_median_packets": 4.0,
+    "csv_median_duration_s": 0.005,
+    "matching_5tuples": 140,
+    "packet_count_correlation": 0.719,
+    "duration_correlation": 0.429,
+    "mean_packets_recon": 111.72,
+    "mean_packets_csv": 40.61,
+    "mean_duration_recon_s": 89.01,
+    "mean_duration_csv_s": 3.73
   }
 }

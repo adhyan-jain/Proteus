@@ -1,12 +1,17 @@
 {
+  "strict_windows_total": 38050,
+  "strict_attack_windows": 2589,
+  "strict_benign_windows": 35461,
+  "strict_trivial_rule_recall": 1.0,
+  "strict_trivial_rule_fpr": 0.7279,
+  "strict_trivial_rule_bacc": 0.636,
   "normal_windows_total": 33283,
   "normal_windows_with_ip": 25810,
   "normal_windows_ip_fpr": 0.7755,
   "normal_windows_ip_fpr_pct": 77.5,
-  "attack_windows_total": 8816,
-  "attack_windows_with_ip": 6641,
-  "attack_windows_ip_recall": 0.7533,
-  "trivial_rule_overall_bacc": 0.4889,
-  "mlp_overall_bacc": 0.946,
-  "mlp_overall_fpr": 0.001
+  "raw_stream_windows_total": 42099,
+  "raw_stream_trivial_bacc": 0.4889,
+  "mlp_overall_bacc": 0.9458,
+  "mlp_overall_fpr": 0.0014,
+  "mlp_normal_fpr": 0.0014
 }
