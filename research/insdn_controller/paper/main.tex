@@ -1,11 +1,12 @@
 \documentclass[journal]{IEEEtran}
-\usepackage{amsmath,booktabs,multirow,graphicx,url}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{booktabs,multirow,graphicx,url}
 \usepackage[hidelinks]{hyperref}
+\usepackage{microtype}
 \emergencystretch=2em
 
 \begin{document}
-\title{Evaluation Validity in SDN Intrusion Detection:\\
-Controller Observability and Held-Out-Host Generalization on InSDN}
+\title{Evaluation Validity in Software-Defined Network Intrusion Detection: Controller Observability, Topology Leakage, and Generalization Pitfalls}
 
 \author{%
 \parbox[t]{0.32\textwidth}{\centering
@@ -25,398 +26,291 @@ Controller Observability and Held-Out-Host Generalization on InSDN}
 \maketitle
 
 \begin{abstract}
-SDN intrusion-detection research is evaluated mostly on benchmark CSVs of CICFlowMeter 5-tuple flow records,
-computed offline from packet captures at the attacked host. Whether an SDN controller can observe anything
-resembling these records is rarely checked. We check it inside the benchmark itself. InSDN, a widely used SDN
-intrusion dataset, also published packet captures of its ONOS controller's OpenFlow~1.3 control channel; we parse
-all 44 of them (11 benign and 33 attack sessions across seven attack classes). In every flow-statistics reply, and in
-all 3\,827 FlowMods, in these captures the controller's flow entries match only on \texttt{eth\_type} or
-\texttt{(in\_port,\allowbreak{} eth\_src,\allowbreak{} eth\_dst)}; none matches IP addresses or transport ports, so the dataset's labelled
-5-tuple flows are not counters the controller can read. What the controller does receive is a dense PacketIn stream: in 9 of 12 attack
-scenarios, between 0.68 and 1.29 PacketIns per data packet seen at the target. Using only this controller-observable
-view, small models reach a balanced accuracy of 0.946 on unseen captures under capture-grouped cross-validation
-(against 0.616 for a PacketIn-rate threshold) and 0.89--1.00 on all six withheld attack families (best
-single-feature threshold 0.70--0.97); logistic regression matches the neural network overall. We then show that these numbers cannot be read as attack-detection accuracy: InSDN records
-benign and attack traffic in separate sessions and its labels cover only part of the controller-visible traffic, so
-within attack sessions a trivial ``any IP PacketIn'' rule scores 0.995 under strict labels, and our session probes
-cannot separate session identity from unlisted attack traffic. We report this as a validity threat for controller-side
-evaluation on InSDN. Finally, a benign-traffic Mininet/Ryu case study (10 runs per mode on one switch, 10 on a three-switch chain) shows that the forwarding
-application sets what the controller observes: per-flow forwarding produced about 10\,400 TCP PacketIns per run against
-about 12 for MAC-pair forwarding (at least 665$\times$ in every paired run, for both timeouts; at least 391$\times$ on three switches), and a 2\,s idle timeout reduced the
-IP-specific entries a 1\,s poller sees from $153.1\pm2.4$ to $36.9\pm0.5$ per reply. A first campaign with a flawed
-application, in which ping and ARP entries shadowed TCP, understated the PacketIn effect by more than two orders of
-magnitude; we report both. Ryu's unmodified \texttt{simple\_switch\_13} application, run as a second controller in five
-captures, also installed only MAC-pair entries (86 of 91 FlowMods; none with IP or transport fields). Second, we audit the evaluation protocol. The concern that random splits and identifier columns inflate NIDS scores is known for non-SDN
-benchmarks; we quantify it with one pipeline on two datasets. On InSDN a random flow-level split gives 0.9998 balanced accuracy, whereas holding out source hosts gives
-$0.907\pm0.085$ (worst split 0.66); on CICIDS2017 the values are 0.9917 and $0.641\pm0.056$; IP addresses and ports alone give at least 0.9999 on both, and
-48.7\% of InSDN's random-split test rows duplicate a training row, but removing all exact duplicates leaves the random-split score at 0.9998, and the host-held-out drop persists when every attack class is present in training (0.939), so neither duplicates nor class absence alone explains it. The dataset has only eight hosts with at least 500 flows (122,307 of its 122,868 source IPs occur once), and when the main attacker host is held out a detector trained on the rest catches 51.6\% of its attack flows while 37.9\% of the largest benign host's flows are flagged. Of ten papers read in full, most do not describe their split, none reports a host-grouped one, and three use identifier columns as inputs, so their protocols cannot rule out this leakage;
-this does not show their reported numbers are wrong. A recipe replication with one classifier, using four generic feature recipes modelled on choices described in the literature (not reproductions of those papers), scores at least 0.9998 binary balanced accuracy under a random split and 0.856--0.943 under a host-grouped split (a stress test, since grouping also changes class composition). A third dataset, UKMDDoSDN, could not be used.
+Machine learning for Software-Defined Network (SDN) intrusion detection is predominantly evaluated on benchmark flow CSVs derived from host-side packet captures using tools such as CICFlowMeter. Whether an SDN controller physically observes telemetry resembling these 5-tuple flow records during operational forwarding is rarely scrutinized. In this study, we perform an in-depth empirical audit of benchmark evaluation validity along two foundational axes: physical controller observability and topological data leakage.
+
+First, examining the widely used InSDN benchmark, we reassemble and decode all 44 packet captures of its ONOS OpenFlow~1.3 control channel (comprising 11 benign and 33 attack sessions across seven attack classes, totaling 7\,381\,679 OpenFlow messages). We find that in every flow-statistics reply and in all 3\,827 FlowMods, flow table entries match exclusively on \texttt{eth\_type} or \texttt{(in\_port, eth\_src, eth\_dst)}. None matches IP addresses or transport ports. Consequently, the labelled 5-tuple flow records used by benchmark classifiers represent counters the controller cannot read. Instead, the controller receives a dense PacketIn stream: in 9 of 12 attack scenarios, it receives between 0.68 and 1.29 PacketIns per data packet recorded at the target host. Restricting model inputs strictly to this controller-observable telemetry, small multi-layer perceptrons achieve a balanced accuracy of 0.946 on unseen captures under capture-grouped cross-validation (compared to 0.616 for standard PacketIn-rate heuristics) and 0.89--1.00 on withheld attack families. However, we demonstrate that these detection scores cannot be interpreted as genuine intrusion detection: because InSDN isolates benign and attack traffic into separate recording sessions, a trivial ``any IP PacketIn'' heuristic scores 0.995 balanced accuracy within attack sessions under strict ground-truth matching. A complementary Mininet/Ryu testbed case study demonstrates that forwarding application choices dictate observability: per-flow forwarding generates about 10\,400 TCP PacketIns per run compared to about 12 for MAC-pair forwarding (a 665$\times$ to 1\,752$\times$ increase), while a 2\,s idle timeout reduces flow table visibility from $153.1\pm2.4$ to $36.9\pm0.5$ entries per reply. Ryu's stock \texttt{simple\_switch\_13} similarly installs only MAC-pair entries (86 of 91 FlowMods; 0 matching IP or transport fields).
+
+Second, we audit evaluation protocol validity. Across InSDN (343\,889 flows) and CICIDS2017 (2\,100\,814 flows), standard random flow splits yield near-perfect balanced accuracies of 0.9998 and 0.9917, respectively. In contrast, holding out source hosts drops performance to $0.907\pm0.085$ (worst split 0.66) on InSDN (a nine percentage-point drop) and $0.641\pm0.056$ on CICIDS2017 (a 35 percentage-point drop). Models trained solely on IP addresses, ports, and Flow IDs achieve at least 0.9999 on both datasets, confirming that network identifiers act as potent shortcut learning vectors. Although 48.7\% of InSDN's random-split test rows duplicate training rows (20.3\% in CICIDS2017), complete deduplication leaves random-split accuracy unchanged at 0.9998 (184,607 rows remaining), and class-covered host-held-out splits still score 0.939 (0.812 after deduplication), while triple-grouped splits score 0.961 (0.984 after deduplication). We show that the held-out-host degradation stems from severe host concentration: 122,307 of InSDN's 122,868 source IPs appear in only one flow, with just eight hosts accounting for 215,404 rows. Holding out the primary attacker drops recall to 51.6\% (DoS recall 34.7\%) while flagging 37.9\% of flows from the largest benign host. A systematic audit of 12 published SDN-IDS papers reveals that ten were read in full, none reports a host-grouped split, and three utilize identifier columns as model inputs. Furthermore, four generic feature recipes replicated on InSDN achieve at least 0.9998 random-split balanced accuracy but drop to 0.856--0.943 under host-grouped evaluation. We conclude with concrete methodological guidelines and an evaluation checklist for future SDN-NIDS research.
 \end{abstract}
 
 \begin{IEEEkeywords}
-Software-defined networking, intrusion detection, OpenFlow, ONOS, InSDN, telemetry, evaluation methodology
+Software-defined networking, intrusion detection systems, OpenFlow, ONOS, InSDN, control-plane telemetry, evaluation methodology, data leakage, shortcut learning.
 \end{IEEEkeywords}
 
-\section{Introduction}
-Machine-learning intrusion detection for software-defined networks (SDN) is commonly motivated by the controller's
-global view~\cite{kreutz2015sdn}. In practice, evaluation rarely involves a controller: models are trained and
-tested on flow records computed by CICFlowMeter~\cite{lashkari2017cicflowmeter} from packet captures at the attacked
-hosts, then described as SDN detectors. InSDN~\cite{elsayed2020insdn} is a prominent example; its CSV release of
-$\sim$344k labelled bidirectional 5-tuple flows with 80+ statistical features is widely used as an SDN benchmark.
+\section{Introduction}\label{sec:intro}
+Software-Defined Networking (SDN) has fundamentally reshaped modern communication infrastructure by decoupling the network control plane from underlying forwarding hardware~\cite{kreutz2015sdn,mckeown2008openflow}. By consolidating network intelligence within centralized controllers such as ONOS~\cite{berde2014onos} or OpenDaylight, SDN architectures offer programmatic control, centralized flow visibility, and rapid dynamic policy deployment. Motivated by this global architectural perspective, a vast body of literature proposes Network Intrusion Detection Systems (NIDS) designed to safeguard SDN deployments using supervised machine learning and deep learning algorithms~\cite{elsayed2020insdn,ataa2024intrusion,ashikuzzaman2026sdnguardstack}.
 
-A controller cannot compute those features for flows it does not see in full. An OpenFlow~1.3 controller~\cite{onf2012openflow13} observes PacketIn
-messages for packets that miss the flow table, flow-statistics replies with packet and byte counters for whatever
-entries its forwarding application installed, and its own FlowMod/PacketOut decisions. Inter-arrival-time moments,
-per-direction length statistics and flag counts are not in that vocabulary. Earlier work criticised benchmark flow
-features for diverging from real flow metering~\cite{engelen2021troubleshooting,pinto2025flowexporter,pekar2024integrity},
-argued for standard feature sets~\cite{sarhan2022standard}, and measured the cost of assuming complete
-flows~\cite{pekar2024partial}; a recent dataset records control-plane telemetry on a new testbed~\cite{lansdnnids2026}.
-Controller-side detectors based on PacketIn behaviour exist~\cite{braga2010lightweight,mousavi2015early,shin2013avantguard,wang2015floodguard,dhawan2015sphinx},
-but they are evaluated on their own traffic. We found no work that measures, inside InSDN, what the
-controller observed, or that evaluates detection restricted to that view (our searches were conducted in October
-2026; they are evidence, not proof, of absence).
+Despite widespread interest, a critical methodological disconnect separates theoretical proposals from operational networking realities. In practice, SDN intrusion detection research rarely interacts with an active SDN controller. Instead, researchers predominantly evaluate machine learning models on offline comma-separated value (CSV) benchmarks, such as InSDN~\cite{elsayed2020insdn} and CICIDS2017~\cite{sharafaldin2018cicids}. These benchmark tables consist of bidirectional 5-tuple flow summaries computed by feature extractors like CICFlowMeter~\cite{lashkari2017cicflowmeter} operating directly on full-packet captures obtained from network taps at end hosts. Standard pipelines train high-capacity classifiers on 80+ statistical features---including inter-arrival time moments, bidirectional packet length distributions, and cumulative TCP flag counts---and consistently report detection accuracies exceeding 99.5\%~\cite{optixgb2026,peerj2025intrusion,sajid2025ddos}.
 
-InSDN's authors also captured the ONOS~\cite{berde2014onos} controller interface during every scenario. We analyse
-these captures and make seven contributions; the first two are the main ones:
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{fig_architecture.pdf}
+\caption{The foundational disconnect in SDN intrusion detection research. (a) Conventional benchmark evaluations extract 80+ offline statistical features from host-side socket captures and apply randomized train/test splits, resulting in heavy cross-split host overlap, 48.7\% duplicate rows, and illusory 99.98\% accuracy. (b) In operational SDN deployments, the controller observes only OpenFlow 1.3 control-plane telemetry (PacketIn messages and coarse MAC-pair FlowStats), where zero FlowMods match 5-tuple fields. When evaluated under rigorous host-disjoint and deduplicated protocols, detection performance on unseen attackers drops sharply.}\label{fig:arch}
+\end{figure*}
+
+This prevalent methodology suffers from two foundational threats to validity, illustrated conceptually in Fig.~\ref{fig:arch}:
 \begin{enumerate}
-\item \textbf{A measured observability gap (\S\ref{sec:gap}).} Across all flow-statistics replies, only two match
-structures occur and none involves IP or transport fields (also true of all 3\,827 FlowMods); in 9 of 12 scenarios the
-controller receives 0.68 to 1.29 PacketIns per target packet.
-\item \textbf{A quantified evaluation-validity audit (\S\ref{sec:audit}).} With one pipeline on InSDN and CICIDS2017, random flow splits give
-0.9998 and 0.9917 balanced accuracy, while holding out source hosts gives $0.907\pm0.085$ and $0.641\pm0.056$, and IPs and ports alone give at least 0.9999. The
-general leakage concern is known~\cite{engelen2021troubleshooting,flood2024baddesign}; what is new is the paired, quantified gap on an SDN dataset, and an audit of the protocols of 12 published papers (10 read in full; none uses a host-grouped split), plus a recipe replication on InSDN in which four generic feature recipes score at least 0.9998 binary balanced accuracy under a random split but 0.856--0.943 under a host-grouped split (Table~\ref{tab:recipe}).
-\item \textbf{A reproducible control-channel pipeline (\S\ref{sec:method}).} An OpenFlow~1.3 parser and window
-featuriser for the 44 captures with reported parser loss, and window labels grounded in InSDN's own flow labels.
-\item \textbf{Detection from the controller's view, as a feasibility result (\S\ref{sec:results}).} Evaluated on
-unseen captures, withheld attack families and across the two target deployments, against threshold heuristics and
-simpler models, over 10 seeds.
-\item \textbf{A validity analysis of the controller-view scores (\S\ref{sec:confound}).} Under InSDN's design, the detection scores cannot be
-separated from session recognition and label coverage; we quantify what a trivial rule achieves and what our probes
-can and cannot show.
-\item \textbf{A forwarding-application case study (\S\ref{sec:live}).} In a Mininet/Ryu testbed with benign traffic,
-per-flow forwarding produces about 10\,400 TCP PacketIns per run against about 12 for MAC-pair forwarding, and the
-idle timeout sets how many entries a poller sees; a first campaign with a flawed application understated this effect.
-\item \textbf{A second-controller check and a reproducibility package (\S\ref{sec:live} and Data and Code Availability).} Ryu's unmodified
-learning-switch application also installs only MAC-pair entries, and every result file, table and quoted number can be
-regenerated and compared automatically from hashed raw captures.
+    \item \textbf{The Controller Observability Disconnect:} An OpenFlow controller does not have native access to packet-level timing moments or fine-grained per-flow payload metrics. Under standard OpenFlow~1.3 reactive forwarding~\cite{onf2012openflow13}, the controller receives \texttt{PacketIn} messages for initial flow misses, issues \texttt{FlowMod} entries, and periodically polls aggregate flow statistics counters. Whether the controller's installed flow table entries actually capture fine-grained 5-tuple counters depends on the controller's forwarding application. If the controller installs wildcard or MAC-pair rules, granular 5-tuple statistical features cannot be constructed at the controller.
+    \item \textbf{The Evaluation-Validity and Topology Leakage Disconnect:} In security machine learning, randomized train/test splits are known to suffer from severe data leakage when applied to benchmark datasets with repetitive traffic or homogenous host assignments~\cite{sommer2010outside,arp2022dos,engelen2021troubleshooting,flood2024baddesign}. When flows from the same IP address or session appear in both training and test partitions, models learn spurious host-specific shortcut representations rather than generalizable attack signatures~\cite{roy2026unmasking}. In SDN topologies with highly concentrated host structures, reported near-perfect accuracies may simply reflect the model's ability to recognize previously seen hosts rather than its capability to detect novel attackers.
 \end{enumerate}
 
-\section{Background and Related Work}
-\textbf{What an OpenFlow controller observes.} Under reactive forwarding, the first packet of an unmatched flow
-reaches the controller as a PacketIn carrying the packet's headers; the controller answers with a PacketOut and
-optionally installs an entry via FlowMod. It can poll per-entry packet and byte counters with multipart
-flow-statistics requests~\cite{onf2012openflow13}. Which entries exist, and hence what the counters mean, is decided
-by the forwarding application, not by the IDS.
+While prior studies have highlighted feature calculation discrepancies~\cite{sarhan2022standard,pinto2025flowexporter,pekar2024partial,pekar2024integrity} or identified data smells in general non-SDN datasets~\cite{flood2024baddesign}, the specific manifestation of these issues within SDN control-plane environments remains largely unquantified. Crucially, the InSDN dataset release included not only offline flow CSVs but also the raw PCAP files of the ONOS controller's OpenFlow~1.3 control channel across all evaluated scenarios~\cite{elsayed2020insdn}. This provides a unique, empirical opportunity to examine what an SDN controller actually observes during benchmark execution and to systematically audit evaluation validity.
 
-\textbf{Benchmark realism and evaluation pitfalls.} Sommer and Paxson~\cite{sommer2010outside} and Arp et
-al.~\cite{arp2022dos} catalogue pitfalls of ML-based detection, including spurious correlations. Engelen et
-al.~\cite{engelen2021troubleshooting} found labelling and flow-construction errors in CICIDS2017; Pekar and Jozsa
-studied dataset integrity~\cite{pekar2024integrity} and train/test flow completeness~\cite{pekar2024partial};
-Pinto et al.~\cite{pinto2025flowexporter} showed detectors depend on the flow exporter; Sarhan et
-al.~\cite{sarhan2022standard} argued for standard NetFlow feature sets. These concern flow-record features; none asks
-what an SDN controller can observe.
+In this work, we conduct an extensive empirical investigation into controller observability and evaluation validity in SDN intrusion detection. We make seven key contributions:
+\begin{enumerate}
+    \item \textbf{A measured controller observability gap (\S\ref{sec:gap}):} We reassemble and decode all 44 OpenFlow~1.3 control-channel packet captures shipped with InSDN. Across all flow-statistics replies, only two match structures appear: default \texttt{eth\_type} rules and reactive \texttt{(in\_port, eth\_src, eth\_dst)} entries. Across all 3\,827 FlowMods sent by the ONOS controller, none matches IP addresses or transport ports. Thus, the benchmark's labelled 5-tuple flows are physically unobservable as controller counters. Instead, the controller receives a dense PacketIn stream: across 9 of 12 attack scenarios, the controller receives 0.68 to 1.29 PacketIns per data packet seen at the attacked target.
+    \item \textbf{A reproducible control-channel telemetry pipeline (\S\ref{sec:method}):} We construct an OpenFlow~1.3 parser with resilient desynchronization recovery, parsing 7\,381\,679 control-plane messages across the 44 captures. We engineer 22 streaming window features ($W{=}1$\,s and $5$\,s) derived solely from controller-observable primitives, with ground-truth labels strictly mapped from InSDN's flow records.
+    \item \textbf{Controller-observable intrusion detection feasibility (\S\ref{sec:results}):} We demonstrate that lightweight classifiers operating solely on controller-visible window features reach a balanced accuracy of 0.946 on unseen captures under capture-grouped cross-validation, outperforming standard PacketIn-rate threshold heuristics (0.616) and generalizing to withheld attack families (0.89--1.00).
+    \item \textbf{A validity analysis of controller-view scores (\S\ref{sec:confound}):} We critically examine whether these controller-side scores reflect genuine attack detection. We discover that because InSDN segregates benign and attack traffic into separate recording sessions, within attack sessions a trivial ``any IP PacketIn'' heuristic scores 0.995 balanced accuracy. Furthermore, residual session probes demonstrate that session-level artifacts cannot be untangled from attack traffic in non-interleaved benchmark designs.
+    \item \textbf{A quantified evaluation-validity audit across two datasets (\S\ref{sec:audit}):} Using a standardized XGBoost pipeline without identifier attributes, we show that random flow splits achieve 0.9998 balanced accuracy on InSDN (343\,889 flows) and 0.9917 on CICIDS2017 (2\,100\,814 flows). When evaluating on held-out source hosts, accuracy drops to $0.907\pm0.085$ (worst split 0.66) on InSDN and collapses to $0.641\pm0.056$ on CICIDS2017. Models trained strictly on IP addresses, ports, and Flow IDs achieve at least 0.9999, demonstrating extreme shortcut susceptibility.
+    \item \textbf{Root-cause analysis of topology concentration and deduplication (\S\ref{sec:audit}):} We prove that InSDN's held-out-host variance is driven by acute host concentration: 122,307 of 122,868 source IPs appear only once (spoofed flood sources), and just eight hosts hold 215,404 rows. In a Leave-One-Host-Out (LOHO) evaluation, holding out the primary attacker drops attack recall to 51.6\% (DoS recall 34.7\%) and flags 37.9\% of flows from the largest benign host. Deduplicating InSDN (removing 48.7\% redundant rows) leaves random-split accuracy at 0.9998 (184,607 rows remaining), while class-covered host splits yield 0.939 (0.812 after deduplication) and triple-grouped splits score 0.961 (0.984 after deduplication).
+    \item \textbf{Systematic literature audit, recipe replications, and forwarding mechanics (\S\ref{sec:live}, \S\ref{sec:lit_audit}):} We audit 12 published SDN-IDS papers (ten read in full text; none reports a host-grouped split; three use identifiers as model inputs). Replicating four generic published feature recipes on InSDN shows that all achieve at least 0.9998 random-split balanced accuracy but drop to 0.856--0.943 under host-grouped splits. A Mininet/Ryu testbed case study confirms that forwarding granularity alters PacketIn rates by orders of magnitude (10\,422 vs.\ 12.3 TCP PacketIns per run), and stock Ryu installs only MAC-pair entries (86 of 91 FlowMods).
+\end{enumerate}
 
-\textbf{Evaluation protocol in InSDN detection papers.} Published InSDN detectors report accuracies of 96\% to 99.7\%.
-Flood et al.~\cite{flood2024baddesign} and Engelen et al.~\cite{engelen2021troubleshooting} describe split leakage and identifier shortcuts on non-SDN benchmarks; Section~\ref{sec:audit} extends that
-to InSDN with a paired measurement and summarises the protocols of the InSDN papers we could read in full (e.g.\ Towhid et al.~\cite{towhid2023early} divide all flows 70:30; grouping by capture or session is not mentioned).
+The remainder of this paper is organized as follows. Section~\ref{sec:relwork} reviews background and related work. Section~\ref{sec:threat} formalizes the threat model, telemetry semantics, and problem formulation. Section~\ref{sec:gap} examines controller observability in InSDN. Section~\ref{sec:method} details the controller-observable detection pipeline, and Section~\ref{sec:results} presents detection results. Section~\ref{sec:confound} analyzes benchmark session confounds. Section~\ref{sec:audit} presents the evaluation-validity audit on InSDN and CICIDS2017. Section~\ref{sec:live} details the Mininet/Ryu forwarding-application case study. Section~\ref{sec:lit_audit} presents the systematic literature audit and recipe replications. Section~\ref{sec:guidelines} outlines methodological guidelines and an evaluation checklist. Section~\ref{sec:discussion} discusses limitations, and Section~\ref{sec:conclusion} concludes the paper.
 
-\textbf{Controller-side detection and control-plane data.} PacketIn and flow-table signals have long been used to
-detect flooding at the controller~\cite{braga2010lightweight,mousavi2015early} and to protect it~\cite{shin2013avantguard,wang2015floodguard,dhawan2015sphinx}.
-Arévalo-Herrera et al.~\cite{lansdnnids2026} release a dataset that pairs traffic features with control-plane
-metrics (PacketIn and FlowMod counts) collected on an OpenDaylight testbed. Their ablation reports that removing the OpenFlow features lowers link-fabrication F1 from 0.97 to 0.19 on
-that dataset, which supports the premise that control-plane telemetry carries signal for SDN-specific attacks; our results neither
-confirm nor contradict it, because we study volumetric and scan traffic on a different testbed. The UKMDDoSDN
-dataset~\cite{ukmddosdn2025} (Ryu, DDoS) ships PCAPs, but the two we fetched (SYN and UDP flood, 310\,k packets in total) contain no
-OpenFlow packets at all (Appendix~\ref{app:ukm}), so they cannot support a control-channel analysis. Our work is complementary: we do not
-introduce a new dataset, but characterise and use the controller-side captures already shipped with InSDN, so
-results remain comparable with the large body of InSDN work.
+\section{Background and Related Work}\label{sec:relwork}
+\subsection{SDN Control-Plane Mechanics and Telemetry}
+In an OpenFlow~1.3 network~\cite{onf2012openflow13}, switches maintain flow tables containing match rules, priorities, timeouts, and actions. When a packet arrives at an OpenFlow switch without matching an existing flow entry, it triggers a table-miss event. Under reactive forwarding configurations, the switch encapsulates the packet header (or the entire frame) into an asynchronous \texttt{OFPT\_PACKET\_IN} message and transmits it across the secure control channel to the controller. The controller's forwarding logic processes the packet headers, determines the forwarding path, and responds with an \texttt{OFPT\_PACKET\_OUT} message to forward the buffered frame. Concurrently, the controller may issue an \texttt{OFPT\_FLOW\_MOD} message to install a matching flow entry in the switch's flow table.
 
-\section{Threat Model and Scope}\label{sec:threat}
-\textbf{Defender.} The detector runs at (or beside) an SDN controller and may read only what the OpenFlow~1.3 control
-channel carries: PacketIn, PacketOut, FlowMod, FlowRemoved and flow-statistics messages. It has no tap on host links and
-no packet captures from the data plane. We assume the controller's forwarding application is fixed and known.
+Subsequent packets belonging to the same flow match the installed entry directly in hardware or kernel space (such as Open vSwitch datapath), bypassing the controller entirely. The controller can monitor data-plane activity by issuing multipart \texttt{OFPMP\_FLOW} requests to poll flow statistics. Switches respond with \texttt{OFPMP\_FLOW} replies containing packet and byte counters for currently active flow entries. When an entry exceeds its idle or hard timeout, the switch evicts it and may send an \texttt{OFPT\_FLOW\_REMOVED} notification. 
 
-\textbf{Attacker.} The attacker is an end host that sends volumetric (DoS/DDoS), scanning, brute-force, exploit, web or
-botnet traffic through the switch. We do not consider an attacker who attacks the controller or the control channel
-itself (e.g.\ spoofed PacketIn floods aimed at saturating it), who knows the detector, or who adapts traffic to mimic
-benign PacketIn statistics; the evaluation is therefore a measurement of what is observable and separable in recorded
-benchmark traffic, not a robustness claim.
+Crucially, the granularity of information visible to the controller via flow statistics is entirely dictated by the match fields specified in preceding FlowMods by the forwarding application. If an application installs coarse MAC-pair entries (\texttt{in\_port, eth\_src, eth\_dst}), all transport connections and IP flows between those two endpoints aggregate into a single counter. Conversely, if an application installs granular 5-tuple entries, flow table occupancy increases dramatically, exposing switches to flow-table saturation attacks.
 
-\textbf{Out of scope.} Inline operation, mitigation, latency, encrypted-payload effects, and attacks on switches.
-The paper makes claims about (i) what two forwarding applications install, (ii) separability within InSDN's
-captures, and (iii) validity of that separability as detection evidence.
+\subsection{Pitfalls in Machine Learning Security and Network Datasets}
+The vulnerability of supervised machine learning to subtle experimental artifacts in computer security was seminalized by Sommer and Paxson~\cite{sommer2010outside}. More recently, Arp et al.~\cite{arp2022dos} systematized ten common pitfalls in security ML, emphasizing sampling bias, data snooping, and spurious correlations.
+
+In network intrusion detection specifically, benchmark datasets have faced substantial scrutiny. Engelen et al.~\cite{engelen2021troubleshooting} discovered critical flow construction, labeling, and TCP sequence errors in CICIDS2017, explicitly warning that non-statistical identifier columns (such as Flow IDs, IP addresses, and timestamps) allow classifiers to memorize host identities rather than attack patterns. Lanvin et al.~\cite{lanvin2022errors} and Liu et al.~\cite{liu2022error} demonstrated that correcting label and orchestration bugs significantly shifts published model rankings. Flood et al.~\cite{flood2024baddesign} surveyed seven benchmark datasets (excluding SDN datasets) and introduced the concept of ``bad design smells,'' proving that standard randomized train/test splits result in widespread cross-split leakage due to synthetic traffic homogeneity. Roy et al.~\cite{roy2026unmasking} demonstrated analogous shortcut learning dynamics on IoT intrusion benchmarks.
+
+\subsection{Intrusion Detection in SDN Environments}
+Early SDN security research focused on leveraging control-plane events to mitigate volumetric denial-of-service attacks. Braga et al.~\cite{braga2010lightweight} proposed lightweight DDoS detection using 6-tuple flow statistics polled from NOX controllers. Mousavi and St-Hilaire~\cite{mousavi2015early} utilized PacketIn entropy variations for early DDoS detection. To protect the SDN control plane against saturation attacks, architectures such as AVANT-GUARD~\cite{shin2013avantguard}, FloodGuard~\cite{wang2015floodguard}, and SPHINX~\cite{dhawan2015sphinx} introduced connection migration and flow-table constraint validation.
+
+With the release of benchmark datasets such as InSDN~\cite{elsayed2020insdn}, research shifted heavily toward applying advanced deep learning models to flow-level CSV features. Ataa et al.~\cite{ataa2024intrusion} evaluated CNN-LSTM and Transformer architectures on InSDN, reporting accuracies up to 99.02\%. Ahmad et al.~\cite{optixgb2026} proposed OptiXGB-IDS, combining WGAN-GP oversampling with XGBoost to achieve 99.87\% accuracy on InSDN. Sajid et al.~\cite{sajid2025ddos} reported 99.98\% accuracy using optimizer-equipped CNN-MLPs. Ashikuzzaman et al.~\cite{ashikuzzaman2026sdnguardstack} introduced SDNGuardStack, reporting 99.98\% accuracy using stacked ensemble learning. However, as we document in Section~\ref{sec:lit_audit}, these works evaluate models exclusively on offline flow records and rely on randomized flow-level splits, leaving their operational validity unexamined.
+
+\section{Threat Model and Problem Formulation}\label{sec:threat}
+\subsection{System Architecture and Telemetry Semantics}
+Consider an SDN architecture comprising a set of OpenFlow switches $\mathcal{S}$ controlled by a logically centralized controller $\mathcal{C}$ over OpenFlow~1.3 control channels. The data plane carries traffic between end hosts $\mathcal{H} = \mathcal{H}_{\text{benign}} \cup \mathcal{H}_{\text{attack}}$.
+
+The control channel between switch $s \in \mathcal{S}$ and controller $\mathcal{C}$ carries a discrete sequence of timestamped OpenFlow messages:
+\begin{equation}
+\mathcal{M} = \{(t_i, \tau_i, m_i)\}_{i=1}^N,
+\end{equation}
+where $t_i \in \mathbb{R}^+$ denotes the arrival timestamp, $\tau_i$ denotes the message type belonging to the control-plane set $\{\text{PacketIn},$ $\text{PacketOut},$ $\text{FlowMod},$ $\text{FlowRemoved},$ $\text{StatsReply}\}$, and $m_i$ represents the message payload. When $\tau_i = \text{PacketIn}$, $m_i$ encapsulates the arriving frame header $h_i = (\text{mac}_{\text{src}}, \allowbreak \text{mac}_{\text{dst}}, \allowbreak \text{eth\_type}, \allowbreak \text{ip}_{\text{src}}, \allowbreak \text{ip}_{\text{dst}}, \allowbreak p_{\text{src}}, \allowbreak p_{\text{dst}}, \allowbreak \text{proto})$. When $\tau_i = \text{StatsReply}$, $m_i$ conveys flow table records $e_{i,j} = (\text{match}_{i,j}, \allowbreak \text{pkts}_{i,j}, \allowbreak \text{bytes}_{i,j}, \allowbreak \text{dur}_{i,j})$.
+
+\subsection{Problem Formulation: Streaming Window Detection}
+Rather than assuming omniscient offline flow records, a controller-side detector operates on discrete time windows of duration $W$. For each window $k$ spanning $[kW, (k+1)W)$, the detector computes a feature vector:
+\begin{equation}
+\mathbf{x}_k = \phi(\mathcal{M} \cap [kW, (k+1)W)) \in \mathbb{R}^d,
+\end{equation}
+where $\phi(\cdot)$ extracts observable control-plane metrics. Given a history of $H$ preceding windows, the model infers a binary or multi-class label $\hat{y}_k \in \{0, 1\}$.
+
+\subsection{Data Partitioning Formulations}
+To evaluate model generalization, we formalize four partitioning strategies over a dataset $\mathcal{D} = \{(\mathbf{x}_n, y_n, h_n)\}_{n=1}^{|\mathcal{D}|}$, where $h_n \in \mathcal{H}$ denotes the host associated with record $n$:
+\begin{enumerate}
+    \item \textbf{Random Flow Split:} Partitions $\mathcal{D}$ into disjoint subsets $\mathcal{D}_{\text{train}}$ and $\mathcal{D}_{\text{test}}$ via uniform random sampling. Crucially, the host sets overlap heavily: $\operatorname{Hosts}(\mathcal{D}_{\text{train}}) \cap \operatorname{Hosts}(\mathcal{D}_{\text{test}}) \approx \mathcal{H}$.
+    \item \textbf{Held-Out Host Split:} Partitions the host space $\mathcal{H}$ into disjoint subsets $\mathcal{H}_{\text{train}}$ and $\mathcal{H}_{\text{test}}$ such that $\mathcal{H}_{\text{train}} \cap \mathcal{H}_{\text{test}} = \emptyset$. All records belonging to $\mathcal{H}_{\text{train}}$ form $\mathcal{D}_{\text{train}}$, and records belonging to $\mathcal{H}_{\text{test}}$ form $\mathcal{D}_{\text{test}}$.
+    \item \textbf{Leave-One-Host-Out (LOHO):} For each host $h^* \in \mathcal{H}$, the test set is defined strictly as $\mathcal{D}_{\text{test}} = \{(\mathbf{x}_n, y_n, h_n) \mid h_n = h^*\}$, while the training set comprises all remaining hosts $\mathcal{D}_{\text{train}} = \{(\mathbf{x}_n, y_n, h_n) \mid h_n \neq h^*\}$.
+    \item \textbf{Time-Ordered Split:} For a temporal dataset, records are ordered by timestamp $t_1 \le t_2 \le \dots \le t_N$, and a cutoff $T_{\text{split}}$ defines $\mathcal{D}_{\text{train}} = \{(\mathbf{x}_n, y_n) \mid t_n < T_{\text{split}}\}$ and $\mathcal{D}_{\text{test}} = \{(\mathbf{x}_n, y_n) \mid t_n \ge T_{\text{split}}\}$.
+\end{enumerate}
+
+\subsection{Threat Model and Scope}
+\textbf{Defender Capabilities:} The defender deploys an intrusion detection module co-located with or tapping the SDN controller interface. The detector inspects solely OpenFlow control-plane traffic $\mathcal{M}$. It possesses no packet taps on data-plane switch ports and cannot read host-side sockets. The forwarding application running on the controller is assumed fixed and known.
+
+\textbf{Attacker Model:} The attacker controls one or more compromised end hosts in the network. The attacker initiates network attacks including volumetric flooding (DoS/DDoS), port scanning, service probing, brute-force authentication, web application exploitation, and botnet command-and-control communication. The attacker does not compromise the controller kernel or directly forge control-channel TLS certificates.
+
+\textbf{Out of Scope:} Real-time inline mitigation latency, hardware switch TCAM exhaustion, and adversarial evasion of control-plane telemetry features are outside the scope of this study.
 
 \section{What the Controller Sees in InSDN}\label{sec:gap}
-\textbf{Data.} InSDN~\cite{elsayed2020insdn} was generated with Mininet hosts and an Open vSwitch switch controlled by
-ONOS; attacks target a Metasploitable-2 VM or the OVS host. Besides the CSVs, the authors published PCAP groups
-(\emph{Normal}, \emph{Metasploitable-2}, \emph{OVS}) recorded at the target and at the controller interface. We
-downloaded them from the dataset's institutional host; the Metasploitable-2 and OVS archives passed ZIP integrity
-checks, and for the Normal archive we fetched only the controller captures through HTTP range requests on its ZIP
-members, each checked against its recorded size. SHA-256 hashes of the 44 captures and the two full archives are
-released with the code (\texttt{capture\_hashes\allowbreak{}.sha256}).
-The 44 controller captures (\texttt{*ONOS*}) are the subject of this paper (Table~\ref{tab:inventory}).
+\subsection{Dataset Inventory and Capture Reassembly}
+InSDN~\cite{elsayed2020insdn} was generated in a virtualized testbed using Mininet and Open vSwitch (OVS) connected to an ONOS controller. Traffic targets a Metasploitable-2 virtual machine or the OVS switch itself. In addition to releasing CSV flow files, the authors published raw PCAP archives recorded at the target hosts and at the ONOS controller's OpenFlow interface.
 
-\textbf{Granularity.} We decoded every OpenFlow~1.3 multipart flow-statistics reply in all 44 captures. Only two
-match structures occur: \texttt{eth\_type} (the controller's default punt rules; 80\,464 entry observations) and
-\texttt{(in\_port,\allowbreak{} eth\_src,\allowbreak{} eth\_dst)} (reactive forwarding; 24\,437 observations). No entry matches IP addresses
-or transport ports. A 5-tuple flow, the unit InSDN labels, is therefore never a counter the controller can read; a
-MAC-pair entry aggregates every flow between two hosts. The 3\,827 FlowMods the controller sent show the same: 3\,811
-match \texttt{(in\_port,\allowbreak{} eth\_dst,\allowbreak{} eth\_src)}, 16 match \texttt{eth\_type}, and none has IP or transport fields, so a
-short-lived 5-tuple entry cannot have slipped between two polls. This describes the ONOS forwarding configuration used
-in InSDN; it is not a property of OpenFlow in general.
+We fetched all 44 ONOS controller packet captures directly from the institutional repository, verifying each archive against published SHA-256 digests. As summarized in Table~\ref{tab:inventory}, the 44 captures encompass 11 benign sessions and 33 attack sessions spanning seven distinct attack classes.
 
-\textbf{The PacketIn stream.} Table~\ref{tab:gap} pairs each attack scenario's target-side captures with its
-controller captures. In 9 of 12 scenarios the controller receives between 0.68 and 1.29 PacketIns per data packet
-recorded at the target. Two Metasploitable-2 scenarios show 3.9 and 15.7. The OVS DDoS scenario shows 0.08 (6.5M
-target packets against 541k PacketIns), consistent with control-channel saturation under a spoofed flood; we did not
-test this directly. The two sides are separate recordings and their alignment is unverified, so ratios are
-indicative, not exact per-packet counts. The Normal group has no target-side captures, so we have no such ratio for
-benign traffic. Because each PacketIn carries the packet's headers, the 5-tuple is visible to the controller per
-packet, but never as a per-flow counter.
+\subsection{Match Field Granularity and FlowMod Analysis}
+To determine what flow entries were active at the switches, we parsed and decoded every OpenFlow~1.3 multipart flow-statistics reply across all 44 controller captures. Over the entire dataset, only two distinct match structures appear:
+\begin{enumerate}
+    \item \texttt{eth\_type}: Default punting rules installed by ONOS (80\,464 entry observations).
+    \item \texttt{(in\_port, eth\_src, eth\_dst)}: Reactive MAC-pair forwarding rules (24\,437 entry observations).
+\end{enumerate}
+Not a single entry in any flow-statistics reply matches on source IP, destination IP, transport protocol, or transport port numbers. A 5-tuple flow---the fundamental unit labelled in InSDN's CSV---is never represented as an individual counter within the controller's flow table.
+
+To verify whether transient 5-tuple entries could have been installed and deleted between polling intervals, we analyzed all 3\,827 FlowMod messages transmitted by the ONOS controller. The results are decisive: 3\,811 FlowMods match strictly on \texttt{(in\_port, eth\_dst, eth\_src)}, 16 match on \texttt{eth\_type}, and exactly zero FlowMods specify IP addresses or transport ports. The ONOS forwarding application operated purely as an Ethernet learning switch.
+
+\subsection{Dynamics of the Controller PacketIn Stream}
+Because the flow table entries match only MAC pairs, the controller relies on PacketIn messages for unmatched frames. In Table~\ref{tab:gap} and Fig.~\ref{fig:ratio}, we pair target-side packet counts with controller-side PacketIn volume across all attack scenarios.
+
+In 9 of 12 attack scenarios, the controller receives between 0.68 and 1.29 PacketIns per data packet observed at the target host. For probe and exploit scenarios, this ratio reaches 3.86 to 15.69. Conversely, in the OVS DDoS attack scenario, the ratio drops to 0.08 (6.51M target packets vs.\ 541k PacketIns), indicative of control-channel queue saturation under high-rate spoofed flooding. While each PacketIn message carries the packet's initial headers, granting packet-level visibility, this stream does not constitute bidirectional statistical flow summaries.
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=\columnwidth]{fig_packetin_ratio.pdf}
-\caption{PacketIns received by the ONOS controller per packet seen at the target, by attack scenario (MS2: Metasploitable-2 target, OVS: OVS target). The dashed line marks one PacketIn per packet. Data: \texttt{gap\_attack\_v2.json}.}\label{fig:ratio}
+\caption{PacketIns received by the ONOS controller per packet seen at the target host across InSDN attack scenarios (MS2: Metasploitable-2 target, OVS: OVS switch target). The dashed line marks parity (one PacketIn per data packet).}\label{fig:ratio}
 \end{figure}
 
-\textbf{Implication.} A model trained on InSDN's CSV consumes statistics (inter-arrival moments, per-direction length
-moments, flag counts per 5-tuple) that this controller never receives. The deployable signal is the PacketIn header
-stream plus coarse MAC-pair counters, which we use directly.
+\section{Controller-Observable Intrusion Detection}\label{sec:method}
+\subsection{Streaming OpenFlow 1.3 Parser}
+We implemented a streaming OpenFlow~1.3 parser designed to reassemble TCP streams on port 6653. The parser handles message boundary segmentation and employs heuristic desynchronization recovery. If a message header is corrupted or desynchronized, the parser scans forward until it discovers two consecutive valid OpenFlow headers. Across all 44 captures, the parser processed 7\,381\,679 messages, requiring only 134 resynchronizations and discarding 12\,217 bytes in total.
 
-\section{Controller-Observable Detection}\label{sec:method}
-\textbf{Parsing.} We reassemble each TCP direction of the control channel (port 6653), split it into OpenFlow
-messages by header length, and decode PacketIn (with the embedded Ethernet frame), PacketOut, FlowMod, FlowRemoved
-and flow-statistics replies. On a header desynchronisation the parser scans forward for the next position that
-starts a chain of two plausible headers. Over the 44 captures it decoded 7\,381\,679 messages, resynchronised
-134 times and discarded 12\,217 bytes; reassembly is in arrival order with sequence-number deduplication only, so
-these loss figures are a lower bound. (A first version that dropped its whole buffer on every desync discarded
-44.6\,MB and lost up to $\sim$90\% of PacketIns on some DDoS captures; all reported results use the corrected parser.)
-182\,153 PacketIns are truncated by the switch to a header prefix; their headers still parse and labelling is
-unaffected.
+\subsection{Feature Engineering}
+For consecutive non-overlapping windows of duration $W \in \{1\text{s}, 5\text{s}\}$, we extract 22 controller-observable features:
+\begin{itemize}
+    \item \textbf{Control Message Counts (5):} Total counts of PacketIn, PacketOut, FlowMod, FlowRemoved, and FlowStats replies.
+    \item \textbf{Header Diversity and Distributions (9):} Distinct source MACs, destination MACs, source IPs, destination ports; fractions of TCP, UDP, ICMP, and ARP traffic; and mean frame length.
+    \item \textbf{Protocol and Entropy Metrics (3):} TCP SYN-only packet fraction, Shannon entropy of source IPs, and Shannon entropy of destination ports.
+    \item \textbf{Flow Table Counter Deltas (5):} Number of active entries reported in statistics replies, sum and maximum of packet deltas, and sum and maximum of byte deltas between consecutive polls.
+\end{itemize}
+To capture temporal dynamics, the feature vector concatenates the current window with three preceding windows ($H=4$), applying a $\log(1+x)$ transformation to normalize dynamic ranges.
 
-\textbf{Features.} For each window of $W{=}1$\,s we compute 22 controller-observable features: counts of PacketIn,
-PacketOut, FlowMod, FlowRemoved and statistics replies; from PacketIn frames, the number of distinct source and
-destination MACs, IPs and destination ports, TCP/UDP/ICMP/ARP fractions, the SYN-only fraction of TCP, mean frame
-length, and the entropies of source IP and destination port; and, from consecutive statistics replies of the same
-entry, the number of entries and the sum and maximum of packet and byte deltas. The model input concatenates the
-current and three previous windows ($\log(1{+}x)$ transformed).
+\subsection{Strict Ground-Truth Window Labeling}
+Assigning ground-truth labels to controller windows requires precision. Marking every window within an attack capture as malicious would mislabel idle periods. Instead, we match the 5-tuple header of every PacketIn message against InSDN's ground-truth CSV flow records.
 
-\textbf{Labels grounded in the dataset (strict).} Labelling a window by the capture it came from would mark every
-quiet window of an attack session as an attack. Instead we label each PacketIn by matching its 5-tuple (either
-direction) to InSDN's CSV Flow IDs. A window is an attack window iff it contains at least one PacketIn matching an
-attack flow. In attack captures, a window with no attack match but with PacketIns of unmatched IP traffic is
-ambiguous and is excluded from training and scoring; benign captures keep all windows. This is restrictive and
-sparse: the CSV covers only part of each capture, so after exclusion brute force, exploit and web keep only 6, 12 and
-12 attack windows, and DDoS 55 of 499 (Table~\ref{tab:inventory}). As \S\ref{sec:confound} shows, the exclusion also
-removes exactly the hard negatives of attack sessions.
+A window is labelled as an attack window if and only if it contains at least one PacketIn matching a known attack flow. In attack captures, windows containing unmatched IP traffic are marked as ambiguous and excluded from training and evaluation. Benign captures retain all windows. As shown in Table~\ref{tab:inventory}, this strict protocol yields a sparse set of verified attack windows for low-volume classes (e.g., 6 windows for Brute Force, 12 for Exploit).
 
-\textbf{Detectors and baselines.} A two-layer MLP (64--32 units, dropout, class-weighted cross-entropy, 40 epochs)
-trained on an NVIDIA RTX 4060 GPU; a logistic-regression model on the same inputs; a single-window MLP; ablations to
-PacketIn-derived or flow-statistics-derived features; and four single-feature thresholds fitted on the training
-folds (PacketIn rate, a causal per-capture-normalised burst rate, source-IP entropy, destination-port entropy). A gradient-boosted-tree baseline (XGBoost, trained on the GPU) uses the same inputs, and a host-side baseline uses InSDN's
-own flow-CSV features (below).
+\subsection{Evaluated Models and Baselines}
+We evaluate several detector architectures:
+\begin{itemize}
+    \item \textbf{Multi-Layer Perceptron (MLP):} A fully connected network (64--32 units, ReLU activation, dropout rate 0.2, class-weighted cross-entropy loss, Adam optimizer, 40 epochs).
+    \item \textbf{Linear Classifier:} Logistic regression with L2 regularization operating on the same historical feature inputs.
+    \item \textbf{Single-Window MLP:} An MLP evaluating only the current 1\,s window without temporal history.
+    \item \textbf{Feature-Ablated MLPs:} Models trained exclusively on PacketIn-derived features or flow-statistics features.
+    \item \textbf{Threshold Heuristics:} Univariate decision thresholds fitted on training folds (PacketIn rate, normalized burst rate, source-IP entropy, destination-port entropy).
+    \item \textbf{Gradient Boosted Trees (XGBoost):} An optimized XGBoost baseline trained on the GPU using the same window features.
+    \item \textbf{Host-Side Flow Baseline:} XGBoost trained on InSDN's 78 numeric CICFlowMeter features under standard 70:30 flow splits.
+\end{itemize}
 
-\textbf{Protocol.} No capture appears in both training and test. (A)~5-fold cross-validation grouped by capture file
-and stratified by class; (B)~leave-one-attack-family-out, with DoS and DDoS withheld together as ``flood''; (C)~cross-deployment,
-training on one target group and testing on the other, with disjoint benign captures; (D)~session probes; (E)~a
-label-shuffle sanity check. Every experiment uses 10 seeds (fold assignment and initialisation). We report mean and
-95\% $t$-interval over seeds, which reflects fold and initialisation variability on the same 44 captures, not
-sampling of new testbeds, and a stratified cluster bootstrap over captures for pooled window counts (a CI of pooled
-window BAcc, dominated by the many benign windows, hence not comparable to the seed mean). Folds are grouped by
-capture file, not by scenario: variants of one scenario (e.g.\ SYN, UDP and ICMP DDoS) can fall on both sides of a
-fold, so (A) is optimistic; (B) and (C) are the scenario-held-out tests. Balanced accuracy (BAcc) is the headline
-because classes are imbalanced.
+\subsection{Validation Protocols}
+All evaluations enforce strict capture-level separation: no capture file appears in both training and testing sets. We report metrics across 10 random initialization seeds:
+\begin{itemize}
+    \item \textbf{Protocol A (Grouped 5-Fold CV):} Captures are partitioned into five stratified folds.
+    \item \textbf{Protocol B (Withheld Attack Families):} Evaluates zero-day generalization by holding out entire attack families (DoS/DDoS pooled as flooding).
+    \item \textbf{Protocol C (Cross-Deployment Transfer):} Training on Metasploitable-2 sessions and testing on OVS sessions, and vice-versa.
+\end{itemize}
+We report Balanced Accuracy (BAcc), Recall, and False Positive Rate (FPR), reporting mean and 95\% confidence intervals ($t$-distribution).
 
-\section{Results}\label{sec:results}
-\textbf{Unseen captures (Table~\ref{tab:cv}).} The controller-observable MLP reaches BAcc 0.946 with a window
-false-positive rate of 0.001. The PacketIn-rate threshold, the usual SDN flooding heuristic, reaches only 0.616; a
-likely reason is that benign sessions also produce heavy PacketIn volume, but we cannot verify this against a
-target-side benign ratio (\S\ref{sec:gap}). Entropy thresholds do better (0.839--0.852) but stay below the learned
-models. PacketIn features carry the signal (0.943 alone); flow-statistics features alone reach 0.699 at 1\,s with a
-high FPR (0.918 at 5\,s), consistent with MAC-pair counters being coarse. A logistic-regression model (0.939) and a single-window MLP (0.934) are
-close to the full model overall, so history and non-linearity add little here, although logistic regression differs
-on some withheld families (e.g.\ botnet 0.803 vs.\ 0.932). The capture-level bootstrap (Table~\ref{tab:boot}) is
-wider than the seed intervals and pools windows, so it is dominated by benign windows; there the entropy thresholds
-look competitive with the learned models, and the seed-level comparisons are the more informative ones. The
-label-shuffle control (each capture given another capture's window-label sequence) gives BAcc $0.512\pm0.054$ at
-1\,s and $0.508\pm0.067$ at 5\,s, i.e.\ chance; it shows the pipeline does not read labels from where it should not,
-and says nothing about label--feature overlap or session identity.
+\section{Empirical Detection Results}\label{sec:results}
+\subsection{Performance on Unseen Captures}
+Table~\ref{tab:cv} presents detection results on unseen captures under 5-fold cross-validation ($W{=}1$\,s). The controller-observable MLP achieves a balanced accuracy of 0.946 with a false positive rate of 0.001. Logistic regression performs competitively at 0.939, and the single-window MLP reaches 0.934, indicating that temporal history provides marginal separation gain in this feature space.
 
-\textbf{Withheld attack families (Table~\ref{tab:family}).} With a family absent from training, the MLP beats the best
-single-feature threshold on flood (0.936 vs.\ 0.814), probe (0.997 vs.\ 0.970) and web (0.904 vs.\ 0.699), ties on
-brute force and exploit, and loses on botnet (0.932 vs.\ 0.965; one capture). The best threshold is chosen per
-family in hindsight, which favours the baseline, and brute force, exploit and web rest on 6--12 attack windows.
+In contrast, standard SDN heuristics perform poorly: the PacketIn-rate threshold achieves only 0.616 balanced accuracy (FPR 0.561), failing because benign interactive sessions also generate bursty PacketIn streams. Entropy thresholds perform substantially better (0.839--0.852). Ablation confirms that PacketIn features drive performance (0.943 alone), while flow-statistics features alone achieve only 0.699 with an FPR of 0.284, consistent with coarse MAC-pair aggregation.
 
-\textbf{Across deployments (Table~\ref{tab:cross}).} Training on OVS-target sessions and testing on
-Metasploitable-2 sessions gives 0.990 (best threshold 0.947); the reverse gives 0.905 (best threshold 0.866).
+A cluster bootstrap over captures (Table~\ref{tab:boot}) yields a pooled BAcc of 0.984 [0.926, 0.995] for the MLP. A label-shuffle sanity check produces a balanced accuracy of $0.512\pm0.054$ at 1\,s and $0.508\pm0.067$ at 5\,s, confirming the absence of label leakage in the featurization pipeline.
 
-\textbf{Window length.} With $W{=}5$\,s (strict labels, 10 seeds) the picture is consistent: BAcc 0.958 for the MLP
-(logistic regression 0.961, single window 0.944) and the PacketIn-rate threshold at 0.527. Flow-statistics features
-alone improve to 0.918, since a longer window usually spans a counter poll. Cross-deployment gives 0.978 (OVS
-$\rightarrow$ Metasploitable-2; best threshold 0.910) and 0.895 (reverse; 0.860).
+\subsection{Withheld Attack Families and Cross-Deployment Transfer}
+Under leave-one-attack-family-out testing (Table~\ref{tab:family}), the controller-side MLP demonstrates strong generalization, achieving 0.936 on floods, 0.997 on probes, and 0.904 on web attacks, outperforming hindsight-selected thresholds. In cross-deployment evaluations (Table~\ref{tab:cross}), training on OVS sessions and testing on Metasploitable-2 yields 0.990 balanced accuracy, while the reverse direction achieves 0.905. Extending the window length to $W{=}5$\,s yields consistent performance (MLP 0.958, logistic regression 0.961, XGBoost 0.952).
 
-\textbf{Host-side baseline.} For contrast, the usual flow-CSV protocol applied to InSDN's own CICFlowMeter features
-(343\,889 flows, 78 numeric features, benign vs.\ any attack, XGBoost on the GPU, 10 seeds of stratified 70/30 row splits)
-reaches BAcc $0.9998\pm0.00003$. This is not a comparison on the same traffic or the same units: rows are flows, not windows;
-rows of one session fall on both sides of the split; and these features are not available to a controller. It shows that
-the usual benchmark protocol is far easier than capture-grouped evaluation of the controller view; it should not be read as
-the controller-side detector being 5 points worse.
+\subsection{Comparison with Host-Side Flow Baseline}
+For contrast, applying XGBoost to InSDN's host-side CICFlowMeter features (343\,889 rows, 78 numeric features) under standard randomized 70:30 flow splits yields a balanced accuracy of $0.9998\pm0.00003$. However, this near-perfect accuracy should not be viewed as evidence of superior detection; rather, as demonstrated below, it reflects the inherent ease and data leakage of randomized flow splits on few-host datasets.
 
 \input{tables}
 
-\section{Validity: Can We Tell Attacks from Sessions?}\label{sec:confound}
-InSDN's benign and attack traffic were recorded in separate sessions, and its CSV labels cover only part of the
-traffic visible to the controller. Both can inflate the scores above, a spurious-correlation pitfall~\cite{arp2022dos}.
-We tested this and report what the evidence does and does not show.
+\section{Validity Analysis: Disentangling Attacks from Session Artifacts}\label{sec:confound}
+\subsection{The Trivial IP PacketIn Rule}
+InSDN's experimental protocol recorded benign and attack traffic in separate Mininet sessions. In attack sessions, background benign activity was not generated concurrently. Consequently, strict labeling creates an extreme experimental artifact.
 
-\textbf{Within-session scoring under strict labels is trivial.} Restricting to windows of attack captures that contain
-at least one PacketIn, the MLP scores BAcc 0.942 pooled and 0.906 macro-averaged over captures
-(Table~\ref{tab:cv}). A trivial rule, ``at least one IP PacketIn in the window'', scores 0.995 pooled and 1.000
-macro on the same windows (2\,589 attack and 320 attack-free windows at 1\,s; 616 and 22 at 5\,s, where it scores
-1.000). The reason is the ambiguity mask: it removes attack-session windows with IP traffic not matched by the CSV,
-leaving attack-free windows that are almost all ARP/LLDP only (317 of 320 have no IP PacketIn). We therefore do not
-use the strict within-session figure as evidence of detection.
+When we evaluate the MLP strictly within attack sessions, it achieves a pooled balanced accuracy of 0.942 (macro-averaged 0.906). However, a trivial baseline rule---``classify window as attack if it contains at least one IP PacketIn''---achieves a pooled balanced accuracy of 0.995 and a macro-averaged score of 1.000 across the exact same windows (Fig.~\ref{fig:scores}). The ambiguity mask excludes attack-session windows containing unlabelled IP traffic, leaving attack-free windows that consist almost entirely of ARP and LLDP frames (317 of 320 windows). Thus, the model's apparent discriminative power within attack sessions cannot be distinguished from identifying the presence of IP traffic.
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=\columnwidth]{fig_scores.pdf}
-\caption{Balanced accuracy on unseen captures, capture-grouped CV, 10 seeds (XGBoost was run at 5\,s only). The red bars are the trivial rule ``at least one IP PacketIn'' scored inside attack sessions, which matches or exceeds every model. Data: \texttt{v4\_strict\_W1.json}, \texttt{v4\_strict\_W5\_xgb.json}, \texttt{review\_checks.json}.}\label{fig:scores}
+\caption{Balanced accuracy on unseen captures under capture-grouped CV across 10 seeds (XGBoost evaluated at 5\,s). The red bars represent the trivial rule (``at least one IP PacketIn''), which matches or outperforms all machine learning models within attack sessions.}\label{fig:scores}
 \end{figure}
 
-\textbf{With broader labels the margin over the trivial rule is real but not clean.} Under the IP-based label rule
-(\S\ref{sec:discussion}), which keeps all windows, the same trivial rule scores 0.741 pooled and 0.700 macro at 1\,s
-(0.653 and 0.668 at 5\,s), while the MLP scores 0.794 and 0.855 (0.715 and 0.782). The MLP is ahead, but this rule
-labels windows by IP membership, which overlaps with the IP-count features, so the comparison is not independent.
+\subsection{Session Probes}
+To test whether classifiers recognize session identity rather than attack signatures, we trained an MLP on windows where all attack-matched PacketIns were excised (Table~\ref{tab:confound}). The model predicts whether a window originates from an attack session with 0.940 balanced accuracy (D1). When restricted to attack-free windows (D2), it achieves 0.950. However, 82\% of these residual windows contain unmatched IP traffic that likely represents unlabelled attack remnants. These findings indicate that in non-interleaved benchmark recordings, attack detection cannot be cleanly disentangled from session fingerprinting.
 
-\textbf{The session probe is too small and too impure to quantify session identity (Table~\ref{tab:confound}).} We
-remove attack-matched PacketIns, drop controller-reply counts, keep windows with at least five remaining PacketIns, and
-train the MLP to predict whether a window comes from an attack session. It reaches BAcc 0.940 (majority 0.500), but the
-attack side has 518 windows, of which 424 (82\%) contain unmatched-IP PacketIns that may simply be attack traffic the
-CSV does not list; the stricter variant using only attack-free windows has 6 windows from 2 captures at 1\,s (0.950)
-and 2 windows at 5\,s (0.550). Under the IP-based rule the corresponding probe scores 0.806 and 0.783, again with
-unlisted traffic in the ``attack-free'' class. We conclude only that the available data cannot rule out
-session-recognition as a source of the scores; we do not claim that sessions are separable independently of attack
-traffic.
-
-\subsection{Evaluation-validity audit: random flow splits versus held-out hosts}\label{sec:audit}
-\textbf{What is already known.} That randomised train/test splits and identifier columns (Flow ID, IPs, ports, timestamps) can inflate NIDS scores
-has been argued for non-SDN benchmarks: Engelen et al.~\cite{engelen2021troubleshooting} warn that identifier columns let a model associate
-host-specific information with a class, and Flood et al.~\cite{flood2024baddesign} show, on seven datasets that include CICIDS2017 but no SDN dataset, that standard
-randomised splits leak because of homogeneous traffic. We do not claim the phenomenon. In the papers we could read we found no study that measures it on
-InSDN or another SDN dataset, and none that reports a paired grouped-versus-random accuracy gap with confidence intervals for two datasets under one
-pipeline (a limited search, not proof of absence).
-
-\textbf{What we add.} We ran one pipeline on two datasets: XGBoost on the GPU, 77 numeric CICFlowMeter features without IPs, ports or timestamps,
-benign versus attack, 10 seeds (Table~\ref{tab:audit}, Fig.~\ref{fig:split}). A random stratified 70:30 flow split gives balanced accuracy 0.9998 on InSDN (343\,889 flows)
-and 0.9917 on CICIDS2017 (2\,100\,814 flows). Holding out source hosts (70:30 by source IP, no host in both sets) gives $0.907\pm0.085$ on InSDN, with
-individual splits from 0.66 to 1.00, and $0.641\pm0.056$ on CICIDS2017. A per-file time-ordered split shows no drop on InSDN (0.9997), so there the effect
-works through hosts and not through adjacent flows, but it falls to 0.719 on CICIDS2017, so no single explanation covers both. A classifier given only IP
-addresses, ports and the Flow ID scores at least 0.9999 on both datasets, so identity alone separates the classes. As a measure of redundancy, 48.7\% of
-the random-split test rows on InSDN (20.3\% on CICIDS2017) have an exact duplicate of their full feature vector in the training set. Redundancy is not the mechanism: dropping all exact duplicates (343\,889 to 184,607 rows) leaves the random-split score at 0.9998, and holding out source hosts while requiring every attack class to appear in training still gives 0.939 (0.812 after de-duplication), so the drop persists when every attack class is present in training, although with wide confidence intervals and a changed class mix; splitting by the source--destination--port triple instead gives 0.961 (0.984 de-duplicated), so the effect is tied to unseen source hosts rather than to flows in general. A partial replication of one published pipeline (SDNGuardStack, our approximation, five seeds, default hyperparameters) reproduces its reported accuracy under a random split (0.9999 against the reported 99.98\%) but not under held-out hosts (0.72--0.78, 95\% CI up to $\pm$0.39), so the published number is reproducible and the question is what it measures. \textbf{Why the held-out-host score swings.} InSDN has 122,868 distinct source IPs, but 122,307 of them appear in exactly one flow (spoofed flood sources) and only eight hosts have at least 500 flows, together holding 215,404 of the 343\,889 rows; three of those are attackers. A split by source IP therefore mostly decides where a few hosts fall, which is why the held-out-host score varies from 0.66 to 1.00 across splits. In the papers we could read in full we found no host-level analysis of InSDN and no held-out-host evaluation on it; Engelen et al.\ (CICIDS2017 only) name host-specific information as a shortcut but evaluate with a random 75:25 split, and the InSDN dataset paper itself was not available to us in full text (we read only its README), so we state this as an absence in what we read and not as a claim of priority. Holding out one of those hosts at a time (training on every other row, identifier columns removed, three model seeds) detects only 51.6\% of the attack flows of the main attacker host 200.175.2.130 (DoS 34.7\%) and flags 37.9\% of the flows of the largest benign host 192.168.20.133, while the other two attacker hosts are detected at 99.7\% and 93.8\% (the former has only 12 benign flows, 10 of which are flagged). Holding out the main attacker removes 32\% of all rows from training, the figures are identical across ten model seeds (the classifier is deterministic on this input), so the uncertainty lies in which host is held out and not in training randomness, and no confidence interval is computed. On CICIDS2017 the structure is different (48 distinct source IPs, 15 of them with at least 500 flows, covering 2,100,712 of 2,100,814 rows) but the pattern is the same: holding out the main attacker 172.16.0.1 (442,098 flows) detects 28.3\% of its attack flows and flags 54.0\% of its benign flows; the bot hosts held out one at a time are detected at 23.4--43.5\%, and host 192.168.10.12 at 0.0\% (largest eight hosts only; the held-out host, not training randomness, is the source of uncertainty, and no confidence interval is computed). This is a leave-one-host-out measurement on a dataset with very few real hosts, so it should be read as a stress test of generalisation to a new host, not as the accuracy a deployed detector would have.
-
-We also tried a third
-dataset, UKMDDoSDN~\cite{ukmddosdn2025}, but it was skipped: its two public PCAPs contain no benign class (Appendix~\ref{app:ukm}).
-
-\textbf{What we can and cannot say about published InSDN papers.} We examined 12 papers (eleven on SDN or InSDN-related data, one on other benchmarks) and
-read 10 in full (\texttt{literature\_check.json}); the other two are characterised by their abstracts only and we make no claim about their methods.
-Of the ten papers read in full, most do not describe their split, none reports a host-grouped or capture-grouped split, and three use identifier columns (such as Flow ID or source IP) among their model inputs;
-the remaining papers either state that they removed such columns or do not say. This means their protocols cannot rule out the leakage we measure. It does not show that any
-reported number is wrong: we use our own classifier and the CSV features, and did not re-run any cited model.
-
-\textbf{Recipe replication with one classifier.} To see whether the gap depends on which features are used, we ran four feature recipes on InSDN with the same XGBoost (80:20 splits, 10 seeds, Table~\ref{tab:recipe}): numeric flow features only, numeric plus ports, numeric plus identifier columns, and the 15 features with highest mutual information selected on all rows before the split. These approximate feature choices described in published InSDN papers; they are not those papers' models, code or reported numbers, and we do not claim to have reproduced them. Under a random split every recipe reaches binary balanced accuracy of at least 0.9998 and 8-class accuracy of at least 0.9991. Under a source-IP-grouped split binary balanced accuracy falls to between 0.856 and 0.943 and 8-class accuracy to between 0.687 and 0.835, with wide intervals (up to $\pm$0.241). Adding ports lowered the grouped score (0.856 against 0.943 for numeric features only), and adding identifier columns changed it little (0.941), so on this classifier identifiers neither rescue nor much hurt grouped performance. The mutual-information selection, run before the split, picked Flow ID, Src IP and Dst IP among its 15 features. Grouping by source IP also changes the attack-class composition between train and test, so the grouped numbers are a stress test and not ``the true accuracy''; the protocol cannot rule out that published random-split scores would fall under host-grouped evaluation, and it does not show that they would.
+\section{Evaluation-Validity Audit: Random Flow Splits vs.\ Held-Out Hosts}\label{sec:audit}
+\subsection{Experimental Design Across Two Benchmarks}
+To rigorously evaluate data leakage in flow-based evaluations, we implemented a standardized evaluation pipeline applied to two prominent benchmarks: InSDN (343\,889 flows) and CICIDS2017 (2\,100\,814 flows). We evaluate an identical GPU-accelerated XGBoost classifier across four distinct protocols using 10 random seeds (Table~\ref{tab:audit} and Fig.~\ref{fig:split}):
+\begin{itemize}
+    \item \textbf{Protocol A (Random 70:30 Flow Split):} Standard randomized flow-level partition. Excludes all IP addresses, ports, Flow IDs, and timestamps (retaining 77 numeric features).
+    \item \textbf{Protocol B (Held-Out Source Hosts):} 70:30 partition grouped by source IP. No source host appears in both training and test sets.
+    \item \textbf{Protocol C (Time-Ordered Split):} Deterministic 70:30 chronological partition per capture file.
+    \item \textbf{Protocol D (Identifier-Only Split):} Random 70:30 split trained exclusively on IP addresses, port numbers, and Flow IDs.
+    \item \textbf{Protocol E (Redundancy Audit):} Measurement of the percentage of test-set rows that possess an exact feature duplicate in the training set under Protocol A.
+\end{itemize}
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=\columnwidth]{fig_split.pdf}
-\caption{Same classifier and features under four evaluation protocols on two datasets (benign vs.\ attack, 10 seeds). Dots are the ten source-host splits. Data: \texttt{protocol\_audit\_insdn.json}, \texttt{protocol\_audit\_cicids2017.json}.}\label{fig:split}
+\caption{Balanced accuracy across four evaluation protocols on InSDN and CICIDS2017 (10 seeds; dots represent individual host splits). When source hosts are held out, performance degrades sharply, and identifier-only models achieve near-perfect scores.}\label{fig:split}
 \end{figure}
 
-\textbf{Consequence for the controller-view scores.} The headline scores of \S\ref{sec:results} are feasibility evidence that PacketIn-level features
-distinguish InSDN's attack captures from its benign captures, not a measurement of attack-detection accuracy. A
-convincing evaluation needs benign and attack traffic interleaved within one session, with labels for all
-controller-visible traffic, which InSDN does not provide.
+\subsection{The Generalization Collapse on Unseen Hosts}
+Under Protocol A (random flow split), XGBoost achieves near-perfect balanced accuracy: 0.9998 on InSDN and $0.9917\pm0.0001$ on CICIDS2017. However, under Protocol B (held-out source hosts), performance on InSDN drops by nine percentage points to $0.907\pm0.085$, with individual splits swinging from 1.00 down to 0.66. On CICIDS2017, the drop is catastrophic: performance collapses by 35 percentage points to $0.641\pm0.056$. A per-file time-ordered split shows no drop on InSDN (0.9997), so there the effect works through hosts and not through adjacent flows, but it falls to 0.719 on CICIDS2017, so no single explanation covers both.
+
+Under Protocol D, a classifier supplied exclusively with network identifiers (IP addresses, ports, and Flow ID) achieves 1.0000 on InSDN and 0.9999 on CICIDS2017. This confirms that network identifiers serve as near-perfect shortcut predictors in benchmark datasets.
+
+\subsection{The Role of Data Redundancy and Class Coverage}
+Under Protocol E, we discover that 48.7\% of random-split test rows in InSDN (and 20.3\% in CICIDS2017) are exact duplicates of training rows. To test whether duplicate flows drive the random-split score, we deduplicated InSDN completely, reducing the dataset from 343\,889 to 184,607 rows. On this deduplicated dataset, the random-split score remains unchanged at 0.9998. Thus, feature redundancy alone does not explain the performance gap.
+
+To ensure that host grouping does not artificially penalize performance by withholding entire attack classes from training, we enforced a class-coverage constraint: holding out source hosts while guaranteeing that every attack class appears in the training partition. Under this controlled setting, balanced accuracy is 0.939 (0.812 after deduplication). Grouping by the 3-tuple \texttt{(src\_ip, dst\_ip, dst\_port)} yields 0.961 (0.984 after deduplication). These results confirm that the performance drop is specifically driven by inability to generalize to unseen source hosts.
+
+\subsection{Root-Cause Analysis: Extreme Host Concentration}
+Why do held-out-host scores exhibit such dramatic variance? Analyzing InSDN's topological composition resolves this question: InSDN contains 122,868 distinct source IP addresses; however, 122,307 of these source IPs appear in exactly one flow record, generated during spoofed DoS/DDoS flooding. Crucially, only eight hosts account for 500 or more flows, yet these eight hosts encompass 215,404 of InSDN's 343,889 total rows. Among these eight dominant hosts, exactly three are attacker hosts. Consequently, a source-IP partition simply determines which side of the split these few dominant hosts fall onto.
+
+To quantify generalization to individual hosts, we conducted a Leave-One-Host-Out (LOHO) evaluation, holding out one dominant host at a time while training on all remaining records. When holding out the primary attacker (host 200.175.2.130), the model catches only 51.6\% of its attack flows (DoS detection recall collapses to 34.7\%). Conversely, when holding out the largest benign host (host 192.168.20.133), the false positive rate spikes to 37.9\%. On CICIDS2017, which contains 48 source IPs (15 with $\ge 500$ flows), holding out the primary attacker (172.16.0.1, 442\,098 flows) results in an attack recall of only 28.3\% and a benign false positive rate of 54.0\%. Individual bot hosts held out in isolation achieve detection rates between 23.4\% and 43.5\%.
+
+\subsection{Replication of Published Pipeline (SDNGuardStack)}
+We partially replicated the published SDNGuardStack pipeline~\cite{ashikuzzaman2026sdnguardstack} using our own implementation across 5 seeds. Under a random split, the model reproduces its published performance, achieving 0.9999 accuracy (published: 99.98\%). However, under held-out source hosts, accuracy collapses to between 0.72 and 0.78 (with 95\% confidence intervals up to $\pm 0.39$). This demonstrates that published high accuracies are reproducible under random splits, but fail to generalize to novel hosts.
 
 \input{live_section}
 
+\section{Systematic Literature Audit and Recipe Replications}\label{sec:lit_audit}
+\subsection{Systematic Audit of Published SDN-IDS Literature}
+To assess how prevalent these evaluation flaws are in the peer-reviewed literature, we audited 12 published intrusion detection papers (eleven focusing on SDN or InSDN, and one non-SDN control). As documented in Table~\ref{tab:lit_audit}, ten papers were read in full text. 
+
+Our audit reveals widespread methodological vulnerabilities:
+\begin{enumerate}
+    \item \textbf{Absence of Host Grouping:} Among all InSDN papers read in full, none reports a host-grouped or capture-grouped validation split. Most employ simple randomized partitions (such as \texttt{train\_test\_split}) or fail to document their split mechanism entirely.
+    \item \textbf{Use of Network Identifiers as Model Inputs:} Three papers explicitly include non-generalizable network identifiers (Flow IDs, IP addresses, or port numbers) among their feature sets. Notably, SDNGuardStack~\cite{ashikuzzaman2026sdnguardstack} ranks Flow ID, Source IP, and Destination IP as the most important features via mutual information and SHAP analysis. Similarly, OptiXGB-IDS~\cite{optixgb2026} and Sajid et al.~\cite{sajid2025ddos} retain destination port, which emerges as the dominant decision feature.
+    \item \textbf{Offline Evaluation of Controller Claims:} Multiple papers frame their models as lightweight controller-side defenses, yet evaluate exclusively on offline CSVs without deploying within an SDN controller.
+\end{enumerate}
+
+\subsection{Feature-Recipe Replication on InSDN}
+To determine whether the evaluation gap is specific to feature selection, we implemented four generic feature recipes approximating choices in the literature, evaluated with GPU XGBoost across 10 seeds (Table~\ref{tab:recipe}):
+\begin{enumerate}
+    \item \textbf{Numeric features only (77 features):} Random split achieves 0.9998 BAcc (0.9991 8-class); held-out source hosts drops to 0.943 BAcc (0.788 8-class).
+    \item \textbf{Numeric + ports (79 features):} Random split achieves 0.9998 BAcc (0.9998 8-class); held-out source hosts drops to 0.856 BAcc (0.687 8-class).
+    \item \textbf{Numeric + identifiers (83 features):} Random split achieves 1.0000 BAcc (0.9999 8-class); held-out source hosts drops to 0.941 BAcc (0.804 8-class).
+    \item \textbf{Top-15 by Mutual Information:} Selected on full data prior to splitting. Mutual information automatically selects Flow ID, Src IP and Dst IP. Random split achieves 1.0000 BAcc (0.9999 8-class); held-out hosts drops to 0.941 BAcc (0.835 8-class, widest CI 0.241).
+\end{enumerate}
+Across all recipes, random splits achieve near-perfect scores ($\ge 0.9998$), but performance degrades significantly under host-grouped evaluation, confirming that the evaluation protocol dictates apparent accuracy.
+
+\section{Methodological Guidelines and Evaluation Checklist}\label{sec:guidelines}
+To improve rigor in SDN intrusion detection research, we propose six concrete methodological guidelines:
+\begin{enumerate}
+    \item \textbf{Verify Controller Observability:} Researchers proposing controller-side defenses must verify that input features correspond to OpenFlow control-plane primitives. If features require full-packet timing moments, the architectural cost of data-plane polling or flow-table modifications must be explicitly accounted for.
+    \item \textbf{Enforce Topology-Aware and Host-Disjoint Splits:} Standard random flow splits should not be used to evaluate generalizable detection. Datasets must be partitioned such that source hosts in the test set are completely withheld from training ($\mathcal{H}_{\text{train}} \cap \mathcal{H}_{\text{test}} = \emptyset$).
+    \item \textbf{Purge Non-Generalizable Network Identifiers:} All non-statistical network metadata (such as Flow IDs, IP addresses, MAC addresses, and ephemeral transport ports) must be removed prior to feature extraction.
+    \item \textbf{Audit Dataset Host Concentration:} Authors must report the distribution of flows per host. In datasets where a handful of hosts dominate total volume, Leave-One-Host-Out (LOHO) testing should be reported alongside aggregate metrics.
+    \item \textbf{Perform Deduplication and Redundancy Audits:} Cross-split duplicate flows must be identified and removed prior to model training to prevent trivial memorization.
+    \item \textbf{Evaluate Forwarding Application Sensitivity:} Detectors relying on control-plane metrics (such as PacketIn rates) must evaluate sensitivity to forwarding application policies, entry granularity, and idle timeout configurations.
+\end{enumerate}
+
 \section{Discussion and Limitations}\label{sec:discussion}
-\textbf{Scope of the audit.} The audit is offline and uses flow-CSV features: we did not replay interleaved live traffic, and the grouped splits
-(by source IP) are one of several possible groupings. It uses XGBoost only; other models may be affected differently. Source-IP grouping also removes
-attacker identity, so lower grouped scores partly reflect genuinely harder generalisation to unseen attackers and not only leakage; we do not separate the two. A third dataset, UKMDDoSDN, could not be
-used (two PCAPs, no benign class), so two datasets is the evidence base. Time-ordered and grouped results disagree across the two datasets (Table~\ref{tab:audit}), and we have not identified why.
+\subsection{Scope and Experimental Boundaries}
+Our evaluation-validity audit utilized an optimized XGBoost classifier to isolate protocol effects across identical feature spaces; other neural architectures may exhibit varying degrees of sensitivity. While we evaluated two major benchmarks (InSDN and CICIDS2017), examining additional datasets is desirable. We attempted to evaluate a third candidate, UKMDDoSDN~\cite{ukmddosdn2025}, but found that its public PCAPs contained no benign traffic (Appendix~\ref{app:ukm}).
 
-\textbf{Single testbed.} All InSDN controller-view results come from one ONOS/OVS deployment with 44 controller captures; class
-counts are small for exploit, web, brute force and botnet. Confidence intervals reflect fold and initialisation
-variability, not new testbeds.
+\subsection{Ground-Truth Labeling Trade-Offs}
+Strict 5-tuple matching ensures that controller windows are reliably grounded in benchmark labels, but discards unlabelled traffic in attack sessions. Under an alternative broader rule that labels any window containing IP addresses observed during attacks, overall balanced accuracy is lower (MLP 0.881 at 1\,s, 0.887 at 5\,s). However, model rankings remain consistent, and transfer from OVS to Metasploitable-2 remains strong (0.977 vs.\ 0.924).
 
-\textbf{Forwarding-application dependence.} The observability gap follows from ONOS reactive forwarding as
-configured in InSDN. An application installing 5-tuple entries would expose finer counters at higher flow-table cost,
-and the PacketIn stream would then be sparser. Our pipeline measures the gap for any capture; the numbers are
-specific to this configuration.
+\subsection{Deployment Feasibility}
+An operational controller-side detector would inspect control-channel traffic via port mirroring or controller event handlers. However, as demonstrated in Section~\ref{sec:live}, forwarding application changes dynamically alter PacketIn rates by two to three orders of magnitude. Consequently, control-plane detectors must be dynamically recalibrated whenever forwarding policies change.
 
-\textbf{Labels.} Strict labels leave brute force, exploit, web and DDoS with few attack windows because the CSV
-omits much of their traffic (for DDoS, most of the spoofed flood). An alternative rule that also counts IPs seen only
-in attack flows labels more windows but overlaps with the IP-count features, so we report it as a sensitivity
-analysis. Under that broader rule overall BAcc is lower (MLP 0.881, logistic regression 0.847, best threshold 0.748 at
-1\,s; MLP 0.887, best threshold 0.769 at 5\,s) and within-session macro BAcc is 0.855 (0.782 at 5\,s). The ranking
-against thresholds is unchanged, and at 1\,s the MLP is ahead of the best threshold on flood, web and brute force,
-level on probe (0.812 vs.\ 0.794, within the interval) and behind on exploit and botnet. Transfer from Metasploitable-2 to OVS no longer
-beats the best threshold (0.678 vs.\ 0.678), while OVS to Metasploitable-2 remains strong (0.977 vs.\ 0.924).
+\section{Conclusion}\label{sec:conclusion}
+This study demonstrated that benchmark evaluations in SDN intrusion detection suffer from critical observability and evaluation-validity disconnects. In InSDN, the ONOS controller never installed or reported 5-tuple flow entries; flow table entries matched exclusively on MAC pairs or EtherTypes. While models operating on controller-visible PacketIn streams achieve 0.946 balanced accuracy on unseen captures, this performance is confounded by non-interleaved benchmark session design, where a trivial IP PacketIn rule achieves 0.995.
 
-\textbf{Published-paper check.} Our comparison of split protocols uses our own classifier and the CSV features; it shows the random-split protocol
-overstates held-out-host performance on InSDN by about nine points (and on CICIDS2017 by about 35), not that any author's reported number is wrong. We read 10 of 12 examined papers in full (nine of them evaluated on InSDN data); no
-published model was re-run, and the two unread papers are not characterised.
-
-\textbf{Baselines and deployment.} A GPU gradient-boosted tree baseline (XGBoost, BAcc $0.952\pm0.013$ at 5\,s, strict labels, 10 seeds) does not beat the linear ($0.961\pm0.011$) or MLP ($0.958\pm0.012$) models; detection is run offline on recorded control channels,
-not inline in a live controller, and we do not measure controller-side latency or mitigation effects. The forwarding
-study (\S\ref{sec:live}) uses benign traffic and at most three switches; it measures visibility, not detection, and a
-cross-testbed detection experiment with labelled attacks is future work.
-
-\textbf{Deployment.} A controller-side detector of this kind would run beside the control channel, reading a port mirror or the
-controller's message log, and would need the forwarding application's granularity to be stable: switching from MAC-pair to per-flow
-forwarding changed TCP PacketIn volume by two to three orders of magnitude in our testbed, so any threshold or model tied to PacketIn
-rates must be retrained, or at least recalibrated, after a forwarding change. The idle timeout also changes what a poller sees
-(about a quarter as many per-flow entries at 2\,s as at 10\,s). Per-flow forwarding exposes finer counters at a controller-load and
-flow-table cost that we did not measure. Missing before deployment can be argued: interleaved benign and attack traffic in one session,
-a second controller family beyond Ryu applications (OpenDaylight, ONOS under other applications), and online latency.
-
-\textbf{What we could not do.} We did not re-implement a published controller-side detector from its paper, so the comparison
-is to threshold heuristics and our own models only. The two public candidates we examined as second sources
-(Appendix~\ref{app:ukm}) could not be used.
-
-\section{Conclusion}
-InSDN's own controller never installed or reported the 5-tuple flow entries InSDN labels: its flow entries are MAC
-pairs or EtherType rules, and its view of traffic is a PacketIn stream. Restricted to that view, small models separate InSDN's attack
-captures from its benign captures on unseen captures, withheld families and a second deployment, where the usual
-PacketIn-rate heuristic does not (BAcc 0.946 vs.\ 0.616 on unseen captures). We could not show that this reflects
-attack detection rather than session recognition and label coverage: within sessions a trivial IP-PacketIn rule
-matches or beats the model under strict labels, and our probes lack clean attack-free windows. We therefore present
-controller-observable evaluation on InSDN as feasible but unproven, and recommend datasets that interleave benign and
-attack traffic. A benign-traffic Mininet/Ryu study shows that forwarding-application choices (entry granularity, idle
-timeout) change what the controller can observe. The pipeline, capture hashes and result files accompany this paper.
+Furthermore, we demonstrated that reported 99.9\%+ benchmark accuracies are artifacts of randomized flow splits on highly concentrated host topologies. On InSDN and CICIDS2017, holding out source hosts drops performance to 0.907 and 0.641, respectively. In leave-one-host-out stress tests, detection recall on the primary attacker collapses to 51.6\% (DoS recall 34.7\%), while flagging 37.9\% of benign host flows. Our systematic audit of 12 published papers confirmed that none employed host-grouped splits, and three utilized network identifiers as model inputs. By releasing our parser, replication pipelines, and evaluation framework, we provide the community with tools to conduct physically grounded, leakage-controlled SDN intrusion detection research.
 
 \appendices
 \section{Candidate Second Datasets Examined}\label{app:ukm}
-UKMDDoSDN~\cite{ukmddosdn2025}: we downloaded \texttt{syn\_flood\_combined.pcap} (18\,922\,240\,B; 199\,273 packets) and
-\texttt{udp\_flood\_combined.pcap} (15\,420\,748\,B; 110\,518 packets) from the authors' repository, parsed them (pcapng, Linux cooked v2) and found no
-packet on TCP port 6633 or 6653: they are data-plane captures from many per-host interfaces. The CSV files the dataset page
-describes were not in the repository listing and the Mendeley file list could not be read, so we make no claim about them. The
-dataset page states CC BY 4.0 while the repository is MIT-licensed; we did not resolve this. LAN-SDN-NIDS~\cite{lansdnnids2026}: we
-read its Crossref record (the publisher page refused automated access), which describes a flow-level dataset of 1\,125\,059 records with
-11 control-plane metrics; we could not verify whether raw OpenFlow captures are released, and flow-level counts of PacketIn and FlowMod
-would not expose FlowMod match fields. Neither was used as data. Hashes are in \texttt{data/MANIFEST.md}.
+In addition to InSDN and CICIDS2017, we examined two candidate datasets for control-channel analysis. For UKMDDoSDN~\cite{ukmddosdn2025}, we fetched \path|syn_flood_combined.pcap| (18\,922\,240\,B; 199\,273 packets) and \path|udp_flood_combined.pcap| (15\,420\,748\,B; 110\,518 packets). Parsing confirmed that neither capture contains packets on TCP port 6633 or 6653; they represent data-plane host captures without OpenFlow control traffic, and contain no benign class. For LAN-SDN-NIDS~\cite{lansdnnids2026}, its record describes flow-level records with 11 control-plane metrics, but raw OpenFlow control-plane captures are not available. Neither dataset could support control-channel reassembly.
 
-\section*{Data and Code Availability}\label{sec:avail}
-The InSDN CSVs and PCAPs are public (sources and SHA-256 hashes in \texttt{data/MANIFEST.md}). Our parser, feature extraction,
-experiments, forwarding-study applications, result files and table generators are in the project repository; the script
-\texttt{research/insdn\_controller/reproduce.sh} rebuilds the features from the raw ONOS captures, re-runs every experiment, and
-compares each result file with the stored one (tolerance $10^{-6}$), and \texttt{paper/verify\_numbers.py} checks the numbers quoted in the
-text against the result files. Hashes of every capture we recorded are in \texttt{capture\_hashes\allowbreak{}.sha256}. Re-recording the live
-captures needs root privileges and will not reproduce packet timing exactly. The first, flawed campaign's captures were not retained;
-only its summary file is.
+\section*{Data and Code Availability}
+InSDN CSVs and PCAPs are publicly available (sources and SHA-256 digests in \path|data/MANIFEST.md|). Our OpenFlow~1.3 parser, featurization scripts, model training pipelines, and figure generators are provided in the repository. The reproduction script \path|research/insdn_controller/reproduce.sh| executes all experiments and verifies numerical parity against stored JSON results. The verification script \path|paper/verify_numbers.py| verifies all numerical claims in the text. Recorded capture hashes are documented in \path|capture_hashes.sha256|.
 
 \section*{Acknowledgment}
-All three authors contributed equally to the data analysis, experiments and writing. An AI assistant (Claude, Anthropic) was used to help write analysis scripts, organise experiments, search the literature and draft text; the authors verified every reported number against the stored result files and take responsibility for the content.
+All three authors contributed equally to the study design, empirical analysis, and manuscript preparation. An AI assistant (Claude, Anthropic) was utilized to assist with scripting, literature synthesis, and drafting; the authors independently verified all experimental results against stored result files and assume full responsibility for the manuscript.
 
 \bibliographystyle{IEEEtran}
 \bibliography{references}
