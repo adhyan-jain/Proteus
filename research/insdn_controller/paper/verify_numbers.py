@@ -15,6 +15,7 @@ st, hs, pi = J("stock_ryu_flowmods.json"), J("hostside_xgb.json"), J("protocol_i
 ai, ac, lit = J("protocol_audit_insdn.json"), J("protocol_audit_cicids2017.json"), json.load(open(R.parent / "literature_check.json"))
 rr = J("recipe_replication.json")
 fta, pr, haa = J("flowtable_audit.json"), J("packetin_reconstruction.json"), J("host_assignment_audit.json")
+ose = J("operational_stream_evaluation.json")
 lp = lit["papers"]
 insdn_read = [p for p in lp if p["read"] and "UNSW" not in str(p.get("dataset"))]  # the one read paper not on InSDN/SDN data is GRU-NTM (UNSW-NB15, BoT-IoT)
 RECIPES = ("numeric", "numeric+port", "ids_all", "top15_mi_ids")
@@ -131,6 +132,11 @@ checks = [
     # host assignment audit (host_assignment_audit.json)
     ("host audit seed 0 test frac", round(100 * haa["seeds"][0]["test_frac"], 1), "43.7"),
     ("host audit seed 1 test frac", round(100 * haa["seeds"][1]["test_frac"], 1), "57.1"),
+    # operational stream evaluation (operational_stream_evaluation.json)
+    ("operational normal windows", f"{ose['normal_windows_total']:,}", "33,283"),
+    ("operational normal ip windows", f"{ose['normal_windows_with_ip']:,}", "25,810"),
+    ("operational normal ip fpr", ose["normal_windows_ip_fpr_pct"], "77.5"),
+    ("operational trivial rule bacc", ose["trivial_rule_overall_bacc"], "0.4889"),
 ]
 WORDS = {"nine": 9, "ten": 10, "three": 3, "none": 0}
 bad = 0
