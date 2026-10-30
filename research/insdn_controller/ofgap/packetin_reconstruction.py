@@ -21,15 +21,11 @@ from ofparse import of_messages
 from ofsim import _key
 from ctrlfeat import _pin_frame
 
-def reconstruct_flows_from_packetins(pcap_path: Path):
-    """Reconstruct bidirectional 5-tuple flows from OFPT_PACKET_IN messages."""
-    flows = collections.defaultdict(lambda: {
-        "ts": [],
-        "lengths": [],
-        "dirs": [],
-        "tcp_flags": collections.Counter(),
-        "is_ip": False
-    })
+def reconstruct_flows_from_packetins(pcap_path: Path, idle_timeout: float = 120.0, max_duration: float = 120.0):
+    """Reconstruct bidirectional 5-tuple flows from OFPT_PACKET_IN messages
+    enforcing CICFlowMeter flow-expiration semantics (120s activity/flow timeout and TCP FIN/RST termination)."""
+    active_flows = {}
+    completed_flows = []
     total_pin = 0
     ip_pin = 0
     truncated_pin = 0
@@ -41,7 +37,6 @@ def reconstruct_flows_from_packetins(pcap_path: Path):
         if len(b) < 24:
             continue
         
-        # Check truncation via total_len field
         tot_len = struct.unpack("!H", b[4:6])[0]
         eth = _pin_frame(b)
         if eth is None:
@@ -66,29 +61,70 @@ def reconstruct_flows_from_packetins(pcap_path: Path):
             proto
         )
         
-        f = flows[flow_key]
-        f["is_ip"] = True
-        f["ts"].append(ts)
-        f["lengths"].append(len(eth))
-        f["dirs"].append(1 if is_rev else 0)
-        
+        is_fin_rst = False
+        tcp_flags = collections.Counter()
         if isinstance(ip.data, dpkt.tcp.TCP):
             tcp = ip.data
             for flag_name, bit in [("SYN", dpkt.tcp.TH_SYN), ("ACK", dpkt.tcp.TH_ACK), 
                                   ("PSH", dpkt.tcp.TH_PUSH), ("RST", dpkt.tcp.TH_RST), 
                                   ("FIN", dpkt.tcp.TH_FIN)]:
                 if tcp.flags & bit:
-                    f["tcp_flags"][flag_name] += 1
+                    tcp_flags[flag_name] += 1
+            if tcp.flags & (dpkt.tcp.TH_FIN | dpkt.tcp.TH_RST):
+                is_fin_rst = True
+                
+        if flow_key in active_flows:
+            cur = active_flows[flow_key]
+            if (ts - cur["last_ts"] > idle_timeout) or (ts - cur["start_ts"] > max_duration):
+                completed_flows.append(cur)
+                cur = {
+                    "flow_key": flow_key,
+                    "start_ts": ts,
+                    "last_ts": ts,
+                    "ts": [ts],
+                    "lengths": [len(eth)],
+                    "dirs": [1 if is_rev else 0],
+                    "tcp_flags": tcp_flags
+                }
+                active_flows[flow_key] = cur
+            else:
+                cur["ts"].append(ts)
+                cur["lengths"].append(len(eth))
+                cur["dirs"].append(1 if is_rev else 0)
+                cur["last_ts"] = ts
+                for fl, cnt in tcp_flags.items():
+                    cur["tcp_flags"][fl] += cnt
+                if is_fin_rst:
+                    completed_flows.append(cur)
+                    del active_flows[flow_key]
+        else:
+            cur = {
+                "flow_key": flow_key,
+                "start_ts": ts,
+                "last_ts": ts,
+                "ts": [ts],
+                "lengths": [len(eth)],
+                "dirs": [1 if is_rev else 0],
+                "tcp_flags": tcp_flags
+            }
+            if is_fin_rst:
+                completed_flows.append(cur)
+            else:
+                active_flows[flow_key] = cur
+
+    for cur in active_flows.values():
+        completed_flows.append(cur)
 
     flow_summaries = []
-    for k, f in flows.items():
+    for f in completed_flows:
         ts_arr = np.array(f["ts"])
         lens = np.array(f["lengths"])
-        dur = float(ts_arr[-1] - ts_arr[0]) if len(ts_arr) > 1 else 0.0
+        dur = float(f["last_ts"] - f["start_ts"])
         iats = np.diff(ts_arr) if len(ts_arr) > 1 else np.array([0.0])
         
         n_fwd = sum(1 for d in f["dirs"] if d == 0)
         n_bwd = sum(1 for d in f["dirs"] if d == 1)
+        k = f["flow_key"]
         
         flow_summaries.append({
             "flow_key": [str(k[0]), str(k[1]), int(k[2]), int(k[3]), int(k[4])],
@@ -108,7 +144,7 @@ def reconstruct_flows_from_packetins(pcap_path: Path):
         "total_packet_in": total_pin,
         "ip_packet_in": ip_pin,
         "truncated_packet_in": truncated_pin,
-        "distinct_flows": len(flows),
+        "distinct_flows": len(flow_summaries),
         "flows": flow_summaries
     }
 
@@ -134,12 +170,16 @@ def main():
         print(f"Reassembling flows for {name} ({rel_path})...", flush=True)
         summary = reconstruct_flows_from_packetins(full_path)
         
-        recon_dict = {tuple(f["flow_key"]): f for f in summary["flows"]}
+        recon_dict = collections.defaultdict(list)
+        for f in summary["flows"]:
+            recon_dict[tuple(f["flow_key"])].append(f)
+            
         pkt_counts = [f["packets"] for f in summary["flows"]]
         durations = [f["duration"] for f in summary["flows"]]
+        single = sum(1 for p in pkt_counts if p == 1)
         
         # Load CSV flows
-        csv_dict = {}
+        csv_dict = collections.defaultdict(list)
         csv_pkts = []
         csv_durs = []
         if csv_path.exists():
@@ -152,7 +192,7 @@ def main():
                 fkey = (min(s_ip, d_ip), max(s_ip, d_ip), min(s_pt, d_pt), max(s_pt, d_pt), proto)
                 p_cnt = int(r["Tot Fwd Pkts"]) + int(r["Tot Bwd Pkts"])
                 d_sec = float(r["Flow Duration"]) / 1e6
-                csv_dict[fkey] = {"packets": p_cnt, "duration": d_sec}
+                csv_dict[fkey].append({"packets": p_cnt, "duration": d_sec})
                 csv_pkts.append(p_cnt)
                 csv_durs.append(d_sec)
         
@@ -161,10 +201,10 @@ def main():
         mean_p_recon, mean_p_csv = None, None
         mean_d_recon, mean_d_csv = None, None
         if common:
-            r_p = [recon_dict[k]["packets"] for k in common]
-            c_p = [csv_dict[k]["packets"] for k in common]
-            r_d = [recon_dict[k]["duration"] for k in common]
-            c_d = [csv_dict[k]["duration"] for k in common]
+            r_p = [float(np.mean([x["packets"] for x in recon_dict[k]])) for k in common]
+            c_p = [float(np.mean([x["packets"] for x in csv_dict[k]])) for k in common]
+            r_d = [float(np.mean([x["duration"] for x in recon_dict[k]])) for k in common]
+            c_d = [float(np.mean([x["duration"] for x in csv_dict[k]])) for k in common]
             mean_p_recon = round(float(np.mean(r_p)), 2)
             mean_p_csv = round(float(np.mean(c_p)), 2)
             mean_d_recon = round(float(np.mean(r_d)), 2)
@@ -178,18 +218,20 @@ def main():
             "total_packet_in": summary["total_packet_in"],
             "ip_packet_in": summary["ip_packet_in"],
             "distinct_reconstructed_flows": summary["distinct_flows"],
-            "flows_with_single_packet": sum(1 for p in pkt_counts if p == 1),
-            "flows_ge_2_packets": sum(1 for p in pkt_counts if p >= 2),
-            "pct_single_packet_flows": round(100.0 * sum(1 for p in pkt_counts if p == 1) / len(pkt_counts), 1) if pkt_counts else 0.0,
+            "flows_with_single_packet": single,
+            "flows_ge_2_packets": len(summary["flows"]) - single,
+            "pct_single_packet_flows": round(100.0 * single / len(summary["flows"]), 1) if summary["flows"] else 0.0,
             "median_packets_per_flow": float(np.median(pkt_counts)) if pkt_counts else 0.0,
             "max_packets_per_flow": int(np.max(pkt_counts)) if pkt_counts else 0,
-            "median_duration_s": float(np.median(durations)) if durations else 0.0,
+            "median_duration_s": round(float(np.median(durations)), 4) if durations else 0.0,
             "max_duration_s": float(np.max(durations)) if durations else 0.0,
-            "csv_flows_total": len(csv_dict),
+            "csv_flows_total": len(df_sub) if csv_path.exists() else 0,
+            "csv_distinct_5tuples": len(csv_dict),
             "csv_single_packet_pct": round(100.0 * sum(1 for p in csv_pkts if p == 1) / len(csv_pkts), 1) if csv_pkts else 0.0,
             "csv_median_packets": float(np.median(csv_pkts)) if csv_pkts else 0.0,
             "csv_median_duration_s": round(float(np.median(csv_durs)), 3) if csv_durs else 0.0,
             "matching_5tuples": len(common),
+            "matching_recon_flows": sum(len(recon_dict[k]) for k in common),
             "packet_count_correlation": corr_p,
             "duration_correlation": corr_d,
             "mean_packets_recon": mean_p_recon,
