@@ -4,11 +4,13 @@ Compares the trivial 'any IP PacketIn' rule against the multi-feature controller
 when evaluated across operational traffic containing true benign activity (the 11 Normal sessions,
 33,283 windows) versus the isolated within-attack session artifact.
 """
-import json
+import json, sys
 from pathlib import Path
 import numpy as np
 
-feats_dir = Path("research/insdn_controller/feats_v4")
+feats_dir = Path(sys.argv[2]) if len(sys.argv) > 2 else Path("research/insdn_controller/feats_v4")
+out_path = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("research/insdn_controller/results/operational_stream_evaluation.json")
+out_path.parent.mkdir(parents=True, exist_ok=True)
 with open(feats_dir / "meta.json") as f:
     meta = json.load(f)
 
@@ -46,7 +48,6 @@ res = {
     "mlp_overall_fpr": 0.001,
 }
 
-out_path = Path("research/insdn_controller/results/operational_stream_evaluation.json")
 with open(out_path, "w") as fp:
     json.dump(res, fp, indent=2)
 

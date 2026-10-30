@@ -28,6 +28,9 @@ echo "== 3. granularity, PacketIn ratio, validity checks"
 "$PY" -I ofgap/flowmod_check.py "$PCAPS/ex" "$OUT/res/flowmod_matches.json" > /dev/null
 "$PY" -I ofgap/gap_measure.py   "$PCAPS/ex" "$OUT/res/gap_attack_v2.json" > /dev/null
 "$PY" -I ofgap/review_checks.py "$OUT/feats" "$OUT/res/review_checks.json" > /dev/null
+"$PY" -I ofgap/flowtable_audit.py "$PCAPS/ex" "$OUT/res/flowtable_audit.json" > /dev/null
+"$PY" -I ofgap/packetin_reconstruction.py "$PCAPS/ex" "$OUT/res/packetin_reconstruction.json" > /dev/null
+"$PY" -I ofgap/operational_stream_eval.py "$OUT/res/operational_stream_evaluation.json" "$OUT/feats" > /dev/null
 
 echo "== 4. Mininet/Ryu forwarding study (analysis of recorded captures)"
 "$PY" -I live/live_table.py live/campaign2   "$OUT/res/live_modes_v4_one10.json"   "$OUT/live_table.tex"         "" tab:live > /dev/null
@@ -44,6 +47,10 @@ echo "== 5. host-side flow-CSV baseline (GPU)"
 (cd "$ROOT" && "$PY" research/insdn_controller/ofgap/recipe_replication.py "$OUT/res/recipe_replication.json" > /dev/null)
 (cd "$ROOT" && "$PY" research/insdn_controller/ofgap/dedup_ladder.py "$OUT/res/dedup_ladder.json" > /dev/null)
 (cd "$ROOT" && "$PY" research/insdn_controller/ofgap/leave_one_host_out.py "$OUT/res/leave_one_host_out.json" > /dev/null)
+(cd "$ROOT" && "$PY" research/insdn_controller/ofgap/leave_one_host_out.py "$OUT/res/leave_one_host_out_cicids2017.json" cicids2017 > /dev/null)
+(cd "$ROOT" && "$PY" research/insdn_controller/ofgap/audit_hosts_per_seed.py "$OUT/res/host_assignment_audit.json" > /dev/null)
+(cd "$ROOT" && "$PY" research/insdn_controller/ofgap/replicate_papers.py 5 "$OUT/res/replicate_papers.json" > /dev/null)
+cp results/leave_one_host_out_10seeds.json "$OUT/res/"
 
 "$PY" -I ofgap/make_figures.py "$OUT" > /dev/null   # paper figures from results/*.json
 

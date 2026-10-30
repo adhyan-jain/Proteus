@@ -6,18 +6,11 @@ import json
 import sys
 from pathlib import Path
 import numpy as np
-import pandas as pd
 from sklearn.model_selection import GroupShuffleSplit
+sys.path.insert(0, ".")
+from backend import data_full
 
-# Load InSDN data using existing loader logic
-data_dir = Path("data/raw/insdn_official/extracted/InSDN_DatasetCSV")
-csvs = [data_dir / "Normal_data.csv", data_dir / "OVS.csv", data_dir / "metasploitable-2.csv"]
-dfs = [pd.read_csv(p, low_memory=False) for p in csvs if p.exists()]
-if not dfs:
-    print("InSDN CSVs not found in official path, checking data/raw...")
-    sys.exit(1)
-
-df = pd.concat(dfs, ignore_index=True)
+df = data_full.load_insdn_raw()
 y = (df["Label"].astype(str).str.upper() != "BENIGN").astype(int).values
 groups = df["Src IP"].values
 
@@ -68,6 +61,8 @@ print(f"Logged assignments for {len(seeds_evaluated)} seeds:")
 for s in seeds_evaluated:
     print(f"Seed {s['seed']}: BAcc={s['score_bacc']:.3f}, test_frac={s['test_frac']:.2f}, primary_attacker_in_test={s['primary_attacker_in_test']}, primary_benign_in_test={s['primary_benign_in_test']}")
 
-with open("research/insdn_controller/results/host_assignment_audit.json", "w") as fp:
+out_file = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("research/insdn_controller/results/host_assignment_audit.json")
+out_file.parent.mkdir(parents=True, exist_ok=True)
+with open(out_file, "w") as fp:
     json.dump({"seeds": seeds_evaluated}, fp, indent=2)
-print("Saved to research/insdn_controller/results/host_assignment_audit.json")
+print(f"Saved to {out_file}")
