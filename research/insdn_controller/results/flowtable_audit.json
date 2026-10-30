@@ -1,0 +1,548 @@
+{
+  "total_captures": 44,
+  "captures_with_flow_stats": 44,
+  "captures_with_ipv4_controller_punt": 44,
+  "total_eth_type_entries": 80464,
+  "eth_type_breakdown": {
+    "0x806": 20116,
+    "0x800": 20116,
+    "0x8942": 20116,
+    "0x88cc": 20116
+  },
+  "total_mac_pair_entries": 24437,
+  "action_types": {
+    "OUTPUT_CTRL": 80464,
+    "INST": 80464,
+    "OUTPUT_PORT": 24437
+  },
+  "per_capture": {
+    "Metsplotable-2_Group/metasploitable-2_brute-force-attack/ONOS_-BRF_tomcat_apache.pcap": {
+      "flow_stats_replies": 6,
+      "total_entries": 28,
+      "eth_type_entries": {
+        "0x806": 6,
+        "0x800": 6,
+        "0x8942": 6,
+        "0x88cc": 6
+      },
+      "mac_pair_entries": 4,
+      "has_ipv4_controller_punt": true
+    },
+    "Metsplotable-2_Group/metasploitable-2_brute-force-attack/ONOS_BRF_telnet.pcap": {
+      "flow_stats_replies": 13,
+      "total_entries": 64,
+      "eth_type_entries": {
+        "0x806": 13,
+        "0x800": 13,
+        "0x8942": 13,
+        "0x88cc": 13
+      },
+      "mac_pair_entries": 12,
+      "has_ipv4_controller_punt": true
+    },
+    "Metsplotable-2_Group/metasploitable-2_ddos/ONOS_DDoS_ICMP.pcap": {
+      "flow_stats_replies": 17,
+      "total_entries": 69,
+      "eth_type_entries": {
+        "0x806": 17,
+        "0x800": 17,
+        "0x8942": 17,
+        "0x88cc": 17
+      },
+      "mac_pair_entries": 1,
+      "has_ipv4_controller_punt": true
+    },
+    "Metsplotable-2_Group/metasploitable-2_ddos/ONOS_DDoS_SYN.pcapng": {
+      "flow_stats_replies": 32,
+      "total_entries": 138,
+      "eth_type_entries": {
+        "0x806": 32,
+        "0x800": 32,
+        "0x8942": 32,
+        "0x88cc": 32
+      },
+      "mac_pair_entries": 10,
+      "has_ipv4_controller_punt": true
+    },
+    "Metsplotable-2_Group/metasploitable-2_ddos/ONOS_DDoS_TCP.pcap": {
+      "flow_stats_replies": 25,
+      "total_entries": 104,
+      "eth_type_entries": {
+        "0x806": 25,
+        "0x800": 25,
+        "0x8942": 25,
+        "0x88cc": 25
+      },
+      "mac_pair_entries": 4,
+      "has_ipv4_controller_punt": true
+    },
+    "Metsplotable-2_Group/metasploitable-2_dos/ONOS_DoS-SYN.pcapng": {
+      "flow_stats_replies": 28,
+      "total_entries": 137,
+      "eth_type_entries": {
+        "0x800": 28,
+        "0x8942": 28,
+        "0x806": 28,
+        "0x88cc": 28
+      },
+      "mac_pair_entries": 25,
+      "has_ipv4_controller_punt": true
+    },
+    "Metsplotable-2_Group/metasploitable-2_dos/ONOS_DoS_slowloris.pcap": {
+      "flow_stats_replies": 68,
+      "total_entries": 327,
+      "eth_type_entries": {
+        "0x800": 68,
+        "0x8942": 68,
+        "0x88cc": 68,
+        "0x806": 68
+      },
+      "mac_pair_entries": 55,
+      "has_ipv4_controller_punt": true
+    },
+    "Metsplotable-2_Group/metasploitable-2_exploit/ONOS_VSFTPD_exploit.pcap": {
+      "flow_stats_replies": 12,
+      "total_entries": 57,
+      "eth_type_entries": {
+        "0x806": 12,
+        "0x800": 12,
+        "0x8942": 12,
+        "0x88cc": 12
+      },
+      "mac_pair_entries": 9,
+      "has_ipv4_controller_punt": true
+    },
+    "Metsplotable-2_Group/metasploitable-2_exploit/ONOS_distcc_exploit.pcap": {
+      "flow_stats_replies": 4,
+      "total_entries": 18,
+      "eth_type_entries": {
+        "0x806": 4,
+        "0x800": 4,
+        "0x8942": 4,
+        "0x88cc": 4
+      },
+      "mac_pair_entries": 2,
+      "has_ipv4_controller_punt": true
+    },
+    "Metsplotable-2_Group/metasploitable-2_exploit/ONOS_irc_exploit.pcap": {
+      "flow_stats_replies": 16,
+      "total_entries": 76,
+      "eth_type_entries": {
+        "0x806": 16,
+        "0x800": 16,
+        "0x8942": 16,
+        "0x88cc": 16
+      },
+      "mac_pair_entries": 12,
+      "has_ipv4_controller_punt": true
+    },
+    "Metsplotable-2_Group/metasploitable-2_exploit/ONOS_samba_exploit.pcap": {
+      "flow_stats_replies": 3,
+      "total_entries": 13,
+      "eth_type_entries": {
+        "0x800": 3,
+        "0x8942": 3,
+        "0x806": 3,
+        "0x88cc": 3
+      },
+      "mac_pair_entries": 1,
+      "has_ipv4_controller_punt": true
+    },
+    "Metsplotable-2_Group/metasploitable-2_probe/ONOS_Scan_probe_wmap_scan.pcap": {
+      "flow_stats_replies": 118,
+      "total_entries": 564,
+      "eth_type_entries": {
+        "0x800": 118,
+        "0x8942": 118,
+        "0x88cc": 118,
+        "0x806": 118
+      },
+      "mac_pair_entries": 92,
+      "has_ipv4_controller_punt": true
+    },
+    "Metsplotable-2_Group/metasploitable-2_probe/ONOS__probe_msf__scan.pcap": {
+      "flow_stats_replies": 678,
+      "total_entries": 3256,
+      "eth_type_entries": {
+        "0x800": 678,
+        "0x8942": 678,
+        "0x88cc": 678,
+        "0x806": 678
+      },
+      "mac_pair_entries": 544,
+      "has_ipv4_controller_punt": true
+    },
+    "Normal_Group/Normal_1/Normal-ONOS_1.pcap": {
+      "flow_stats_replies": 330,
+      "total_entries": 1645,
+      "eth_type_entries": {
+        "0x806": 330,
+        "0x8942": 330,
+        "0x800": 330,
+        "0x88cc": 330
+      },
+      "mac_pair_entries": 325,
+      "has_ipv4_controller_punt": true
+    },
+    "Normal_Group/Normal_10/Normal-ONOS_11.pcap": {
+      "flow_stats_replies": 1270,
+      "total_entries": 6953,
+      "eth_type_entries": {
+        "0x88cc": 1270,
+        "0x806": 1270,
+        "0x8942": 1270,
+        "0x800": 1270
+      },
+      "mac_pair_entries": 1873,
+      "has_ipv4_controller_punt": true
+    },
+    "Normal_Group/Normal_11/Normal-ONOS_12.pcap": {
+      "flow_stats_replies": 7428,
+      "total_entries": 40510,
+      "eth_type_entries": {
+        "0x88cc": 7428,
+        "0x806": 7428,
+        "0x8942": 7428,
+        "0x800": 7428
+      },
+      "mac_pair_entries": 10798,
+      "has_ipv4_controller_punt": true
+    },
+    "Normal_Group/Normal_2/Normal-ONOS_2.pcap": {
+      "flow_stats_replies": 925,
+      "total_entries": 4539,
+      "eth_type_entries": {
+        "0x800": 925,
+        "0x8942": 925,
+        "0x88cc": 925,
+        "0x806": 925
+      },
+      "mac_pair_entries": 839,
+      "has_ipv4_controller_punt": true
+    },
+    "Normal_Group/Normal_3/Normal-ONOS_3.pcap": {
+      "flow_stats_replies": 264,
+      "total_entries": 1311,
+      "eth_type_entries": {
+        "0x800": 264,
+        "0x806": 264,
+        "0x88cc": 264,
+        "0x8942": 264
+      },
+      "mac_pair_entries": 255,
+      "has_ipv4_controller_punt": true
+    },
+    "Normal_Group/Normal_4/Normal-ONOS_4.pcap": {
+      "flow_stats_replies": 339,
+      "total_entries": 1711,
+      "eth_type_entries": {
+        "0x800": 339,
+        "0x8942": 339,
+        "0x88cc": 339,
+        "0x806": 339
+      },
+      "mac_pair_entries": 355,
+      "has_ipv4_controller_punt": true
+    },
+    "Normal_Group/Normal_5/Normal-ONOS_5.pcap": {
+      "flow_stats_replies": 1503,
+      "total_entries": 7899,
+      "eth_type_entries": {
+        "0x88cc": 1503,
+        "0x806": 1503,
+        "0x8942": 1503,
+        "0x800": 1503
+      },
+      "mac_pair_entries": 1887,
+      "has_ipv4_controller_punt": true
+    },
+    "Normal_Group/Normal_6/Normal-ONOS_6.pcap": {
+      "flow_stats_replies": 2059,
+      "total_entries": 10716,
+      "eth_type_entries": {
+        "0x88cc": 2059,
+        "0x806": 2059,
+        "0x8942": 2059,
+        "0x800": 2059
+      },
+      "mac_pair_entries": 2480,
+      "has_ipv4_controller_punt": true
+    },
+    "Normal_Group/Normal_7/Normal-ONOS_8.pcap": {
+      "flow_stats_replies": 513,
+      "total_entries": 2736,
+      "eth_type_entries": {
+        "0x88cc": 513,
+        "0x806": 513,
+        "0x8942": 513,
+        "0x800": 513
+      },
+      "mac_pair_entries": 684,
+      "has_ipv4_controller_punt": true
+    },
+    "Normal_Group/Normal_8/Normal-ONOS_9.pcap": {
+      "flow_stats_replies": 740,
+      "total_entries": 3948,
+      "eth_type_entries": {
+        "0x88cc": 740,
+        "0x8942": 740,
+        "0x800": 740,
+        "0x806": 740
+      },
+      "mac_pair_entries": 988,
+      "has_ipv4_controller_punt": true
+    },
+    "Normal_Group/Normal_9/Normal_ONOS.gz_10.pcap": {
+      "flow_stats_replies": 229,
+      "total_entries": 1220,
+      "eth_type_entries": {
+        "0x806": 229,
+        "0x88cc": 229,
+        "0x8942": 229,
+        "0x800": 229
+      },
+      "mac_pair_entries": 304,
+      "has_ipv4_controller_punt": true
+    },
+    "OVS_Group/Botnet/ONOS_Botnet.pcap": {
+      "flow_stats_replies": 96,
+      "total_entries": 468,
+      "eth_type_entries": {
+        "0x88cc": 96,
+        "0x8942": 96,
+        "0x800": 96,
+        "0x806": 96
+      },
+      "mac_pair_entries": 84,
+      "has_ipv4_controller_punt": true
+    },
+    "OVS_Group/DDoS/ONOS-DDoS-ICMP.pcap": {
+      "flow_stats_replies": 22,
+      "total_entries": 96,
+      "eth_type_entries": {
+        "0x800": 22,
+        "0x8942": 22,
+        "0x88cc": 22,
+        "0x806": 22
+      },
+      "mac_pair_entries": 8,
+      "has_ipv4_controller_punt": true
+    },
+    "OVS_Group/DDoS/ONOS-DDoS-SYN.pcap": {
+      "flow_stats_replies": 34,
+      "total_entries": 160,
+      "eth_type_entries": {
+        "0x8942": 34,
+        "0x88cc": 34,
+        "0x806": 34,
+        "0x800": 34
+      },
+      "mac_pair_entries": 24,
+      "has_ipv4_controller_punt": true
+    },
+    "OVS_Group/DDoS/ONOS-DDoS-UDP.pcap": {
+      "flow_stats_replies": 35,
+      "total_entries": 155,
+      "eth_type_entries": {
+        "0x800": 35,
+        "0x8942": 35,
+        "0x88cc": 35,
+        "0x806": 35
+      },
+      "mac_pair_entries": 15,
+      "has_ipv4_controller_punt": true
+    },
+    "OVS_Group/Probe/ONOS_Probe-Docker.pcap": {
+      "flow_stats_replies": 1140,
+      "total_entries": 4994,
+      "eth_type_entries": {
+        "0x88cc": 1140,
+        "0x806": 1140,
+        "0x8942": 1140,
+        "0x800": 1140
+      },
+      "mac_pair_entries": 434,
+      "has_ipv4_controller_punt": true
+    },
+    "OVS_Group/Probe/ONOS_Probe-Vhosts.pcap": {
+      "flow_stats_replies": 1248,
+      "total_entries": 6799,
+      "eth_type_entries": {
+        "0x88cc": 1248,
+        "0x806": 1248,
+        "0x8942": 1248,
+        "0x800": 1248
+      },
+      "mac_pair_entries": 1807,
+      "has_ipv4_controller_punt": true
+    },
+    "OVS_Group/brute-force-attack/ONOS_brute-force-attack-brup-suite.pcap": {
+      "flow_stats_replies": 218,
+      "total_entries": 1062,
+      "eth_type_entries": {
+        "0x806": 218,
+        "0x800": 218,
+        "0x8942": 218,
+        "0x88cc": 218
+      },
+      "mac_pair_entries": 190,
+      "has_ipv4_controller_punt": true
+    },
+    "OVS_Group/brute-force-attack/ONOS_brute-force-attack-hydra.pcap": {
+      "flow_stats_replies": 6,
+      "total_entries": 29,
+      "eth_type_entries": {
+        "0x806": 6,
+        "0x800": 6,
+        "0x8942": 6,
+        "0x88cc": 6
+      },
+      "mac_pair_entries": 5,
+      "has_ipv4_controller_punt": true
+    },
+    "OVS_Group/dos/Application_DoS/ONOS_Dos-hulk.pcap": {
+      "flow_stats_replies": 57,
+      "total_entries": 264,
+      "eth_type_entries": {
+        "0x800": 57,
+        "0x806": 57,
+        "0x8942": 57,
+        "0x88cc": 57
+      },
+      "mac_pair_entries": 36,
+      "has_ipv4_controller_punt": true
+    },
+    "OVS_Group/dos/Application_DoS/ONOS_Slowloris.pcap": {
+      "flow_stats_replies": 19,
+      "total_entries": 88,
+      "eth_type_entries": {
+        "0x800": 19,
+        "0x8942": 19,
+        "0x88cc": 19,
+        "0x806": 19
+      },
+      "mac_pair_entries": 12,
+      "has_ipv4_controller_punt": true
+    },
+    "OVS_Group/dos/Application_DoS/ONOS_Slowloris_Apache killer.pcap": {
+      "flow_stats_replies": 6,
+      "total_entries": 27,
+      "eth_type_entries": {
+        "0x800": 6,
+        "0x8942": 6,
+        "0x88cc": 6,
+        "0x806": 6
+      },
+      "mac_pair_entries": 3,
+      "has_ipv4_controller_punt": true
+    },
+    "OVS_Group/dos/Application_DoS/ONOS_Slowloris_R-U-Dead-Yet or Rudy.pcap": {
+      "flow_stats_replies": 7,
+      "total_entries": 32,
+      "eth_type_entries": {
+        "0x800": 7,
+        "0x8942": 7,
+        "0x88cc": 7,
+        "0x806": 7
+      },
+      "mac_pair_entries": 4,
+      "has_ipv4_controller_punt": true
+    },
+    "OVS_Group/dos/Application_DoS/ONOS_Slowloris_Slow Read.pcap": {
+      "flow_stats_replies": 70,
+      "total_entries": 326,
+      "eth_type_entries": {
+        "0x800": 70,
+        "0x8942": 70,
+        "0x88cc": 70,
+        "0x806": 70
+      },
+      "mac_pair_entries": 46,
+      "has_ipv4_controller_punt": true
+    },
+    "OVS_Group/dos/Application_DoS/ONOS_torshhummer.pcap": {
+      "flow_stats_replies": 41,
+      "total_entries": 183,
+      "eth_type_entries": {
+        "0x800": 41,
+        "0x806": 41,
+        "0x8942": 41,
+        "0x88cc": 41
+      },
+      "mac_pair_entries": 19,
+      "has_ipv4_controller_punt": true
+    },
+    "OVS_Group/dos/Network_DoS/ONOS-HTTP-flood.pcap": {
+      "flow_stats_replies": 27,
+      "total_entries": 124,
+      "eth_type_entries": {
+        "0x88cc": 27,
+        "0x800": 27,
+        "0x8942": 27,
+        "0x806": 27
+      },
+      "mac_pair_entries": 16,
+      "has_ipv4_controller_punt": true
+    },
+    "OVS_Group/dos/Network_DoS/ONOS-TCP-flood.pcap": {
+      "flow_stats_replies": 50,
+      "total_entries": 231,
+      "eth_type_entries": {
+        "0x8942": 50,
+        "0x88cc": 50,
+        "0x806": 50,
+        "0x800": 50
+      },
+      "mac_pair_entries": 31,
+      "has_ipv4_controller_punt": true
+    },
+    "OVS_Group/dos/Network_DoS/ONOS-UDP-flood.pcap": {
+      "flow_stats_replies": 36,
+      "total_entries": 160,
+      "eth_type_entries": {
+        "0x88cc": 36,
+        "0x800": 36,
+        "0x8942": 36,
+        "0x806": 36
+      },
+      "mac_pair_entries": 16,
+      "has_ipv4_controller_punt": true
+    },
+    "OVS_Group/web_attack/ONOS-interface_XSS_Burp.pcap": {
+      "flow_stats_replies": 132,
+      "total_entries": 572,
+      "eth_type_entries": {
+        "0x800": 132,
+        "0x8942": 132,
+        "0x88cc": 132,
+        "0x806": 132
+      },
+      "mac_pair_entries": 44,
+      "has_ipv4_controller_punt": true
+    },
+    "OVS_Group/web_attack/ONOS_SQL-Injection.pcap": {
+      "flow_stats_replies": 33,
+      "total_entries": 143,
+      "eth_type_entries": {
+        "0x800": 33,
+        "0x8942": 33,
+        "0x88cc": 33,
+        "0x806": 33
+      },
+      "mac_pair_entries": 11,
+      "has_ipv4_controller_punt": true
+    },
+    "OVS_Group/web_attack/ONOS_reverse-shell.pcap": {
+      "flow_stats_replies": 219,
+      "total_entries": 949,
+      "eth_type_entries": {
+        "0x800": 219,
+        "0x8942": 219,
+        "0x88cc": 219,
+        "0x806": 219
+      },
+      "mac_pair_entries": 73,
+      "has_ipv4_controller_punt": true
+    }
+  }
+}

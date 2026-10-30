@@ -14,6 +14,7 @@ DL, RP, LH, LC = J("dedup_ladder.json"), J("replicate_papers.json"), J("leave_on
 st, hs, pi = J("stock_ryu_flowmods.json"), J("hostside_xgb.json"), J("protocol_inflation.json")
 ai, ac, lit = J("protocol_audit_insdn.json"), J("protocol_audit_cicids2017.json"), json.load(open(R.parent / "literature_check.json"))
 rr = J("recipe_replication.json")
+fta, pr, haa = J("flowtable_audit.json"), J("packetin_reconstruction.json"), J("host_assignment_audit.json")
 lp = lit["papers"]
 insdn_read = [p for p in lp if p["read"] and "UNSW" not in str(p.get("dataset"))]  # the one read paper not on InSDN/SDN data is GRU-NTM (UNSW-NB15, BoT-IoT)
 RECIPES = ("numeric", "numeric+port", "ids_all", "top15_mi_ids")
@@ -119,6 +120,17 @@ checks = [
     ("lit papers read in full (word)", sum(p["read"] for p in lp), "ten"),
     ("lit read InSDN, none grouped", sum(bool(p.get("grouped")) for p in insdn_read), "none reports a host-grouped"),
     ("lit read InSDN, ids as inputs", sum(bool(p.get("identifiers_as_features")) for p in insdn_read), "three"),
+    # flowtable decode (flowtable_audit.json)
+    ("flowtable ipv4 punt entries", fta["eth_type_breakdown"]["0x800"], "20116"),
+    ("flowtable ipv4 punt caps", fta["captures_with_ipv4_controller_punt"], "44"),
+    # packetin software reconstruction (packetin_reconstruction.json)
+    ("recon DDoS 100pct single-pkt", pr["OVS_DDoS"]["pct_single_packet_flows"], "100.0"),
+    ("recon DDoS single-pkt flows", pr["OVS_DDoS"]["flows_with_single_packet"], "17565"),
+    ("recon DDoS total flows", pr["OVS_DDoS"]["distinct_reconstructed_flows"], "17566"),
+    ("recon Probe pct single-pkt", pr["OVS_Probe"]["pct_single_packet_flows"], "97.3"),
+    # host assignment audit (host_assignment_audit.json)
+    ("host audit seed 0 test frac", round(100 * haa["seeds"][0]["test_frac"], 1), "43.7"),
+    ("host audit seed 1 test frac", round(100 * haa["seeds"][1]["test_frac"], 1), "57.1"),
 ]
 WORDS = {"nine": 9, "ten": 10, "three": 3, "none": 0}
 bad = 0

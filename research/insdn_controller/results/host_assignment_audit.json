@@ -1,0 +1,134 @@
+{
+  "seeds": [
+    {
+      "seed_idx": 0,
+      "seed": 0,
+      "bacc": 0.7862382851669444,
+      "test_rows": 150311,
+      "test_frac": 0.437,
+      "primary_attacker_in_test": true,
+      "primary_benign_in_test": false,
+      "test_dominant": [
+        "200.175.2.130",
+        "192.168.20.1",
+        "74.125.168.10"
+      ]
+    },
+    {
+      "seed_idx": 1,
+      "seed": 1,
+      "bacc": 0.6596102755550365,
+      "test_rows": 196477,
+      "test_frac": 0.571,
+      "primary_attacker_in_test": true,
+      "primary_benign_in_test": false,
+      "test_dominant": [
+        "200.175.2.130",
+        "192.168.3.130",
+        "192.168.20.134",
+        "185.127.17.56"
+      ]
+    },
+    {
+      "seed_idx": 2,
+      "seed": 2,
+      "bacc": 0.9385126878575454,
+      "test_rows": 76478,
+      "test_frac": 0.222,
+      "primary_attacker_in_test": false,
+      "primary_benign_in_test": false,
+      "test_dominant": [
+        "192.168.3.130",
+        "192.168.20.1",
+        "74.125.168.10"
+      ]
+    },
+    {
+      "seed_idx": 3,
+      "seed": 3,
+      "bacc": 1.0,
+      "test_rows": 38657,
+      "test_frac": 0.112,
+      "primary_attacker_in_test": false,
+      "primary_benign_in_test": false,
+      "test_dominant": []
+    },
+    {
+      "seed_idx": 4,
+      "seed": 4,
+      "bacc": 0.8586813067185246,
+      "test_rows": 134284,
+      "test_frac": 0.39,
+      "primary_attacker_in_test": false,
+      "primary_benign_in_test": true,
+      "test_dominant": [
+        "192.168.20.133",
+        "192.168.3.130",
+        "192.168.20.134"
+      ]
+    },
+    {
+      "seed_idx": 5,
+      "seed": 5,
+      "bacc": 0.9964414722614432,
+      "test_rows": 75990,
+      "test_frac": 0.221,
+      "primary_attacker_in_test": false,
+      "primary_benign_in_test": false,
+      "test_dominant": [
+        "192.168.3.130",
+        "74.125.168.10"
+      ]
+    },
+    {
+      "seed_idx": 6,
+      "seed": 6,
+      "bacc": 0.9984297955336656,
+      "test_rows": 42413,
+      "test_frac": 0.123,
+      "primary_attacker_in_test": false,
+      "primary_benign_in_test": false,
+      "test_dominant": [
+        "192.168.20.2",
+        "74.125.168.10"
+      ]
+    },
+    {
+      "seed_idx": 7,
+      "seed": 7,
+      "bacc": 0.8368070914205843,
+      "test_rows": 93115,
+      "test_frac": 0.271,
+      "primary_attacker_in_test": false,
+      "primary_benign_in_test": true,
+      "test_dominant": [
+        "192.168.20.133",
+        "74.125.168.10"
+      ]
+    },
+    {
+      "seed_idx": 8,
+      "seed": 8,
+      "bacc": 0.9999863387978143,
+      "test_rows": 41893,
+      "test_frac": 0.122,
+      "primary_attacker_in_test": false,
+      "primary_benign_in_test": false,
+      "test_dominant": [
+        "192.168.20.2"
+      ]
+    },
+    {
+      "seed_idx": 9,
+      "seed": 9,
+      "bacc": 0.9990986930925735,
+      "test_rows": 42648,
+      "test_frac": 0.124,
+      "primary_attacker_in_test": false,
+      "primary_benign_in_test": false,
+      "test_dominant": [
+        "185.127.17.56"
+      ]
+    }
+  ]
+}
