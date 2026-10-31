@@ -7,7 +7,7 @@ from pathlib import Path
 
 H = Path(__file__).parent
 R = H.parent / "results"
-tex = "".join((H / f).read_text() for f in ("main.tex", "live_section.tex")).replace("\\,", "").replace("$", "")
+tex = "".join((H / f).read_text() for f in ("main.tex", "live_section.tex", "table_deployment.tex", "table_recon.tex")).replace("\\,", "").replace("$", "")
 J = lambda n: json.load(open(R / n))  # noqa: E731
 fm, one, l3, xg = J("flowmod_matches.json"), J("live_modes_v4_one10.json"), J("live_modes_v4_linear3.json"), J("v4_strict_W5_xgb.json")
 DL, RP, LH, LC = J("dedup_ladder.json"), J("replicate_papers.json"), J("leave_one_host_out.json"), J("leave_one_host_out_cicids2017.json")
@@ -16,6 +16,16 @@ ai, ac, lit = J("protocol_audit_insdn.json"), J("protocol_audit_cicids2017.json"
 rr = J("recipe_replication.json")
 fta, pr, haa = J("flowtable_audit.json"), J("packetin_reconstruction.json"), J("host_assignment_audit.json")
 ose = J("operational_stream_evaluation.json")
+di, sb = J("deployment_inventory.json"), J("session_identity_baseline.json")
+V4 = J("v4_strict_W1.json")["A_grouped_cv"]
+C = di["cells"]
+MSP = [k for k in C if k.startswith("metasploitable|")]
+OVSC = [k for k in C if k.startswith("ovs|")]
+ZERO_FM = [k for k, v in json.load(open(R / "flowmod_matches.json"))["per_capture"].items() if not v]
+ZERO_FM_MAC = [fta["per_capture"][k]["mac_pair_entries"] for k in ZERO_FM]
+SB = lambda rule, m: sb[rule][m]["mean"]  # noqa: E731
+ROW = lambda m: (f"{m['bacc']['mean']:.3f}{{\\scriptsize\\pm{m['bacc']['ci95']:.3f}}} & "  # noqa: E731
+                 f"{m['recall']['mean']:.3f} & {m['fpr']['mean']:.3f}")
 lp = lit["papers"]
 insdn_read = [p for p in lp if p["read"] and "UNSW" not in str(p.get("dataset"))]  # the one read paper not on InSDN/SDN data is GRU-NTM (UNSW-NB15, BoT-IoT)
 RECIPES = ("numeric", "numeric+port", "ids_all", "top15_mi_ids")
@@ -124,22 +134,29 @@ checks = [
     # flowtable decode (flowtable_audit.json)
     ("flowtable ipv4 punt entries", fta["eth_type_breakdown"]["0x800"], "20116"),
     ("flowtable ipv4 punt caps", fta["captures_with_ipv4_controller_punt"], "44"),
-    # packetin software reconstruction (packetin_reconstruction.json)
+    # packetin software reconstruction (packetin_reconstruction.json; table_recon.tex quotes counts with thousands commas)
     ("recon DDoS 100pct single-pkt", pr["OVS_DDoS"]["pct_single_packet_flows"], "100.0"),
-    ("recon DDoS single-pkt flows", pr["OVS_DDoS"]["flows_with_single_packet"], "17565"),
-    ("recon DDoS total flows", pr["OVS_DDoS"]["distinct_reconstructed_flows"], "17566"),
+    ("recon DDoS total flows", f"{pr['OVS_DDoS']['distinct_reconstructed_flows']:,}", "17,566"),
     ("recon Probe pct single-pkt", pr["OVS_Probe"]["pct_single_packet_flows"], "97.3"),
     ("recon MS2 DoS pct single-pkt", pr["MS2_DoS"]["pct_single_packet_flows"], "7.1"),
     ("recon MS2 DoS matching 5tuples", pr["MS2_DoS"]["matching_5tuples"], "494"),
-    ("recon MS2 DoS duration corr", pr["MS2_DoS"]["duration_correlation"], "-0.237"),
-    ("recon MS2 DoS packet corr", pr["MS2_DoS"]["packet_count_correlation"], "0.629"),
+    ("recon MS2 DoS matched share", pr["MS2_DoS"]["matched_share_of_reconstructed_pct"] == 1.7, "covering 1.7\\%"),
     ("recon MS2 Probe pct single-pkt", pr["MS2_Probe"]["pct_single_packet_flows"], "0.6"),
-    ("recon MS2 Probe matching 5tuples", pr["MS2_Probe"]["matching_5tuples"], "13214"),
-    ("recon MS2 Probe duration corr", f"{pr['MS2_Probe']['duration_correlation']:.3f}", "0.420"),
+    ("recon MS2 Probe matching 5tuples", f"{pr['MS2_Probe']['matching_5tuples']:,}", "13,214"),
     ("recon Normal pct single-pkt", pr["Normal_1"]["pct_single_packet_flows"], "35.3"),
     ("recon Normal matching 5tuples", pr["Normal_1"]["matching_5tuples"], "140"),
-    ("recon Normal duration corr", pr["Normal_1"]["duration_correlation"], "0.977"),
-    ("recon Normal packet corr", pr["Normal_1"]["packet_count_correlation"], "0.974"),
+    ("recon DoS pkt spearman", f"{pr['MS2_DoS']['packet_count_spearman']:.2f}", "0.24"),
+    ("recon DoS pkt spearman in text", f"{pr['MS2_DoS']['packet_count_spearman']:.2f}" == "0.24", "rho=0.24"),
+    ("recon Probe pkt spearman", f"{pr['MS2_Probe']['packet_count_spearman']:.2f}" == "0.86", "rho=0.86"),
+    ("recon Normal pkt spearman", f"{pr['Normal_1']['packet_count_spearman']:.2f}" == "0.94", "rho=0.94"),
+    ("recon Normal duration spearman", f"{pr['Normal_1']['duration_spearman']:.2f}" == "0.98", "0.98 on the benign capture"),
+    ("recon DoS/Probe duration spearman",
+     (f"{pr['MS2_DoS']['duration_spearman']:.2f}", f"{pr['MS2_Probe']['duration_spearman']:.2f}") == ("-0.27", "-0.11"),
+     "-0.27 on DoS and -0.11 on probing"),
+    ("recon packet-total ratios",
+     f"{round(100 * pr['MS2_DoS']['packet_sum_ratio_recon_over_csv'])}\\% (DoS) and "
+     f"{round(100 * pr['Normal_1']['packet_sum_ratio_recon_over_csv'])}\\% (benign)", "38\\% (DoS) and 45\\% (benign)"),
+    ("recon Probe packet-total ratio", abs(pr["MS2_Probe"]["packet_sum_ratio_recon_over_csv"] - 1.0) < 0.005, "ratio 1.00"),
     # host assignment audit (host_assignment_audit.json)
     ("host audit seed 0 test frac", round(100 * haa["seeds"][0]["test_frac"], 1), "43.7"),
     ("host audit seed 1 test frac", round(100 * haa["seeds"][1]["test_frac"], 1), "57.1"),
@@ -149,10 +166,55 @@ checks = [
     ("operational normal windows", f"{ose['normal_windows_total']:,}", "33,283"),
     ("operational normal ip windows", f"{ose['normal_windows_with_ip']:,}", "25,810"),
     ("operational normal ip fpr", ose["normal_windows_ip_fpr_pct"], "77.5"),
+    ("operational normal ip fpr 3dp", f"{ose['normal_windows_with_ip'] / ose['normal_windows_total']:.3f}" == "0.775", "normal-session FPR = 0.775"),
     ("operational strict trivial bacc", f"{ose['strict_trivial_rule_bacc']:.4f}", "0.6360"),
     ("operational raw trivial bacc", ose["raw_stream_trivial_bacc"], "0.4889"),
+    # deployment inventory (deployment_inventory.json, table_deployment.tex)
+    ("attack windows total", di["total_attack_windows"], "2589"),
+    ("probe share of attack windows", di["attack_share_by_class_pct"]["probe"], "75.9"),
+    ("OVS DDoS/brute zero attack windows", C["ovs|ddos"]["attack"] == 0 and C["ovs|brute"]["attack"] == 0,
+     "OVS DDoS and OVS brute-force contribute no attack windows"),
+    ("Metasp attack windows", sum(C[k]["attack"] for k in MSP) == 2128, "2128 attack windows"),
+    ("Metasp probe attack windows", C["metasploitable|probe"]["attack"] == 1922, "1922 (90\\%) of them probe windows"),
+    ("OVS attack windows and classes",
+     sum(C[k]["attack"] for k in OVSC) == 461 and (C["ovs|botnet"]["attack"], C["ovs|dos"]["attack"],
+                                                   C["ovs|probe"]["attack"], C["ovs|web"]["attack"]) == (83, 323, 43, 12),
+     "461 OVS attack windows (botnet 83, DoS 323, probe 43, web 12)"),
+    ("brute/exploit/web attack windows",
+     (C["metasploitable|brute"]["attack"], C["metasploitable|exploit"]["attack"], C["ovs|web"]["attack"]) == (6, 12, 12),
+     "6, 12 and 12 attack windows"),
+    ("attack-free kept in attack sessions",
+     di["within_attack_sessions"]["attack_free_kept_nonempty"] + di["within_attack_sessions"]["attack_free_kept_empty"] == 2178,
+     "2178 attack-free windows"),
+    ("attack-free empty", di["within_attack_sessions"]["attack_free_kept_empty"] == 1858, "1858 are empty"),
+    ("attack-free nonempty without IP",
+     (di["within_attack_sessions"]["attack_free_kept_nonempty"],
+      di["within_attack_sessions"]["attack_free_kept_nonempty"] - di["within_attack_sessions"]["attack_free_nonempty_with_ip_packetin"]) == (320, 317),
+     "of the remaining 320, 317 contain no IP PacketIn"),
+    # flow-table priorities and zero-FlowMod captures
+    ("ipv4 punt priority 5", fta["priority_by_kind"]["eth_type_0x800"] == {"5": 20116}, "all 20116 observations have priority 5"),
+    ("mac-pair priority 10", fta["priority_by_kind"]["mac_pair"] == {"10": 24437}, "all 24437 observations at priority 10"),
+    ("arp/lldp/bddp priority 40000",
+     all(fta["priority_by_kind"][k] == {"40000": 20116} for k in ("eth_type_0x806", "eth_type_0x88cc", "eth_type_0x8942")),
+     "priority 40000"),
+    ("zero-FlowMod captures", len(ZERO_FM), "five captures contain none"),
+    ("zero-FlowMod captures MAC-pair range", (min(ZERO_FM_MAC), max(ZERO_FM_MAC)) == (4, 73), "4--73 observations per capture"),
+    # host-identity baseline (session_identity_baseline.json, Table tab:identity)
+    ("identity table R1 all", True, ROW(sb["R1_attacker_only_ip_memory"])),
+    ("identity table R2 all", True, ROW(sb["R2_any_attack_ip"])),
+    ("identity table MLP all", True, ROW(V4["mlp_all"])),
+    ("identity table R1 within", True, ROW(sb["R1_within_attack_nonempty"])),
+    ("identity table R2 within", True, ROW(sb["R2_within_attack_nonempty"])),
+    ("identity table MLP within", True, ROW(V4["mlp_all_within_attack_nonempty"])),
+    ("identity text R1 bacc", f"{SB('R1_attacker_only_ip_memory', 'bacc'):.3f}" == "0.734", "balanced accuracy of 0.734"),
+    ("identity text R1 recall", f"{SB('R1_attacker_only_ip_memory', 'recall'):.3f}" == "0.472", "recall limited to 0.472"),
+    ("identity text R2 bacc", f"{SB('R2_any_attack_ip', 'bacc'):.3f}" == "0.680", "R2 (0.680)"),
+    ("identity text R2 within", f"{SB('R2_within_attack_nonempty', 'bacc'):.3f}" == "0.994", "near-perfect (0.994)"),
+    ("host-side baseline feature count", hs["features"] == 78, "78 numeric features including the two port numbers"),
+    ("identity text MLP margin", round(V4["mlp_all"]["bacc"]["mean"] - SB("R1_attacker_only_ip_memory", "bacc"), 2) == 0.21,
+     "exceeds R1 by 0.21"),
 ]
-WORDS = {"nine": 9, "ten": 10, "three": 3, "none": 0}
+WORDS = {"nine": 9, "ten": 10, "three": 3, "none": 0, "five": 5}
 bad = 0
 for name, val, quoted in checks:
     num = WORDS.get(quoted.split()[0], quoted)  # quoted word -> number it stands for

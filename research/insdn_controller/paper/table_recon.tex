@@ -1,0 +1,17 @@
+\begin{table}[t]
+\caption{Flows reassembled from PacketIns (120\,s timeout, FIN/RST termination) against the benchmark CSV for one capture per scenario. Correlations and the packet ratio use only matched 5-tuples and are omitted (--) below 30 matches. Ratio = reconstructed over host-side packet total.}
+\label{tab:recon}
+\centering\footnotesize\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{lrrrrrrr}
+\toprule
+Scenario & Flows & 1-pkt \% & Matched & Matched \% & $\rho_{\text{pkt}}$ & Ratio & $\rho_{\text{dur}}$ \\
+\midrule
+OVS DDoS & 17,566 & 100.0 & 0 & 0.0 & -- & -- & -- \\
+OVS Probe & 11,293 & 97.3 & 0 & 0.0 & -- & -- & -- \\
+OVS Web & 61 & 37.7 & 8 & 19.7 & -- & -- & -- \\
+MS2 DoS & 29,818 & 7.1 & 494 & 1.7 & 0.24 & 0.38 & -0.27 \\
+MS2 Probe & 13,589 & 0.6 & 13,214 & 97.7 & 0.86 & 1.00 & -0.11 \\
+Normal (1 of 11) & 501 & 35.3 & 140 & 65.9 & 0.94 & 0.45 & 0.98 \\
+\bottomrule
+\end{tabular}
+\end{table}

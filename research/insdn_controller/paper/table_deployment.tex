@@ -1,0 +1,23 @@
+\begin{table}[t]
+\caption{Strictly labelled controller windows ($W{=}1$\,s) per deployment and class. A class with zero attack windows contributes only attack-free windows: OVS DDoS and OVS brute-force have no CSV-matched flows (Section~\ref{sec:method}). Probe supplies 75.9\% of the 2,589 pooled attack windows.}
+\label{tab:deployment}
+\centering\footnotesize\setlength{\tabcolsep}{3pt}
+\begin{tabular}{llrrrr}
+\toprule
+Deployment & Class & Captures & Windows & Kept & Attack win. \\
+\midrule
+Metasp. & Brute force & 2 & 45 & 33 & 6 \\
+Metasp. & DDoS & 3 & 290 & 101 & 55 \\
+Metasp. & DoS & 2 & 333 & 308 & 133 \\
+Metasp. & Exploit & 4 & 88 & 71 & 12 \\
+Metasp. & Probe & 2 & 1,989 & 1,956 & 1,922 \\
+OVS & Botnet & 1 & 160 & 152 & 83 \\
+OVS & Brute force & 2 & 559 & 326 & 0 \\
+OVS & DDoS & 3 & 209 & 83 & 0 \\
+OVS & DoS & 9 & 528 & 497 & 323 \\
+OVS & Probe & 2 & 3,979 & 965 & 43 \\
+OVS & Web & 3 & 636 & 275 & 12 \\
+Normal & Normal & 11 & 33,283 & 33,283 & 0 \\
+\bottomrule
+\end{tabular}
+\end{table}
