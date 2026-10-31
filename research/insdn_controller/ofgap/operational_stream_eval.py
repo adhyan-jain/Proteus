@@ -14,7 +14,7 @@ import exp_ctrl2
 
 out_path = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("research/insdn_controller/results/operational_stream_evaluation.json")
 feats_dir = Path(sys.argv[2]) if len(sys.argv) > 2 else Path("research/insdn_controller/feats_v4")
-v4_path = Path("research/insdn_controller/results/v4_strict_W1.json")
+v4_path = Path(sys.argv[3]) if len(sys.argv) > 3 else Path(__file__).resolve().parent.parent / "results" / "v4_strict_W1.json"
 
 # 1. Strict window set evaluation (exact same set evaluated by MLP)
 caps = exp_ctrl2.load(feats_dir, 1.0, "strict")

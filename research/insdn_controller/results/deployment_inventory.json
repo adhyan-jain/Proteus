@@ -1,0 +1,134 @@
+{
+  "cells": {
+    "metasploitable|brute": {
+      "captures": 2,
+      "windows": 45,
+      "kept": 33,
+      "attack": 6,
+      "attack_free_nonempty": 3,
+      "attack_free_empty": 24,
+      "attack_free_nonempty_with_ip": 0
+    },
+    "metasploitable|ddos": {
+      "captures": 3,
+      "windows": 290,
+      "kept": 101,
+      "attack": 55,
+      "attack_free_nonempty": 12,
+      "attack_free_empty": 34,
+      "attack_free_nonempty_with_ip": 0
+    },
+    "metasploitable|dos": {
+      "captures": 2,
+      "windows": 333,
+      "kept": 308,
+      "attack": 133,
+      "attack_free_nonempty": 15,
+      "attack_free_empty": 160,
+      "attack_free_nonempty_with_ip": 0
+    },
+    "metasploitable|exploit": {
+      "captures": 4,
+      "windows": 88,
+      "kept": 71,
+      "attack": 12,
+      "attack_free_nonempty": 6,
+      "attack_free_empty": 53,
+      "attack_free_nonempty_with_ip": 0
+    },
+    "metasploitable|probe": {
+      "captures": 2,
+      "windows": 1989,
+      "kept": 1956,
+      "attack": 1922,
+      "attack_free_nonempty": 1,
+      "attack_free_empty": 33,
+      "attack_free_nonempty_with_ip": 0
+    },
+    "normal|normal": {
+      "captures": 11,
+      "windows": 33283,
+      "kept": 33283,
+      "attack": 0,
+      "attack_free_nonempty": 26166,
+      "attack_free_empty": 7117,
+      "attack_free_nonempty_with_ip": 25810
+    },
+    "ovs|botnet": {
+      "captures": 1,
+      "windows": 160,
+      "kept": 152,
+      "attack": 83,
+      "attack_free_nonempty": 4,
+      "attack_free_empty": 65,
+      "attack_free_nonempty_with_ip": 0
+    },
+    "ovs|brute": {
+      "captures": 2,
+      "windows": 559,
+      "kept": 326,
+      "attack": 0,
+      "attack_free_nonempty": 2,
+      "attack_free_empty": 324,
+      "attack_free_nonempty_with_ip": 0
+    },
+    "ovs|ddos": {
+      "captures": 3,
+      "windows": 209,
+      "kept": 83,
+      "attack": 0,
+      "attack_free_nonempty": 4,
+      "attack_free_empty": 79,
+      "attack_free_nonempty_with_ip": 1
+    },
+    "ovs|dos": {
+      "captures": 9,
+      "windows": 528,
+      "kept": 497,
+      "attack": 323,
+      "attack_free_nonempty": 27,
+      "attack_free_empty": 147,
+      "attack_free_nonempty_with_ip": 0
+    },
+    "ovs|probe": {
+      "captures": 2,
+      "windows": 3979,
+      "kept": 965,
+      "attack": 43,
+      "attack_free_nonempty": 238,
+      "attack_free_empty": 684,
+      "attack_free_nonempty_with_ip": 2
+    },
+    "ovs|web": {
+      "captures": 3,
+      "windows": 636,
+      "kept": 275,
+      "attack": 12,
+      "attack_free_nonempty": 8,
+      "attack_free_empty": 255,
+      "attack_free_nonempty_with_ip": 0
+    }
+  },
+  "total_attack_windows": 2589,
+  "total_kept_windows": 38050,
+  "attack_share_by_class_pct": {
+    "botnet": 3.2,
+    "brute": 0.2,
+    "ddos": 2.1,
+    "dos": 17.6,
+    "exploit": 0.5,
+    "normal": 0.0,
+    "probe": 75.9,
+    "web": 0.5
+  },
+  "attack_windows_by_deployment": {
+    "metasploitable": 2128,
+    "normal": 0,
+    "ovs": 461
+  },
+  "within_attack_sessions": {
+    "attack_free_kept_nonempty": 320,
+    "attack_free_kept_empty": 1858,
+    "attack_free_nonempty_with_ip_packetin": 3
+  }
+}

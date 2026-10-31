@@ -15,6 +15,23 @@
     "INST": 80464,
     "OUTPUT_PORT": 24437
   },
+  "priority_by_kind": {
+    "eth_type_0x800": {
+      "5": 20116
+    },
+    "eth_type_0x806": {
+      "40000": 20116
+    },
+    "eth_type_0x88cc": {
+      "40000": 20116
+    },
+    "eth_type_0x8942": {
+      "40000": 20116
+    },
+    "mac_pair": {
+      "10": 24437
+    }
+  },
   "per_capture": {
     "Metsplotable-2_Group/metasploitable-2_brute-force-attack/ONOS_-BRF_tomcat_apache.pcap": {
       "flow_stats_replies": 6,

@@ -30,7 +30,9 @@ echo "== 3. granularity, PacketIn ratio, validity checks"
 "$PY" -I ofgap/review_checks.py "$OUT/feats" "$OUT/res/review_checks.json" > /dev/null
 "$PY" -I ofgap/flowtable_audit.py "$PCAPS/ex" "$OUT/res/flowtable_audit.json" > /dev/null
 "$PY" -I ofgap/packetin_reconstruction.py "$PCAPS/ex" "$OUT/res/packetin_reconstruction.json" > /dev/null
-"$PY" -I ofgap/operational_stream_eval.py "$OUT/res/operational_stream_evaluation.json" "$OUT/feats" > /dev/null
+"$PY" -I ofgap/operational_stream_eval.py "$OUT/res/operational_stream_evaluation.json" "$OUT/feats" "$OUT/res/v4_strict_W1.json" > /dev/null
+"$PY" -I ofgap/deployment_inventory.py "$OUT/feats" "$OUT/res/deployment_inventory.json" > /dev/null
+"$PY" -I ofgap/session_identity_baseline.py "$PCAPS/ex" "$OUT/feats" "$OUT/res/session_identity_baseline.json" > /dev/null
 
 echo "== 4. Mininet/Ryu forwarding study (analysis of recorded captures)"
 "$PY" -I live/live_table.py live/campaign2   "$OUT/res/live_modes_v4_one10.json"   "$OUT/live_table.tex"         "" tab:live > /dev/null
@@ -59,5 +61,8 @@ echo "== 6. tables and comparison"
       "$OUT/tables.tex" "$OUT/res/review_checks.json" > /dev/null
 cmp "$OUT/tables.tex" paper/tables.tex && echo "tables.tex identical"
 cmp "$OUT/live_table.tex" paper/live_table.tex && cmp "$OUT/live_table_linear3.tex" paper/live_table_linear3.tex && echo "live tables identical"
+"$PY" -I ofgap/make_deployment_table.py "$OUT/res/deployment_inventory.json" "$OUT/table_deployment.tex" \
+      "$OUT/res/packetin_reconstruction.json" "$OUT/table_recon.tex"
+cmp "$OUT/table_deployment.tex" paper/table_deployment.tex && cmp "$OUT/table_recon.tex" paper/table_recon.tex && echo "deployment and reconstruction tables identical"
 "$PY" -I ofgap/compare_results.py "$OUT/res"
 "$PY" paper/verify_numbers.py | grep -c '^OK' | sed 's/^/paper numbers verified against results\/*.json: /'

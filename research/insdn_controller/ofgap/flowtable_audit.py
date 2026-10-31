@@ -55,6 +55,7 @@ def audit_captures(pcap_root: Path):
     total_mac_pair_counts = 0
     action_types = collections.Counter()
     captures_with_ipv4_punt = 0
+    priority_by_kind = collections.defaultdict(collections.Counter)   # rule kind -> {priority: entry observations}
 
     for f in files:
         rel = str(f.relative_to(pcap_root))
@@ -73,7 +74,7 @@ def audit_captures(pcap_root: Path):
                     ln, = struct.unpack("!H", b[p:p + 2])
                     if ln == 0:
                         break
-                    pri, = struct.unpack("!H", b[p + 8:p + 10])
+                    pri, = struct.unpack("!H", b[p + 12:p + 14])   # ofp_flow_stats: len, table, pad, dur_s, dur_ns, priority
                     mt, ml = struct.unpack("!HH", b[p + 48:p + 52])
                     mb = b[p + 52:p + 48 + ml]
                     q, fields = 0, []
@@ -96,11 +97,13 @@ def audit_captures(pcap_root: Path):
                         hex_eth = hex(eth_val) if eth_val else "unknown"
                         cap_stats["eth_type_entries"][hex_eth] += 1
                         total_eth_type_counts[hex_eth] += 1
+                        priority_by_kind["eth_type_" + hex_eth][pri] += 1
                         if eth_val == 0x0800 and is_to_ctrl:
                             cap_stats["has_ipv4_controller_punt"] = True
                     elif "in_port" in fields and "eth_src" in fields and "eth_dst" in fields:
                         cap_stats["mac_pair_entries"] += 1
                         total_mac_pair_counts += 1
+                        priority_by_kind["mac_pair"][pri] += 1
 
                     for a in acts:
                         action_types[a[0] if a[0] != "OUTPUT" else ("OUTPUT_CTRL" if a[1] == OFPP_CONTROLLER else "OUTPUT_PORT")] += 1
@@ -119,6 +122,7 @@ def audit_captures(pcap_root: Path):
         "eth_type_breakdown": dict(total_eth_type_counts),
         "total_mac_pair_entries": total_mac_pair_counts,
         "action_types": dict(action_types),
+        "priority_by_kind": {k: {str(p): n for p, n in sorted(v.items())} for k, v in sorted(priority_by_kind.items())},
         "per_capture": per_capture,
     }
     return summary

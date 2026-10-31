@@ -15,6 +15,7 @@ import socket
 import dpkt
 import numpy as np
 import pandas as pd
+from scipy import stats
 
 sys.path.insert(0, str(Path(__file__).parent))
 from ofparse import of_messages
@@ -151,7 +152,7 @@ def reconstruct_flows_from_packetins(pcap_path: Path, idle_timeout: float = 120.
 def main():
     pcap_root = Path(sys.argv[1])
     out_file = Path(sys.argv[2])
-    csv_dir = Path("data/raw/insdn_official/extracted/InSDN_DatasetCSV")
+    csv_dir = Path(__file__).resolve().parents[3] / "data/raw/insdn_official/extracted/InSDN_DatasetCSV"
     
     target_scenarios = [
         ("OVS_DDoS", "OVS_Group/DDoS/ONOS-DDoS-SYN.pcap", csv_dir / "OVS.csv", "DDoS"),
@@ -198,6 +199,7 @@ def main():
         
         common = set(recon_dict.keys()) & set(csv_dict.keys())
         corr_p, corr_d = None, None
+        spear_p, spear_d, ratio_p, med_rel_err_p = None, None, None, None
         mean_p_recon, mean_p_csv = None, None
         mean_d_recon, mean_d_csv = None, None
         if common:
@@ -213,6 +215,13 @@ def main():
                 corr_p = round(float(np.corrcoef(r_p, c_p)[0, 1]), 3)
             if len(common) > 1 and np.std(r_d) > 0 and np.std(c_d) > 0:
                 corr_d = round(float(np.corrcoef(r_d, c_d)[0, 1]), 3)
+            # rank correlation (robust to heavy tails) and magnitude bias, on the matched 5-tuples only
+            if len(common) > 2 and np.std(r_p) > 0 and np.std(c_p) > 0:
+                spear_p = round(float(stats.spearmanr(r_p, c_p)[0]), 3)
+            if len(common) > 2 and np.std(r_d) > 0 and np.std(c_d) > 0:
+                spear_d = round(float(stats.spearmanr(r_d, c_d)[0]), 3)
+            ratio_p = round(float(np.sum(r_p) / np.sum(c_p)), 3) if np.sum(c_p) > 0 else None
+            med_rel_err_p = round(float(np.median([(a - b) / b for a, b in zip(r_p, c_p) if b > 0])), 3)
 
         results[name] = {
             "total_packet_in": summary["total_packet_in"],
@@ -232,8 +241,14 @@ def main():
             "csv_median_duration_s": round(float(np.median(csv_durs)), 3) if csv_durs else 0.0,
             "matching_5tuples": len(common),
             "matching_recon_flows": sum(len(recon_dict[k]) for k in common),
+            "matched_share_of_reconstructed_pct": round(100.0 * sum(len(recon_dict[k]) for k in common) / max(summary["distinct_flows"], 1), 1),
+            "matched_share_of_csv_5tuples_pct": round(100.0 * len(common) / max(len(csv_dict), 1), 1),
             "packet_count_correlation": corr_p,
             "duration_correlation": corr_d,
+            "packet_count_spearman": spear_p,
+            "duration_spearman": spear_d,
+            "packet_sum_ratio_recon_over_csv": ratio_p,
+            "packet_median_relative_error": med_rel_err_p,
             "mean_packets_recon": mean_p_recon,
             "mean_packets_csv": mean_p_csv,
             "mean_duration_recon_s": mean_d_recon,
