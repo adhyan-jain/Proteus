@@ -41,7 +41,7 @@ Despite widespread interest, a methodological gap separates published evaluation
 \begin{figure*}[t]
 \centering
 \includegraphics[width=\textwidth]{fig_architecture.pdf}
-\caption{The foundational disconnect in SDN intrusion detection research. (a) Conventional benchmark evaluations extract 80+ offline statistical features from host-side socket captures and apply randomized train/test splits, with heavy cross-split host overlap, 48.7\% duplicate test rows, and 99.98\% balanced accuracy on InSDN. (b) In operational SDN deployments, the controller observes only OpenFlow 1.3 control-plane telemetry (PacketIn messages and coarse MAC-pair FlowStats), where zero FlowMods match 5-tuple fields. Under host-held-out evaluation, balanced accuracy on InSDN is lower and far more variable.}\label{fig:arch}
+\caption{Overview of the audit. (a) Conventional evaluation computes flow features offline from end-host captures and splits flows at random, with host overlap, 48.7\% duplicate test rows and 0.9998 balanced accuracy on InSDN. (b) This study decodes the controller's OpenFlow 1.3 control channel (no flow-table entry or FlowMod matches a 5-tuple under ONOS's configuration), evaluates a controller-side detector against identity baselines, and repeats the flow-feature evaluation with source hosts held out, where balanced accuracy on InSDN is lower and far more variable.}\label{fig:arch}
 \end{figure*}
 
 This prevalent methodology suffers from two foundational threats to validity, illustrated conceptually in Fig.~\ref{fig:arch}:
