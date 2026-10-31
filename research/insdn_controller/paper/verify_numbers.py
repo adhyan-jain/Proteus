@@ -7,7 +7,7 @@ from pathlib import Path
 
 H = Path(__file__).parent
 R = H.parent / "results"
-tex = "".join((H / f).read_text() for f in ("main.tex", "live_section.tex", "table_deployment.tex", "table_recon.tex")).replace("\\,", "").replace("$", "")
+tex = "".join((H / f).read_text() for f in ("main.tex", "live_section.tex", "table_deployment.tex", "table_recon.tex", "table_literature.tex")).replace("\\,", "").replace("$", "")
 J = lambda n: json.load(open(R / n))  # noqa: E731
 fm, one, l3, xg = J("flowmod_matches.json"), J("live_modes_v4_one10.json"), J("live_modes_v4_linear3.json"), J("v4_strict_W5_xgb.json")
 DL, RP, LH, LC = J("dedup_ladder.json"), J("replicate_papers.json"), J("leave_one_host_out.json"), J("leave_one_host_out_cicids2017.json")
@@ -210,6 +210,10 @@ checks = [
     ("identity text R1 recall", f"{SB('R1_attacker_only_ip_memory', 'recall'):.3f}" == "0.472", "recall limited to 0.472"),
     ("identity text R2 bacc", f"{SB('R2_any_attack_ip', 'bacc'):.3f}" == "0.680", "R2 (0.680)"),
     ("identity text R2 within", f"{SB('R2_within_attack_nonempty', 'bacc'):.3f}" == "0.994", "near-perfect (0.994)"),
+    ("paper2 proxy random acc", f"{RP['paper2']['mlp_binary|random']['acc']['mean']:.4f}\\pm{RP['paper2']['mlp_binary|random']['acc']['ci95']:.4f}" == "0.9994\\pm0.0001", "0.9994\\pm0.0001 accuracy under a random split"),
+    ("paper2 proxy grouped acc", f"{RP['paper2']['mlp_binary|grouped']['acc']['mean']:.3f}\\pm{RP['paper2']['mlp_binary|grouped']['acc']['ci95']:.3f}" == "0.820\\pm0.202", "0.820\\pm0.202 under held-out source hosts"),
+    ("paper2 proxy per-seed", ", ".join(f"{x:.2f}" for x in RP['paper2']['mlp_binary|grouped']['acc']['per_seed']) == "0.68, 0.71, 1.00, 0.71, 0.99", "per-seed: 0.68, 0.71, 1.00, 0.71, 0.99"),
+    ("paper2 proxy macro-F1", f"{RP['paper2']['mlp_binary|grouped']['macro_f1']['mean']:.3f}\\pm{RP['paper2']['mlp_binary|grouped']['macro_f1']['ci95']:.3f}" == "0.706\\pm0.299", "macro-F1 0.706\\pm0.299"),
     ("host-side baseline feature count", hs["features"] == 78, "78 numeric features including the two port numbers"),
     ("identity text MLP margin", round(V4["mlp_all"]["bacc"]["mean"] - SB("R1_attacker_only_ip_memory", "bacc"), 2) == 0.21,
      "exceeds R1 by 0.21"),

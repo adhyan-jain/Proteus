@@ -1,0 +1,24 @@
+\begin{table*}[t]
+\caption{Targeted literature audit of representative SDN intrusion detection evaluations on benchmark datasets (12 papers examined, 10 read in full text; details and quotations in \texttt{literature\_check.json}). None of the InSDN papers read in full reports a host-grouped or capture-grouped split, and three use identifier attributes as input features.}
+\label{tab:lit_audit}
+\centering\footnotesize\setlength{\tabcolsep}{4pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lllllll}
+\toprule
+Paper & Venue & Dataset & Evaluated Model & Split Protocol & Identifiers Used? & Methodological Findings / Red Flags \\
+\midrule
+Towhid \& Shahriar~\cite{towhid2023early} & NOMS 2023 & InSDN & RF / LSTM & Random 70:30 & Excluded & Divides all flows 70:30; no host/session grouping; offline Scapy features \\
+Ataa et al.~\cite{ataa2024intrusion} & Sci.\ Rep.\ 2024 & InSDN & CNN-LSTM / Transf. & Shuffled (ratio unstated) & Excluded & Shuffled flows; no train/test ratio or grouping stated; single run \\
+Abdallah et al.~\cite{abdallah2021hybrid} & ACM ARES 2021 & InSDN & Hybrid CNN-LSTM & Unverified (paywall) & Unverified & Publisher access restricted; split details unverified \\
+Elsayed et al.~\cite{elsayed2023securing} & ASEJ 2023 & InSDN / ToN-IoT & SATIDS (LSTM) & Unverified (paywall) & Unverified & Publisher access restricted; split details unverified \\
+Saykat et al.~\cite{optixgb2026} & Sci.\ Rep.\ 2026 & InSDN / CIC-17 & OptiXGB + WGAN-GP & 80:20 sample-level & Src/Dst Port kept & Preprocessing leakage controlled, but the split has no host grouping; Dst Port is the major split of the surrogate tree \\
+Mujahid et al.~\cite{peerj2025intrusion} & PeerJ CS 2025 & InSDN / Kaggle & RF + Deep Extractor & train\_test\_split (ratio unstated) & Unstated & scikit-learn row-level split; no grouping; row count mismatch unexplained \\
+Mehmood et al.~\cite{sajid2025ddos} & PLOS ONE 2025 & InSDN / CICDDoS & CNN-MLP & Unstated & Dst Port kept & No split protocol stated; Dst Port is the strongest negative SHAP contributor \\
+Alqhatani et al.~\cite{gruntm2025deep} & PLOS ONE 2025 & UNSW / BoT-IoT & GRU-NTM & Chronological 80:20 & Unstated & Chronological split, but the 20\% is a validation set used for early stopping/tuning \\
+Ashikuzzaman et al.~\cite{ashikuzzaman2026sdnguardstack} & arXiv 2026 & InSDN & Stacking + LightGBM & 80:20 (method unstated) & Flow ID, IPs, Ports & Top-15 mutual-information features include Flow ID, Src/Dst IP, Src/Dst Port; SHAP ranks Flow ID first \\
+Malik et al.~\cite{malik2026improving} & Unreviewed ms.\ 2026 & InSDN & BiLSTM + RFE & Stratified 5-fold CV & Unstated & Stratified 5-fold drops accuracy to 81.60\%; attributed to split variance \\
+Rohith et al.~\cite{lightids2026} & Sci.\ Rep.\ 2026 & InSDN & Quantum + MSDC Net & 80:20 (method unstated) & Unstated & Four split ratios tried; 80:20 chosen from the reported test results; no grouping \\
+Saleh \& Hamad~\cite{saleh2026sica} & JESA 2026 & SICA / InSDN & DNN / LSTM & 70:20:10 (method unstated) & Excluded & Removed Flow ID/IPs, yet InSDN scores 99.61\% (split presumably random) \\
+\bottomrule
+\end{tabular}}
+\end{table*}

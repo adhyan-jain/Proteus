@@ -90,7 +90,7 @@
    ]
   },
   {
-   "paper": "Distributed Denial of Services (DDoS) attack detection in SDN using Optimizer-equipped CNN-MLP (Sajid et al.; PLOS ONE 2025, doi 10.1371/journal.pone.0312425)",
+   "paper": "Distributed Denial of Services (DDoS) attack detection in SDN using Optimizer-equipped CNN-MLP (Mehmood et al.; PLOS ONE 2025, doi 10.1371/journal.pone.0312425)",
    "reported": "InSDN accuracy 0.9998 (99.98%); CICDDoS-2019 accuracy 0.9995. The abstract calls both '99.95% for the true positive (TP) of the CICDDoS-2019 dataset and 99.98% for the InSDN dataset'",
    "verified": "Full text read (PMC11771897 via Europe PMC XML). Datasets: InSDN and CICDDoS-2019. No train/test ratio, split method, validation scheme, seed, or duplicate handling is described in the extracted text (searched: split, divid, partition, ratio, fold, shuffl, duplicate, validation set; only a generic statement that metrics are 'revealed by the validation dataset'). The SHAP feature table for InSDN lists 'Dst Port' (-1.44) among the influential model inputs, so a port-level identifier feature is an input. No Flow ID, IP or timestamp features found.",
    "read": true,
