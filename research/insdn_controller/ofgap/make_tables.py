@@ -119,7 +119,7 @@ table("tab:cross", "Cross-deployment transfer (BAcc, strict labels).", "lccc", "
 D = R["D_session_confound_probe"]
 rows = [f"All windows (D1) & {pm(D['D1_all_windows']['bacc'])} & {v(D['D1_all_windows_majority_baseline']['bacc'])}",
         f"Attack-free windows only (D2) & {pm(D['D2_attack_free_windows_only']['bacc'])} & {v(D['D2_attack_free_windows_only_majority_baseline']['bacc'])}"]
-table("tab:confound", "Session probe: predicting benign vs.\\ attack \\emph{session} from PacketIn features after removing attack-matched PacketIns (${\\ge}5$ remaining per window). The residual can still contain unlisted attack traffic (D1: 424 of 518 attack-session windows contain unmatched-IP PacketIns), and D2 rests on 6 windows from 2 captures.",
+table("tab:confound", "Session probe: predicting benign vs.\\ attack {\\normalfont\\itshape session} from PacketIn features after removing attack-matched PacketIns (${\\ge}5$ remaining per window). The residual can still contain unlisted attack traffic (D1: 424 of 518 attack-session windows contain unmatched-IP PacketIns), and D2 rests on 6 windows from 2 captures.",
       "lcc", "Variant & BAcc & Majority", rows)
 
 # ---- evaluation-validity audit (two datasets, same pipeline; read from results/protocol_audit_*.json)
@@ -131,7 +131,7 @@ def hi(d):  # four-digit mean, with the CI only when it is visible at that preci
 
 arows = [
     "A. Random 70:30 flow split & " + " & ".join(hi(a["A_random_flow_split"]) for a in AU),
-    "B. Held-out source hosts (70:30 by source IP) & " + " & ".join(pm(a["B_source_ip_grouped_split"]) for a in AU),
+    "B. Source-IP-disjoint split (70:30 by source IP) & " + " & ".join(pm(a["B_source_ip_grouped_split"]) for a in AU),
     "C. Per-file time-ordered 70:30 (deterministic) & " + " & ".join(f"{a['C_time_ordered_split']['mean']:.4f}" for a in AU),
     "D. IPs, ports and Flow ID only, random split & " + " & ".join(hi(a["D_identifier_only_random_split"]) for a in AU),
     "E. Split-A test rows duplicating a train row (\\%) & " + " & ".join(f"{100 * a['E_test_rows_duplicating_train_row_splitA']['mean']:.1f}" for a in AU),
@@ -142,6 +142,7 @@ table("tab:audit", "Evaluation-validity audit: balanced accuracy (benign vs.\\ a
       "lcc", "Protocol & InSDN & CICIDS2017", arows)
 
 # ---- recipe replication (results/recipe_replication.json)
+RES = Path(__file__).resolve().parent.parent / "results"
 RR = json.loads((RES / "recipe_replication.json").read_text())
 rrows = []
 for k, nm in (("numeric", "Numeric features only"), ("numeric+port", "Numeric + ports"),
@@ -152,7 +153,7 @@ for k, nm in (("numeric", "Numeric features only"), ("numeric+port", "Numeric + 
 table("tab:recipe", "Feature-recipe replication on InSDN (one XGBoost classifier, GPU, 80:20, 10 seeds, mean{\\scriptsize$\\pm$}95\\% CI): "
       "binary balanced accuracy and 8-class accuracy under a random flow split and a source-IP-grouped split. "
       "Recipes approximate feature choices described in published InSDN papers; they are not those papers' models or code. "
-      "Grouping by source host also changes the attack-class mix between train and test, so grouped values are a stress test.",
+      "Grouping by source IP also changes the attack-class mix between train and test, so grouped values are a stress test.",
       "lcccc", "Recipe & BAcc random & BAcc grouped & 8-cls random & 8-cls grouped", rrows, size="\\scriptsize\\setlength{\\tabcolsep}{2pt}")
 
 Path(sys.argv[4]).write_text("\n".join(out))

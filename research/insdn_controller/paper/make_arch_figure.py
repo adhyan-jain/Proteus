@@ -5,6 +5,12 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from pathlib import Path
 
+plt.rcParams.update({
+    "font.family": "serif",
+    "font.serif": ["Times New Roman", "DejaVu Serif", "STIXGeneral", "serif"],
+    "mathtext.fontset": "stix",
+})
+
 OUT_DIR = Path(__file__).resolve().parent
 
 fig, ax = plt.subplots(figsize=(7.1, 3.8), dpi=300)
@@ -64,11 +70,11 @@ arrow(75.5, 37.5, 79.5, 37.5, color=C_BORDER_ERR)
 rounded_box(80, 29.5, 17, 15.5, "#fbeeed", C_BORDER_ERR, lw=1.5)
 T(88.5, 44.4, "Reported Metric", 7.5, fontweight="bold", color="#900")
 T(88.5, 41.4, "Balanced accuracy\n0.9998 (InSDN,\nrandom split)", 6.8, fontweight="bold", color="#900")
-T(88.5, 33.4, "Does not survive a\nhost-held-out split", 6, style="italic", color="#777777")
+T(88.5, 33.4, "Does not survive\nsource-IP-disjoint split", 6, style="italic", color="#777777")
 
 # ----------------- SECTION B: this study -----------------
 rounded_box(1, 1, 98, 25, "#fafafa", "#cccccc", lw=1.0)
-T(3, 25.4, "(b) Controller observability and host-held-out evaluation (this study)", 8.5, ha="left", fontweight="bold", color="#005544")
+T(3, 25.4, "(b) Controller observability and source-IP-disjoint evaluation (this study)", 8.5, ha="left", fontweight="bold", color="#005544")
 
 rounded_box(3, 2.5, 23, 19.5, C_BG_REAL, C_BORDER_REAL)
 T(14.5, 21.4, "SDN Control Channel", 7.5, fontweight="bold", color=C_TEXT)
@@ -87,14 +93,14 @@ arrow(51.5, 12.5, 55.5, 12.5, color=C_BORDER_REAL)
 rounded_box(56, 2.5, 22, 19.5, "#eef5fc", "#2a6f97")
 T(67, 21.4, "Validity Checks", 7.5, fontweight="bold", color=C_TEXT)
 T(67, 19.2, "Controller-side and flow-side", 6.5, fontweight="bold", color="#1a4f77")
-T(67, 17.2, "- Any-IP and host-identity rules\n- Held-out source hosts, LOHO\n- Deduplication\n- Forwarding-mode sensitivity", 6.2, color=C_MUTED)
+T(67, 17.2, "- Any-IP and host-identity rules\n- Source-IP-disjoint, LOSGO\n- Deduplication\n- Forwarding-mode sensitivity", 6.2, color=C_MUTED)
 T(67, 5.6, "Session and host confounds", 6, style="italic", color="#1a4f77")
 arrow(78.5, 12.5, 82.5, 12.5, color="#2a6f97")
 
 rounded_box(83, 2.5, 15, 19.5, "#e8f5e9", "#2e7d32", lw=1.5)
-T(90.5, 21.4, "Held-out hosts", 7, fontweight="bold", color="#1b5e20")
+T(90.5, 21.4, "Source-IP groups", 7, fontweight="bold", color="#1b5e20")
 T(90.5, 19.0, "BAcc 0.907 ± 0.085\n(worst 0.66)", 6.2, fontweight="bold", color="#1b5e20")
-T(90.5, 13.6, "Held out alone:\nattacker recall 51.6%\nbenign host FPR 37.9%", 5.6, fontweight="bold", color="#c0392b")
+T(90.5, 13.6, "LOSGO alone:\nattacker recall 51.6%\nbenign host FPR 37.9%", 5.6, fontweight="bold", color="#c0392b")
 T(90.5, 5.6, "InSDN, XGBoost", 5.8, style="italic", color="#555555")
 
 plt.tight_layout()

@@ -63,7 +63,7 @@ def recon_table(r):
         "for one capture per scenario. Correlations and the packet ratio use only matched 5-tuples and are omitted "
         "(--) below 30 matches. Ratio = reconstructed over host-side packet total.}\n"
         "\\label{tab:recon}\n"
-        "\\centering\\footnotesize\\setlength{\\tabcolsep}{2.5pt}\n"
+        "\\centering\\footnotesize\\setlength{\\tabcolsep}{2.0pt}\n"
         "\\begin{tabular}{lrrrrrrr}\n\\toprule\n"
         "Scenario & Flows & 1-pkt \\% & Matched & Matched \\% & $\\rho_{\\text{pkt}}$ & Ratio & $\\rho_{\\text{dur}}$ \\\\\n"
         "\\midrule\n"

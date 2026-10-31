@@ -119,7 +119,7 @@ OVS $\rightarrow$ Metasploitable-2 & 0.990{\scriptsize$\pm$0.001} & 0.985 & 0.94
 \end{table}
 
 \begin{table}[t]
-\caption{Session probe: predicting benign vs.\ attack \emph{session} from PacketIn features after removing attack-matched PacketIns (${\ge}5$ remaining per window). The residual can still contain unlisted attack traffic (D1: 424 of 518 attack-session windows contain unmatched-IP PacketIns), and D2 rests on 6 windows from 2 captures.}
+\caption{Session probe: predicting benign vs.\ attack {\normalfont\itshape session} from PacketIn features after removing attack-matched PacketIns (${\ge}5$ remaining per window). The residual can still contain unlisted attack traffic (D1: 424 of 518 attack-session windows contain unmatched-IP PacketIns), and D2 rests on 6 windows from 2 captures.}
 \label{tab:confound}
 \centering\footnotesize\setlength{\tabcolsep}{3pt}
 \begin{tabular}{lcc}
@@ -142,7 +142,7 @@ Attack-free windows only (D2) & 0.950{\scriptsize$\pm$0.031} & 0.500 \\
 Protocol & InSDN & CICIDS2017 \\
 \midrule
 A. Random 70:30 flow split & 0.9998 & 0.9917{\scriptsize$\pm$0.0001} \\
-B. Held-out source hosts (70:30 by source IP) & 0.907{\scriptsize$\pm$0.085} & 0.641{\scriptsize$\pm$0.056} \\
+B. Source-IP-disjoint split (70:30 by source IP) & 0.907{\scriptsize$\pm$0.085} & 0.641{\scriptsize$\pm$0.056} \\
 C. Per-file time-ordered 70:30 (deterministic) & 0.9997 & 0.7187 \\
 D. IPs, ports and Flow ID only, random split & 1.0000 & 0.9999 \\
 E. Split-A test rows duplicating a train row (\%) & 48.7 & 20.3 \\
@@ -151,7 +151,7 @@ E. Split-A test rows duplicating a train row (\%) & 48.7 & 20.3 \\
 \end{table}
 
 \begin{table}[t]
-\caption{Feature-recipe replication on InSDN (one XGBoost classifier, GPU, 80:20, 10 seeds, mean{\scriptsize$\pm$}95\% CI): binary balanced accuracy and 8-class accuracy under a random flow split and a source-IP-grouped split. Recipes approximate feature choices described in published InSDN papers; they are not those papers' models or code. Grouping by source host also changes the attack-class mix between train and test, so grouped values are a stress test.}
+\caption{Feature-recipe replication on InSDN (one XGBoost classifier, GPU, 80:20, 10 seeds, mean{\scriptsize$\pm$}95\% CI): binary balanced accuracy and 8-class accuracy under a random flow split and a source-IP-grouped split. Recipes approximate feature choices described in published InSDN papers; they are not those papers' models or code. Grouping by source IP also changes the attack-class mix between train and test, so grouped values are a stress test.}
 \label{tab:recipe}
 \centering\scriptsize\setlength{\tabcolsep}{2pt}
 \resizebox{\columnwidth}{!}{%

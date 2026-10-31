@@ -7,11 +7,15 @@ from pathlib import Path
 
 H = Path(__file__).parent
 R = H.parent / "results"
-tex = "".join((H / f).read_text() for f in ("main.tex", "live_section.tex", "table_deployment.tex", "table_recon.tex", "table_literature.tex")).replace("\\,", "").replace("$", "")
+tex = "".join((H / f).read_text() for f in (
+    "main.tex", "live_section.tex", "table_deployment.tex", "table_recon.tex", "table_literature.tex",
+    "table_weighting.tex", "table_multiprotocol.tex", "table_combinatorial_50seeds.tex"
+)).replace("\\,", "").replace("$", "")
 J = lambda n: json.load(open(R / n))  # noqa: E731
 fm, one, l3, xg = J("flowmod_matches.json"), J("live_modes_v4_one10.json"), J("live_modes_v4_linear3.json"), J("v4_strict_W5_xgb.json")
 DL, RP, LH, LC = J("dedup_ladder.json"), J("replicate_papers.json"), J("leave_one_host_out.json"), J("leave_one_host_out_cicids2017.json")
 st, hs, pi = J("stock_ryu_flowmods.json"), J("hostside_xgb.json"), J("protocol_inflation.json")
+hw, mp, c50 = J("host_weighting_audit.json"), J("multiprotocol_split_audit.json"), J("combinatorial_audit_50seeds.json")
 ai, ac, lit = J("protocol_audit_insdn.json"), J("protocol_audit_cicids2017.json"), json.load(open(R.parent / "literature_check.json"))
 rr = J("recipe_replication.json")
 fta, pr, haa = J("flowtable_audit.json"), J("packetin_reconstruction.json"), J("host_assignment_audit.json")
@@ -224,12 +228,33 @@ checks = [
     ("identity text R2 bacc", f"{SB('R2_any_attack_ip', 'bacc'):.3f}" == "0.680", "R2 (0.680)"),
     ("identity text R2 within", f"{SB('R2_within_attack_nonempty', 'bacc'):.3f}" == "0.994", "near-perfect (0.994)"),
     ("paper2 proxy random acc", f"{RP['paper2']['mlp_binary|random']['acc']['mean']:.4f}\\pm{RP['paper2']['mlp_binary|random']['acc']['ci95']:.4f}" == "0.9994\\pm0.0001", "0.9994\\pm0.0001 accuracy under a random split"),
-    ("paper2 proxy grouped acc", f"{RP['paper2']['mlp_binary|grouped']['acc']['mean']:.3f}\\pm{RP['paper2']['mlp_binary|grouped']['acc']['ci95']:.3f}" == "0.820\\pm0.202", "0.820\\pm0.202 under held-out source hosts"),
+    ("paper2 proxy grouped acc", f"{RP['paper2']['mlp_binary|grouped']['acc']['mean']:.3f}\\pm{RP['paper2']['mlp_binary|grouped']['acc']['ci95']:.3f}" == "0.820\\pm0.202", "0.820\\pm0.202 under source-IP-disjoint evaluation"),
     ("paper2 proxy per-seed", ", ".join(f"{x:.2f}" for x in RP['paper2']['mlp_binary|grouped']['acc']['per_seed']) == "0.68, 0.71, 1.00, 0.71, 0.99", "per-seed: 0.68, 0.71, 1.00, 0.71, 0.99"),
     ("paper2 proxy macro-F1", f"{RP['paper2']['mlp_binary|grouped']['macro_f1']['mean']:.3f}\\pm{RP['paper2']['mlp_binary|grouped']['macro_f1']['ci95']:.3f}" == "0.706\\pm0.299", "macro-F1 0.706\\pm0.299"),
     ("host-side baseline feature count", hs["features"] == 78, "78 numeric features including the two port numbers"),
     ("identity text MLP margin", round(V4["mlp_all"]["bacc"]["mean"] - SB("R1_attacker_only_ip_memory", "bacc"), 2) == 0.21,
      "exceeds R1 by 0.21"),
+    # multi-protocol split audit (multiprotocol_split_audit.json, Table tab:multiprotocol)
+    ("multiprotocol B_nospoof bacc", f"{mp['summary']['B_non_spoofed_src_grouped']['bacc']['mean']:.4f}", "0.8417"),
+    ("multiprotocol B_nospoof ci", f"{mp['summary']['B_non_spoofed_src_grouped']['bacc']['ci95']:.4f}", "0.1114"),
+    ("multiprotocol B_nospoof macro_f1", f"{mp['summary']['B_non_spoofed_src_grouped']['macro_f1']['mean']:.4f}", "0.6503"),
+    ("multiprotocol B_dst bacc", f"{mp['summary']['B_dst_ip_grouped']['bacc']['mean']:.4f}", "0.8727"),
+    ("multiprotocol B_pair bacc", f"{mp['summary']['B_pair_grouped']['bacc']['mean']:.4f}", "0.9891"),
+    # combinatorial 50-seed audit (combinatorial_audit_50seeds.json, Table tab:combinatorial_50seeds)
+    ("combinatorial 50seeds overall bacc", f"{c50['overall_bacc']['mean']:.4f}", "0.8614"),
+    ("combinatorial 50seeds overall ci", f"{c50['overall_bacc']['ci95']:.4f}", "0.0377"),
+    ("combinatorial 50seeds correlation r", f"{c50['test_frac_vs_bacc_correlation']['pearson_r']:.4f}", "-0.7713"),
+    ("combinatorial neither theory", f"{c50['hypergeometric_theory']['neither_withheld'] * 100:.1f}", "49.0"),
+    ("combinatorial att only theory", f"{c50['hypergeometric_theory']['att_only_withheld'] * 100:.1f}", "21.0"),
+    # host weighting audit (host_weighting_audit.json, Table tab:weighting_audit)
+    ("host weighting sqrt bacc", f"{hw['summary']['sqrt_attenuation']['bacc']['mean']:.3f}", "0.931"),
+    ("host weighting sqrt worst", f"{hw['summary']['sqrt_attenuation']['bacc']['min']:.3f}", "0.730"),
+    ("host weighting inv_freq worst", f"{hw['summary']['inv_freq']['bacc']['min']:.3f}", "0.337"),
+    ("combinatorial exact neither prob", f"{c50['hypergeometric_theory']['exact_prob_neither_retained']:.6f}", "0.489991"),
+    ("combinatorial exact att only prob", f"{c50['hypergeometric_theory']['exact_prob_att_only_withheld']:.6f}", "0.210004"),
+    ("weighting paired mean diff", f"+{hw['paired_difference_analysis']['mean_diff']:.4f}", "+0.0238"),
+    ("weighting paired ci", f"{hw['paired_difference_analysis']['ci95_diff']:.4f}", "0.0415"),
+    ("weighting paired pval", f"{hw['paired_difference_analysis']['paired_t_pvalue']:.4f}", "0.2267"),
 ]
 WORDS = {"nine": 9, "ten": 10, "three": 3, "none": 0, "five": 5}
 bad = 0
