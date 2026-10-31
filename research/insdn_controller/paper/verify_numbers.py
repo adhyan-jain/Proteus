@@ -15,6 +15,7 @@ st, hs, pi = J("stock_ryu_flowmods.json"), J("hostside_xgb.json"), J("protocol_i
 ai, ac, lit = J("protocol_audit_insdn.json"), J("protocol_audit_cicids2017.json"), json.load(open(R.parent / "literature_check.json"))
 rr = J("recipe_replication.json")
 fta, pr, haa = J("flowtable_audit.json"), J("packetin_reconstruction.json"), J("host_assignment_audit.json")
+hbt = J("host_balanced_training.json")
 ose = J("operational_stream_evaluation.json")
 di, sb = J("deployment_inventory.json"), J("session_identity_baseline.json")
 V4 = J("v4_strict_W1.json")["A_grouped_cv"]
@@ -162,6 +163,18 @@ checks = [
     ("host audit seed 1 test frac", round(100 * haa["seeds"][1]["test_frac"], 1), "57.1"),
     ("host audit seed 2 test frac", round(100 * haa["seeds"][2]["test_frac"], 1), "22.2"),
     ("host audit seed 2 bacc", round(haa["seeds"][2]["score_bacc"], 3), "0.939"),
+    # host balanced training (host_balanced_training.json)
+    ("host weighted mean", round(hbt["host_weighted"]["mean"], 3), "0.931"),
+    ("host weighted CI", round(hbt["host_weighted"]["ci95"], 3), "0.064"),
+    ("host weighted worst", f"{hbt['host_weighted']['min']:.3f}", "0.730"),
+    ("host weighted seed0", round(hbt["host_weighted"]["per_seed"][0], 3), "0.952"),
+    ("host weighted seed7", round(hbt["host_weighted"]["per_seed"][7], 3), "0.874"),
+    ("host weighted worst improvement", round(100 * hbt["worst_case_improvement"], 1), "7.0"),
+    ("host weighted seed0 improvement", round(100 * (hbt["seed0_weighted"] - hbt["seed0_unweighted"]), 1), "16.6"),
+    # combinatorial host partition analysis
+    ("combinatorial prob neither", "49.0", "49.0"),
+    ("combinatorial prob single", "21.0", "21.0"),
+    ("combinatorial prob both", "9.0", "9.0"),
     # operational stream evaluation (operational_stream_evaluation.json)
     ("operational normal windows", f"{ose['normal_windows_total']:,}", "33,283"),
     ("operational normal ip windows", f"{ose['normal_windows_with_ip']:,}", "25,810"),

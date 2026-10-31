@@ -51,6 +51,7 @@ echo "== 5. host-side flow-CSV baseline (GPU)"
 (cd "$ROOT" && "$PY" research/insdn_controller/ofgap/leave_one_host_out.py "$OUT/res/leave_one_host_out.json" > /dev/null)
 (cd "$ROOT" && "$PY" research/insdn_controller/ofgap/leave_one_host_out.py "$OUT/res/leave_one_host_out_cicids2017.json" cicids2017 > /dev/null)
 (cd "$ROOT" && "$PY" research/insdn_controller/ofgap/audit_hosts_per_seed.py "$OUT/res/host_assignment_audit.json" > /dev/null)
+(cd "$ROOT" && "$PY" research/insdn_controller/ofgap/host_balanced_training.py "$OUT/res/host_balanced_training.json" > /dev/null)
 (cd "$ROOT" && "$PY" research/insdn_controller/ofgap/replicate_papers.py 5 "$OUT/res/replicate_papers.json" > /dev/null)
 cp results/leave_one_host_out_10seeds.json "$OUT/res/"
 
