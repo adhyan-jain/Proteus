@@ -20,8 +20,13 @@
 \parbox[t]{0.32\textwidth}{\centering
 {\large Kshitij Manikshete\IEEEauthorrefmark{1}}\\[2pt]
 {\small Vellore Institute of Technology\\Vellore, India}\\[2pt]
-{\footnotesize kshitij.rahul2024@vitstudent.ac.in}}%
-\thanks{\IEEEauthorrefmark{1}All three authors contributed equally to this work.}}
+{\footnotesize kshitij.rahul2024@vitstudent.ac.in}}\\[10pt]
+\parbox[t]{\textwidth}{\centering
+{\large Dr.~Arivoli A.\IEEEauthorrefmark{2}}\\[2pt]
+{\small School of Computer Science and Engineering, Vellore Institute of Technology, Vellore, India}\\[2pt]
+{\footnotesize arivoli.a@vit.ac.in}}%
+\thanks{\IEEEauthorrefmark{1}Adhyan Jain, Atharva Sheersh Pandey, and Kshitij Manikshete contributed equally to this work.}%
+\thanks{\IEEEauthorrefmark{2}Dr.~Arivoli A. is the corresponding author (e-mail: arivoli.a@vit.ac.in).}}
 
 \maketitle
 
@@ -404,7 +409,7 @@ In addition to InSDN and CICIDS2017, we examined candidate datasets for control-
 InSDN CSVs and PCAPs are publicly available (sources and SHA-256 digests in \path|data/MANIFEST.md|). The OpenFlow~1.3 parser, feature extraction, evaluation code, the per-experiment result files and the table and figure generators are in the project repository (\url{https://github.com/adhyan-jain/Proteus}, directory \path|research/insdn_controller|). The script \path|reproduce.sh| is provided to regenerate the result files from the raw data (it requires a CUDA GPU), and \path|paper/verify_numbers.py| checks every number quoted in the text against the stored result files. Experiments ran in Python 3.12 with PyTorch 2.11 (CUDA 12.8) and XGBoost 3.4 on one NVIDIA RTX 4060 laptop GPU. Capture hashes are in \path|capture_hashes.sha256|.
 
 \section*{Acknowledgment}
-All three authors contributed equally to the study design, empirical analysis, and manuscript preparation. An AI assistant (Claude, Anthropic) was utilized to assist with scripting, literature synthesis, and drafting; the authors independently verified all experimental results against stored result files and assume full responsibility for the manuscript.
+Adhyan Jain, Atharva Sheersh Pandey, and Kshitij Manikshete contributed equally to the study design, empirical analysis, and manuscript preparation under the supervision of Dr.~Arivoli A. An AI assistant (Claude, Anthropic) was utilized to assist with scripting, literature synthesis, and drafting; the authors independently verified all experimental results against stored result files and assume full responsibility for the manuscript.
 
 \bibliographystyle{IEEEtran}
 \bibliography{references}
