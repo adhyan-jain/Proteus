@@ -38,16 +38,16 @@ hashes pin the numbers in the paper.
 | `ofgap/protocol_inflation.py`, `protocol_audit.py` | random vs held-out-host split audit (InSDN; InSDN and CICIDS2017) |
 | `ofgap/dedup_ladder.py`, `leave_one_host_out.py` | duplicate and class-coverage controls; per-host detection on InSDN and CICIDS2017 |
 | `ofgap/recipe_replication.py`, `replicate_papers.py` | generic feature recipes; partial replication of two published pipelines |
-| `ofgap/make_tables.py`, `make_figures.py`, `make_deck.py`, `compare_results.py` | tables, figures and slides from results; reproduction comparison |
+| `ofgap/exp_multiprotocol_split.py`, `exp_combinatorial_50seeds.py`, `exp_host_weighting_audit.py` | multi-protocol split, 50-seed combinatorial host and sample-weighting audits |
+| `ofgap/make_tables.py`, `make_updated_tables.py`, `make_figures.py`, `make_deck.py`, `compare_results.py` | tables, figures and slides from results; reproduction comparison |
 | `ofgap/attacker_ips.py`, `remotezip_ls.py` | attacker-IP extraction; range-request listing of the remote capture archive |
 | `live/` | Ryu apps (`ryu_fwd.py`; `ryu_fwd_v1.py` is the archived flawed first app), Mininet runner, analysis; recorded captures are local |
 | `results/` | all result JSONs behind the paper |
 | `paper/` | LaTeX source, bibliography, generated tables and figures, `verify_numbers.py` |
 | `deck/` | `PRESENTATION.pptx` and its PDF |
-| `notes/` | `DEFENSE.md` (claims and answers), `NOVELTY_CHECK.md` (prior art and venue assessment), `PRIOR_ART_HOSTS.md` (full-text prior-art check) |
+| `notes/` | `PRIOR_ART_HOSTS.md` (full-text prior-art check) |
+| `submission/` | `COVER_LETTER.md` |
 | `literature_check.json` | the 12 papers examined, with split protocol, identifier use and red flags |
-| `feats/`, `feats_v4/` | extracted controller features (local, gitignored; rebuilt by `reproduce.sh`) |
-| `tc/` | archived earlier study, local and gitignored; not used by the paper |
 | `attacker_ips.json`, `capture_hashes.sha256` | attacker address list; SHA-256 of every capture used |
 
 ## Known gaps
