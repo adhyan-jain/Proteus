@@ -1,0 +1,19 @@
+\begin{table}[t]
+\caption{Combinatorial dominant host allocation across 50 Protocol~B seeds on InSDN (GroupShuffleSplit 70:30, $M=122\,868, k=\lceil 0.3M \rceil = 36\,861$). Correlation between test partition row share and balanced accuracy: $r = -0.7713$ ($p = 5.61 \times 10^{-11}$).}
+\label{tab:combinatorial_50seeds}
+\centering\footnotesize\setlength{\tabcolsep}{3pt}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lccccc}
+\toprule
+Allocation Regime & Seeds ($N$) & Hypergeom. Theory & Empirical Pct & Mean BAcc & BAcc Range \\
+\midrule
+Neither primary host withheld & 24 & 49.0\% & 48.0\% & 0.9809 & [0.9283, 1.0000] \\
+Primary attacker withheld only & 13 & 21.0\% & 26.0\% & 0.7513 & [0.6596, 0.8172] \\
+Primary benign withheld only & 9 & 21.0\% & 18.0\% & 0.7566 & [0.6300, 0.8591] \\
+Both primary hosts withheld & 4 & 9.0\% & 8.0\% & 0.7385 & [0.5794, 0.8989] \\
+\midrule
+\textbf{Overall Population (50 Seeds)} & \textbf{50} & \textbf{100.0\%} & \textbf{100.0\%} & \textbf{0.8614}{\scriptsize$\pm$0.0377} & \textbf{[0.5794, 1.0000]} \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}

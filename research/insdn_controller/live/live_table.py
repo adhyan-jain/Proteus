@@ -59,8 +59,9 @@ for m in ("mac", "fivetuple", "fivetuple_short"):
     cells = [f"{s[k]['mean']:.1f}{{\\scriptsize$\\pm${s[k]['ci95']:.1f}}}" for k in KEYS]
     rows.append(names[m] + " & " + " & ".join(cells) + " \\\\")
 n = summary["mac"]["packet_in_tcp"]["n"]
+topo = "3-switch linear Mininet/Ryu testbed" if ("linear3" in str(camp) or "linear3" in str(out_tex) or LABEL == "tab:live_l3") else "1-switch Mininet/Ryu testbed"
 tex = ("\\begin{table*}[t]\n\\caption{Forwarding application vs.\\ what the controller observes: benign traffic from the same generator and seeds "
-       f"(5 hosts $\\rightarrow$ 1 HTTP server, plus pings), 1-switch Mininet/Ryu testbed, $\\sim$99\\,s capture per run, {n} runs per "
+       f"(5 hosts $\\rightarrow$ 1 HTTP server, plus pings), {topo}, $\\sim$99\\,s capture per run, {n} runs per "
        "mode, mean{\\scriptsize$\\pm$}95\\% CI. Entries = flow entries returned per flow-statistics reply "
        f"(1\\,s polling). {NOTE}}}\n"
        f"\\label{{{LABEL}}}\n\\centering\\small\n"

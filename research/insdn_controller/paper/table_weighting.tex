@@ -1,0 +1,18 @@
+\begin{table}[t]
+\caption{Comparison of sample-weighting strategies under source-IP-disjoint evaluation (InSDN Protocol~B, 10 seeds, mean{\scriptsize$\pm$}95\% CI). Ratio = total sample weight of primary attacker host relative to a single-flow host. Paired difference for square-root attenuation vs.\ ERM: $\bar{\Delta} = +0.0238\pm 0.0415$ ($p = 0.2267$).}
+\label{tab:weighting_audit}
+\centering\footnotesize\setlength{\tabcolsep}{3pt}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lcccc}
+\toprule
+Weighting Strategy & Sample Weight Ratio & BAcc & Worst Seed & Macro-F1 \\
+\midrule
+Unweighted ERM (Standard) & 110,799 : 1 & 0.907{\scriptsize$\pm$0.085} & 0.660 & 0.832{\scriptsize$\pm$0.188} \\
+Square-root attenuation ($1/\sqrt{N_h}$) & 333 : 1 & 0.931{\scriptsize$\pm$0.064} & 0.730 & 0.835{\scriptsize$\pm$0.149} \\
+Pure inverse-frequency ($1/N_h$) & 1 : 1 & 0.835{\scriptsize$\pm$0.158} & 0.337 & 0.706{\scriptsize$\pm$0.193} \\
+Clipped inverse-frequency ($99\%$ cap) & 1 : 1 (reg.) & 0.835{\scriptsize$\pm$0.158} & 0.337 & 0.706{\scriptsize$\pm$0.193} \\
+Class-conditional ($1/N_{h,c}$) & Class-relative & 0.826{\scriptsize$\pm$0.158} & 0.342 & 0.685{\scriptsize$\pm$0.202} \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}

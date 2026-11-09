@@ -45,7 +45,10 @@ from the controller by two orders of magnitude, independently of the forwarding 
 \textbf{Reliability.} One run (5-tuple, 2\,s idle, seed 4) had 41 failed requests (7--10 per client); the other 29
 one-switch runs and all 30 three-switch runs had none. The run did not reproduce, and its failures were spread evenly over
 all five clients, which is consistent with a short stall of the shared path or controller rather than one client. The cause
-is not established (the failure reasons were not logged in that run; later runs log them). The run is included in all figures.
+is not established (the failure reasons were not logged in that run; later runs log them). The run is included in all figures
+and tables. Excluding seed~4 does not change the picture: in the one-switch 2\,s-idle mode, mean TCP PacketIns move from
+$10\,391.6\pm249.4$ to $10\,464.3\pm213.6$ (+0.7\%), FlowMods from $10\,556.4\pm252.3$ to $10\,629.7\pm216.8$, and flow
+entries per reply from $36.9\pm0.5$ to $36.8\pm0.6$.
 
 \textbf{A second topology.} On a three-switch chain (hosts h1--h6, server two hops from h1 and h2; 10 runs per mode,
 26\,826 requests, none failed) the contrast holds (Table~\ref{tab:live_l3}): $18.0\pm5.0$ TCP PacketIns per run under

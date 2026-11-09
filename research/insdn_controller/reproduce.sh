@@ -55,6 +55,12 @@ echo "== 5. host-side flow-CSV baseline (GPU)"
 (cd "$ROOT" && "$PY" research/insdn_controller/ofgap/replicate_papers.py 5 "$OUT/res/replicate_papers.json" > /dev/null)
 cp results/leave_one_host_out_10seeds.json "$OUT/res/"
 
+echo "== 5b. multi-protocol, 50-seed combinatorial, and sample-weighting audits (GPU)"
+(cd "$ROOT" && "$PY" research/insdn_controller/ofgap/exp_multiprotocol_split.py "$OUT/res/multiprotocol_split_audit.json" > /dev/null)
+(cd "$ROOT" && "$PY" research/insdn_controller/ofgap/exp_combinatorial_50seeds.py "$OUT/res/combinatorial_audit_50seeds.json" > /dev/null)
+(cd "$ROOT" && "$PY" research/insdn_controller/ofgap/exp_host_weighting_audit.py "$OUT/res/host_weighting_audit.json" > /dev/null)
+(cd "$ROOT" && "$PY" research/insdn_controller/ofgap/make_updated_tables.py)
+
 "$PY" -I ofgap/make_figures.py "$OUT" > /dev/null   # paper figures from results/*.json
 
 echo "== 6. tables and comparison"

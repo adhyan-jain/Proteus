@@ -1,0 +1,18 @@
+\begin{table}[t]
+\caption{Evaluation-validity audit across network partitioning protocols on InSDN (77 numeric CICFlowMeter features, identifiers excluded, GPU XGBoost, 10 seeds, mean{\scriptsize$\pm$}95\% CI).}
+\label{tab:multiprotocol}
+\centering\footnotesize\setlength{\tabcolsep}{3pt}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lcccc}
+\toprule
+Partitioning Protocol & Address Isolation & Balanced Accuracy & Min BAcc & Macro-F1 \\
+\midrule
+Protocol A: Random flow split & Overlapping & 0.9998{\scriptsize$\pm$0.0000} & 0.9997 & 0.9999{\scriptsize$\pm$0.0000} \\
+Protocol B: Source-IP-disjoint & Disjoint Src IP & 0.9074{\scriptsize$\pm$0.0847} & 0.6596 & 0.8321{\scriptsize$\pm$0.1883} \\
+Protocol B$_{\text{dst}}$: Destination-IP-disjoint & Disjoint Dst IP & 0.8727{\scriptsize$\pm$0.0881} & 0.5904 & 0.8141{\scriptsize$\pm$0.1046} \\
+Protocol B$_{\text{pair}}$: (Src, Dst) Pair-disjoint & Disjoint (Src, Dst) & 0.9891{\scriptsize$\pm$0.0084} & 0.9630 & 0.9767{\scriptsize$\pm$0.0193} \\
+Protocol B$_{\text{nospoof}}$: Non-spoofed Source IP & Disjoint (No Spoof) & 0.8417{\scriptsize$\pm$0.1114} & 0.6021 & 0.6503{\scriptsize$\pm$0.2005} \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
